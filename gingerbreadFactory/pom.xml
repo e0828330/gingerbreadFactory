@@ -48,6 +48,23 @@
 			<artifactId>mozartspaces-xvsmp-jaxb</artifactId>
 			<version>2.2-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.qpid</groupId>
+			<artifactId>qpid-client</artifactId>
+			<version>0.24</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.qpid</groupId>
+			<artifactId>qpid-client</artifactId>
+			<version>0.24</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.geronimo.specs</groupId>
+			<artifactId>geronimo-jms_1.1_spec</artifactId>
+			<version>1.0</version>
+		</dependency>
+
 	</dependencies>
 
 
