@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Mon Nov 11 18:15:53 CET 2013:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.8.2.2 - (1181258): instance a816c00e-0142-4829-9480-000002df2400 
+on database directory /home/linux/derbystore/default/default  with class loader sun.misc.Launcher$AppClassLoader@645ad7b2 
+Loaded from file:/home/linux/qpid-broker-0.24/lib/derby-10.8.2.2.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.7.0_45-mockbuild_2013_10_16_17_47-b00
+user.dir=/home/linux/qpid-broker-0.24/bin
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Mon Nov 11 18:16:45 CET 2013:
+Shutting down instance a816c00e-0142-4829-9480-000002df2400 on database directory /home/linux/derbystore/default/default with class loader sun.misc.Launcher$AppClassLoader@645ad7b2 
