@@ -40,28 +40,34 @@ public class BakerTest implements Runnable {
 		private LindaSelector selector;
 		private CountDownLatch sync;
 		private TransactionReference tx;
+		private Long timeout;
 
-		public ItemGetter(LindaSelector selector, TransactionReference tx, CountDownLatch sync) {
+		public ItemGetter(LindaSelector selector, TransactionReference tx, Long timeout, CountDownLatch sync) {
 			this.selector = selector;
 			this.sync = sync;
 			this.tx = tx;
+			this.timeout = timeout;
 		}
 		
 		public void run() {
 			Capi capi = new Capi(core);
 			try {
 				ContainerReference container = capi.lookupContainer("ingredients", new URI(App.spaceURL), 10, this.tx);
-				resultEntries = capi.take(container, selector, MzsConstants.RequestTimeout.INFINITE, this.tx);
+				resultEntries = capi.take(container, selector, timeout, this.tx);
 				sync.countDown();
 				
 				System.out.println(resultEntries.get(0));
+				return;
 				
 			} catch (MzsCoreException e) {
+				e.printStackTrace();
 				resultEntries = null;
 			} catch (URISyntaxException e) {
 				resultEntries = null;
 			}
-
+			resultEntries = null;
+			System.out.println("OUT");
+			sync.countDown();
 		}
 
 		public ArrayList<Ingredient> getResultEntries() {
@@ -73,14 +79,14 @@ public class BakerTest implements Runnable {
 	private void getNextIngredient(Long timeout) {
 		Capi capi = new Capi(core);
 		try {
-			TransactionReference tx = capi.createTransaction(timeout, new URI(App.spaceURL));
+			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
 			try {
 				CountDownLatch sync = new CountDownLatch(3);
 				
-				ItemGetter getFlour = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, Ingredient.Type.FLOUR), 1), tx, sync);
-				ItemGetter getHoney = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, Ingredient.Type.HONEY), 1), tx, sync);
-				ItemGetter getEggs = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, Ingredient.Type.EGG), 2), tx, sync);
-				
+				ItemGetter getFlour = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, Ingredient.Type.FLOUR), 1), tx, timeout, sync);
+				ItemGetter getHoney = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, Ingredient.Type.HONEY), 1), tx, timeout, sync);
+				ItemGetter getEggs = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, Ingredient.Type.EGG), 2), tx, timeout, sync);
+
 				executor.execute(getFlour);
 				executor.execute(getHoney);
 				executor.execute(getEggs);
@@ -88,6 +94,7 @@ public class BakerTest implements Runnable {
 				sync.await();
 				
 				if (getFlour.getResultEntries() == null || getHoney.getResultEntries() == null || getEggs.getResultEntries() == null) {
+					System.out.println("NOT ENOUGH ROLLBACK");
 					capi.rollbackTransaction(tx); // Not enough ingredients
 				}
 				else {
@@ -116,9 +123,9 @@ public class BakerTest implements Runnable {
 		while(true) {
 			/* Get at least enough for one */
 			getNextIngredient(MzsConstants.RequestTimeout.INFINITE);
-			
+
 			/* Try up to five */
-			/*getNextIngredient(1000L);
+			getNextIngredient(1000L);
 			if (getChargeSize() == 2) {
 				getNextIngredient(1000L);
 			}
@@ -127,7 +134,7 @@ public class BakerTest implements Runnable {
 			}
 			if (getChargeSize() == 4) {
 				getNextIngredient(1000L);
-			}*/
+			}
 			
 			System.out.println("SIZE: " + getChargeSize());
 			break;
@@ -139,7 +146,7 @@ public class BakerTest implements Runnable {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
 		MzsCore core = DefaultMzsCore.newInstance();
 		ExecutorService executor = Executors.newCachedThreadPool();
-		new BakerTest(core, executor).run();		
+		new BakerTest(core, executor).run();
 	}
 
 }

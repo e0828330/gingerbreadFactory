@@ -34,11 +34,12 @@ public class App {
 		
 		TransactionReference tx = capi.createTransaction(1000, new URI(spaceURL));
 		capi.write(container, new Entry(honey), new Entry(flour));	
+		capi.write(container, new Entry(honey), new Entry(flour));
 		capi.commitTransaction(tx);
 		Thread.sleep(3500);
 		tx = capi.createTransaction(1000, new URI(spaceURL));
 		capi.write(container, new Entry(egg), new Entry(egg2), new Entry(egg3));
+		capi.write(container, new Entry(egg), new Entry(egg2), new Entry(egg3));
 		capi.commitTransaction(tx);
-
 	}
 }
