@@ -1,7 +1,7 @@
 package factory.factory;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.mozartspaces.capi3.LindaCoordinator;
 import org.mozartspaces.core.Capi;
@@ -16,21 +16,14 @@ import org.mozartspaces.core.TransactionReference;
 import factory.entities.Ingredient;
 
 public class App {
+		
+	public static final String spaceURL = "xvsm://localhost:9876";
 	
-	private static ExecutorService executor;
-	
-	public static void main(String[] args) throws MzsCoreException, InterruptedException {
-		MzsCore core = DefaultMzsCore.newInstance(); // TODO: Server
+	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException {
+		MzsCore core = DefaultMzsCore.newInstance();
 		Capi capi = new Capi(core);
-		ContainerReference container = capi.createContainer("ingredients", null, 
+		ContainerReference container = capi.createContainer("ingredients", new URI(spaceURL), 
 															 MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false));
-		
-		
-		executor = Executors.newCachedThreadPool();
-		
-		executor.execute(new BakerTest(core, executor));
-		
-		Thread.sleep(2000);
 		
 		Ingredient honey = new Ingredient(1L, Ingredient.Type.HONEY);
 		Ingredient flour = new Ingredient(2L, Ingredient.Type.FLOUR);
@@ -39,20 +32,13 @@ public class App {
 		Ingredient egg3 = new Ingredient(5L, Ingredient.Type.EGG);
 	
 		
-		TransactionReference tx = capi.createTransaction(1000, null);
+		TransactionReference tx = capi.createTransaction(1000, new URI(spaceURL));
 		capi.write(container, new Entry(honey), new Entry(flour));	
 		capi.commitTransaction(tx);
 		Thread.sleep(3500);
-		tx = capi.createTransaction(1000, null);
+		tx = capi.createTransaction(1000, new URI(spaceURL));
 		capi.write(container, new Entry(egg), new Entry(egg2), new Entry(egg3));
 		capi.commitTransaction(tx);
-		
-		
-		
-		Thread.sleep(15000);
 
-		capi.destroyContainer(container, null);
-		core.shutdown(true);
-		executor.shutdownNow();
 	}
 }
