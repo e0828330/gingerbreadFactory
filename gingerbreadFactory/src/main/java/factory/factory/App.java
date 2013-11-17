@@ -14,6 +14,7 @@ import org.mozartspaces.core.MzsCoreException;
 import org.mozartspaces.core.TransactionReference;
 
 import factory.entities.Ingredient;
+import factory.utils.Utils;
 
 public class App {
 		
@@ -25,11 +26,11 @@ public class App {
 		ContainerReference container = capi.createContainer("ingredients", new URI(spaceURL), 
 															 MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false));
 		
-		Ingredient honey = new Ingredient(1L, Ingredient.Type.HONEY);
-		Ingredient flour = new Ingredient(2L, Ingredient.Type.FLOUR);
-		Ingredient egg = new Ingredient(3L, Ingredient.Type.EGG);
-		Ingredient egg2 = new Ingredient(4L, Ingredient.Type.EGG);
-		Ingredient egg3 = new Ingredient(5L, Ingredient.Type.EGG);
+		Ingredient honey = new Ingredient(Utils.getID(), Ingredient.Type.HONEY);
+		Ingredient flour = new Ingredient(Utils.getID(), Ingredient.Type.FLOUR);
+		Ingredient egg = new Ingredient(Utils.getID(), Ingredient.Type.EGG);
+		Ingredient egg2 = new Ingredient(Utils.getID(), Ingredient.Type.EGG);
+		Ingredient egg3 = new Ingredient(Utils.getID(), Ingredient.Type.EGG);
 	
 		
 		TransactionReference tx = capi.createTransaction(1000, new URI(spaceURL));
@@ -42,4 +43,5 @@ public class App {
 		capi.write(container, new Entry(egg), new Entry(egg2), new Entry(egg3));
 		capi.commitTransaction(tx);
 	}
+	
 }

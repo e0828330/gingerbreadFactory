@@ -60,13 +60,11 @@ public class BakerTest implements Runnable {
 				return;
 				
 			} catch (MzsCoreException e) {
-				e.printStackTrace();
 				resultEntries = null;
 			} catch (URISyntaxException e) {
 				resultEntries = null;
 			}
 			resultEntries = null;
-			System.out.println("OUT");
 			sync.countDown();
 		}
 
