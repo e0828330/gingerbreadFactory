@@ -20,7 +20,7 @@ import org.mozartspaces.core.TransactionReference;
 import factory.entities.Ingredient;
 import factory.factory.App;
 
-public class BakerTest implements Runnable {
+public class Baker implements Runnable {
 
 	private MzsCore core;
 	private ExecutorService executor;
@@ -29,11 +29,14 @@ public class BakerTest implements Runnable {
 	private ArrayList<Ingredient> eggs = new ArrayList<Ingredient>();
 	private ArrayList<Ingredient> flour = new ArrayList<Ingredient>();
 
-	public BakerTest(MzsCore core, ExecutorService executor) {
+	public Baker(MzsCore core, ExecutorService executor) {
 		this.core = core;
 		this.executor = executor;
 	}
 
+	/**
+	 * This thread gets items (Ingredients) from the space
+	 */
 	private class ItemGetter implements Runnable {
 
 		private ArrayList<Ingredient> resultEntries;
@@ -52,7 +55,7 @@ public class BakerTest implements Runnable {
 		public void run() {
 			Capi capi = new Capi(core);
 			try {
-				ContainerReference container = capi.lookupContainer("ingredients", new URI(App.spaceURL), 10, this.tx);
+				ContainerReference container = capi.lookupContainer("ingredients", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, this.tx);
 				resultEntries = capi.take(container, selector, timeout, this.tx);
 				sync.countDown();
 				
@@ -74,7 +77,12 @@ public class BakerTest implements Runnable {
 
 	}
 
-	private void getNextIngredient(Long timeout) {
+	/**
+	 * Gets the next ingredient set (2 eggs, 1 flour, 1 honey) from the space
+	 * 
+	 * @param timeout
+	 */
+	private void getNextIngredientSet(Long timeout) {
 		Capi capi = new Capi(core);
 		try {
 			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
@@ -112,26 +120,38 @@ public class BakerTest implements Runnable {
 		}
 	}
 	
+	/**
+	 * Returns the size of the current charge
+	 * 
+	 * @return
+	 */
 	private int getChargeSize() {
 		return flour.size();
+	}
+	
+	/**
+	 * Generates a new gingerbread
+	 */
+	private void mixGingerbread() {
+		// TODO
 	}
 	
 	public void run() {
 
 		while(true) {
 			/* Get at least enough for one */
-			getNextIngredient(MzsConstants.RequestTimeout.INFINITE);
+			getNextIngredientSet(MzsConstants.RequestTimeout.INFINITE);
 
 			/* Try up to five */
-			getNextIngredient(1000L);
+			getNextIngredientSet(1000L);
 			if (getChargeSize() == 2) {
-				getNextIngredient(1000L);
+				getNextIngredientSet(1000L);
 			}
 			if (getChargeSize() == 3) {
-				getNextIngredient(1000L);
+				getNextIngredientSet(1000L);
 			}
 			if (getChargeSize() == 4) {
-				getNextIngredient(1000L);
+				getNextIngredientSet(1000L);
 			}
 			
 			System.out.println("SIZE: " + getChargeSize());
@@ -144,7 +164,7 @@ public class BakerTest implements Runnable {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
 		MzsCore core = DefaultMzsCore.newInstance();
 		ExecutorService executor = Executors.newCachedThreadPool();
-		new BakerTest(core, executor).run();
+		new Baker(core, executor).run();
 	}
 
 }
