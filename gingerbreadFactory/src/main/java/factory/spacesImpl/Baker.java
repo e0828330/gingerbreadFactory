@@ -3,6 +3,7 @@ package factory.spacesImpl;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,22 +13,25 @@ import org.mozartspaces.capi3.LindaCoordinator.LindaSelector;
 import org.mozartspaces.core.Capi;
 import org.mozartspaces.core.ContainerReference;
 import org.mozartspaces.core.DefaultMzsCore;
+import org.mozartspaces.core.Entry;
 import org.mozartspaces.core.MzsConstants;
 import org.mozartspaces.core.MzsCore;
 import org.mozartspaces.core.MzsCoreException;
 import org.mozartspaces.core.TransactionReference;
 
+import factory.entities.GingerBread;
 import factory.entities.Ingredient;
 import factory.factory.App;
+import factory.utils.Utils;
 
 public class Baker implements Runnable {
 
 	private MzsCore core;
 	private ExecutorService executor;
 	
-	private ArrayList<Ingredient> honey = new ArrayList<Ingredient>();
-	private ArrayList<Ingredient> eggs = new ArrayList<Ingredient>();
-	private ArrayList<Ingredient> flour = new ArrayList<Ingredient>();
+	private LinkedList<Ingredient> honey = new LinkedList<Ingredient>();
+	private LinkedList<Ingredient> eggs = new LinkedList<Ingredient>();
+	private LinkedList<Ingredient> flour = new LinkedList<Ingredient>();
 
 	public Baker(MzsCore core, ExecutorService executor) {
 		this.core = core;
@@ -129,11 +133,27 @@ public class Baker implements Runnable {
 		return flour.size();
 	}
 	
-	/**
-	 * Generates a new gingerbread
-	 */
-	private void mixGingerbread() {
-		// TODO
+
+	private void processCharge() throws MzsCoreException, URISyntaxException {
+		Long chargeId = Utils.getID();
+		int size = getChargeSize();
+		Capi capi = new Capi(core);
+		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+		
+		for (int i = 0; i < size; i++) {
+			GingerBread tmp = new GingerBread();
+			tmp.setBakerId(0L); // TODO SET AT STARTUP
+			tmp.setChargeId(chargeId);
+			tmp.setFlourId(flour.poll().getId());
+			tmp.setHoneyId(honey.poll().getId());
+			tmp.setFirstEggId(eggs.poll().getId());
+			tmp.setSecondEggId(eggs.poll().getId());
+			tmp.setState(GingerBread.State.PRODUCED);
+			capi.write(gingerbreadsContainer, new Entry(tmp));
+		}
+	
+		// TODO oven + mark charge
+		
 	}
 	
 	public void run() {
@@ -158,7 +178,15 @@ public class Baker implements Runnable {
 			break;
 		}
 		System.out.println("DONE");
-		mixGingerbread();
+		try {
+			processCharge();
+		} catch (MzsCoreException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException {
