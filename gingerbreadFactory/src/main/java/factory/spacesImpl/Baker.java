@@ -158,6 +158,7 @@ public class Baker implements Runnable {
 			break;
 		}
 		System.out.println("DONE");
+		mixGingerbread();
 	}
 	
 	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException {
