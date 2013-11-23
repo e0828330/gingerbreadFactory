@@ -25,7 +25,7 @@ public class SupplierImpl implements Supplier {
 	
 	public void run() {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
-		MzsCore core = DefaultMzsCore.newInstance();
+		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
 		Capi capi = new Capi(core);
 		try {
 			ContainerReference container = capi.lookupContainer("ingredients", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);

@@ -163,7 +163,7 @@ public class Baker implements Runnable {
 	
 	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
-		MzsCore core = DefaultMzsCore.newInstance();
+		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
 		ExecutorService executor = Executors.newCachedThreadPool();
 		new Baker(core, executor).run();
 	}

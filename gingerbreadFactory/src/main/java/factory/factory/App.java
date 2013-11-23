@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.mozartspaces.capi3.KeyCoordinator;
 import org.mozartspaces.capi3.LindaCoordinator;
 import org.mozartspaces.core.Capi;
 import org.mozartspaces.core.DefaultMzsCore;
@@ -21,6 +22,8 @@ public class App {
 		MzsCore core = DefaultMzsCore.newInstance();
 		Capi capi = new Capi(core);
 		capi.createContainer("ingredients", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false));
+		capi.createContainer("oven", new URI(spaceURL), 10, null, new KeyCoordinator());
+		capi.createContainer("charges", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false));
 		
 		
 		System.out.println("Server running");
