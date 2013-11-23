@@ -8,6 +8,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.mozartspaces.capi3.KeyCoordinator;
 import org.mozartspaces.capi3.LindaCoordinator;
 import org.mozartspaces.capi3.LindaCoordinator.LindaSelector;
 import org.mozartspaces.core.Capi;
@@ -140,8 +141,11 @@ public class Baker implements Runnable {
 		Capi capi = new Capi(core);
 		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 		
+		ArrayList<GingerBread> currentCharge = new ArrayList<GingerBread>(size);
+		
 		for (int i = 0; i < size; i++) {
 			GingerBread tmp = new GingerBread();
+			tmp.setId(Utils.getID());
 			tmp.setBakerId(0L); // TODO SET AT STARTUP
 			tmp.setChargeId(chargeId);
 			tmp.setFlourId(flour.poll().getId());
@@ -150,9 +154,36 @@ public class Baker implements Runnable {
 			tmp.setSecondEggId(eggs.poll().getId());
 			tmp.setState(GingerBread.State.PRODUCED);
 			capi.write(gingerbreadsContainer, new Entry(tmp));
+			currentCharge.add(tmp);
 		}
-	
-		// TODO oven + mark charge
+		
+		boolean baked = false;	
+		
+		ContainerReference ovenContainer = capi.lookupContainer("oven", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+		do {
+			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
+			for (GingerBread tmp : currentCharge)  {
+				capi.write(ovenContainer, new Entry(tmp, KeyCoordinator.newCoordinationData(tmp.getId().toString())));
+			}
+			try {
+				capi.commitTransaction(tx);
+			}
+			catch (MzsCoreException e) {
+				capi.rollbackTransaction(tx);
+				continue;
+			}
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+
+			}
+			baked = true;
+		}
+		while (baked == false);
+		
+		// TODO: Remove from oven
+		// TODO: Change state
+		// TODO: Pass to QA
 		
 	}
 	
