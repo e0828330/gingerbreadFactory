@@ -1,5 +1,8 @@
 package factory.factory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -20,12 +23,31 @@ public class App {
 		
 	public static final String spaceURL = "xvsm://localhost:9876";
 	
-	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException {
+	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException, IOException {
 		MzsCore core = DefaultMzsCore.newInstance();
 		Capi capi = new Capi(core);
 		ContainerReference container = capi.createContainer("ingredients", new URI(spaceURL), 
 															 MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false));
 		
+		
+		System.out.println("Server running");
+		
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+		System.out.println("Type quit or exit to quit.");
+		
+		String input;
+		while ((input = br.readLine()) != null) {
+			 if (input.equals("quit") || input.equals("exit")) {
+				break;
+			}
+		}
+		
+		System.out.println("Shutting down.");
+		core.shutdown(true);
+		
+		
+		/*
 		Ingredient honey = new Ingredient(Utils.getID(), Ingredient.Type.HONEY);
 		Ingredient flour = new Ingredient(Utils.getID(), Ingredient.Type.FLOUR);
 		Ingredient egg = new Ingredient(Utils.getID(), Ingredient.Type.EGG);
@@ -41,7 +63,7 @@ public class App {
 		tx = capi.createTransaction(1000, new URI(spaceURL));
 		capi.write(container, new Entry(egg), new Entry(egg2), new Entry(egg3));
 		capi.write(container, new Entry(egg), new Entry(egg2), new Entry(egg3));
-		capi.commitTransaction(tx);
+		capi.commitTransaction(tx);*/
 	}
 	
 }
