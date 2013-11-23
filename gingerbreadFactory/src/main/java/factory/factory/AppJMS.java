@@ -16,6 +16,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import factory.entities.Ingredient;
+import factory.utils.Utils;
 
 public class AppJMS {
 
@@ -41,7 +42,7 @@ public class AppJMS {
 		connection.start();
 		
 		ObjectMessage msg = session.createObjectMessage();
-		msg.setObject(new Ingredient(1l, Ingredient.Type.EGG));
+		msg.setObject(new Ingredient(null, Utils.getID(), Ingredient.Type.EGG));
 		messageProducer.send(msg);
 		session.close();
 		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

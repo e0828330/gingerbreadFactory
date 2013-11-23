@@ -89,9 +89,9 @@ public class Baker implements Runnable {
 			try {
 				CountDownLatch sync = new CountDownLatch(3);
 				
-				ItemGetter getFlour = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, Ingredient.Type.FLOUR), 1), tx, timeout, sync);
-				ItemGetter getHoney = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, Ingredient.Type.HONEY), 1), tx, timeout, sync);
-				ItemGetter getEggs = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, Ingredient.Type.EGG), 2), tx, timeout, sync);
+				ItemGetter getFlour = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.FLOUR), 1), tx, timeout, sync);
+				ItemGetter getHoney = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.HONEY), 1), tx, timeout, sync);
+				ItemGetter getEggs = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.EGG), 2), tx, timeout, sync);
 
 				executor.execute(getFlour);
 				executor.execute(getHoney);

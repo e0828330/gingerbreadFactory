@@ -8,6 +8,7 @@ public class Ingredient implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 	private Long id;
+	private Long supplierId;
 	
 	public enum Type {
 		HONEY,
@@ -18,14 +19,23 @@ public class Ingredient implements Serializable {
 	private Type type;
 
 	
-	public Ingredient(Long id, Type type) {
+	public Long getId() {
+		return id;
+	}
+
+	public Long getSupplierId() {
+		return supplierId;
+	}
+
+	public Ingredient(Long supplierId, Long id, Type type) {
 		this.id = id;
 		this.type = type;
+		this.supplierId = supplierId;
 	}
 	
 	 @Override
      public String toString() {
-		 return "[ " + this.id + " - " + this.type + " ]";
+		 return "[ | " + this.getSupplierId() + " | " + this.getId() + " - " + this.type + " ]";
 	 }
 
 }
