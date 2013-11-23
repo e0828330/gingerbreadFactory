@@ -1,0 +1,11 @@
+<mozartspacesCoreConfig>
+	<embeddedSpace>false</embeddedSpace>
+	<remoting>
+		<transports>
+			<tcpsocket scheme="xvsm">
+				<receiverPort>0</receiverPort>
+			</tcpsocket>
+		</transports>
+	</remoting>
+	<spaceURI>${remoting.defaultScheme}://localhost:${remoting.transports.tcpsocket.receiverPort}</spaceURI>
+</mozartspacesCoreConfig>

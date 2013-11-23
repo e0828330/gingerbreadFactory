@@ -7,7 +7,7 @@ import factory.entities.Ingredient;
  * 
  *
  */
-public interface Supplier {
+public interface Supplier extends Runnable {
 	/**
 	 * Sets the suppliers ID
 	 * 
