@@ -33,7 +33,7 @@ public class SupplierImpl implements Supplier {
 				Ingredient item =  new Ingredient(id, Utils.getID(), type);
 				capi.write(container, new Entry(item));
 				System.out.println("Unloaded:" + item);
-				Thread.sleep(2000);
+				Thread.sleep(Utils.getRandomWaitTime());
 			}
 		} catch (MzsCoreException e) {
 			e.printStackTrace();

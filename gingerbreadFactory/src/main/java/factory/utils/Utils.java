@@ -25,4 +25,13 @@ public class Utils {
 		return 0L;
 		
 	}
+	
+	/**
+	 * Returns a number between 1000 and 2000
+	 * can be used to wait "1-2 seconds"
+	 * @return
+	 */
+	public static int getRandomWaitTime() {
+		return (int) (1000 + Math.random() * 1000);
+	}
 }
