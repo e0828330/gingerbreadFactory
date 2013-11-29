@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.jms.JMSException;
+import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
@@ -12,6 +13,11 @@ import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
+import javax.jms.Topic;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.jms.TopicPublisher;
+import javax.jms.TopicSession;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -31,9 +37,15 @@ public class JMSServerInstance implements Runnable {
 	private QueueSession ingredientsDelivery_session;
 	private Queue ingredientsDelivery_queue;
 	
-	private QueueSender ingredientsDelivery_sender;
+	//private QueueSender ingredientsDelivery_sender;
 	private QueueReceiver ingredientsDelivery_receiver;
 
+	// ingredient topic
+	private Topic ingredientsTopic_topic;
+	private TopicConnection ingredientsTopic_connection;
+	private TopicSession ingredientsTopic_session;
+	private TopicPublisher ingredientsTopic_publisher;
+	
 	private ArrayList<Ingredient> honey_list;
 	private ArrayList<Ingredient> flour_list;
 	private ArrayList<Ingredient> egg_list;
@@ -50,9 +62,28 @@ public class JMSServerInstance implements Runnable {
 		this.flour_list = new ArrayList<Ingredient>();
 		this.egg_list = new ArrayList<Ingredient>();
 		
-		// Set queue connection for communication with server
+		// Set queue connection for ingredients
 		this.setup_ingredientsQueue();
+		
+		// Set topic for ingredients
+		this.setup_ingredientsTopic();
 
+		
+	}
+	
+	private void setup_ingredientsTopic() throws NamingException, JMSException {
+		this.logger.info("Initializing topic for ingredients...", (Object[]) null); 
+		TopicConnectionFactory topicConnectionFactory = 
+				  (TopicConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		
+		this.ingredientsTopic_topic = (Topic) ctx.lookup("ingredientsTopic");
+		
+		this.ingredientsTopic_connection = topicConnectionFactory.createTopicConnection();
+		
+		this.ingredientsTopic_session = this.ingredientsTopic_connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+	
+		this.ingredientsTopic_publisher = this.ingredientsTopic_session.createPublisher(this.ingredientsTopic_topic);
+	
 		
 	}
 	
@@ -73,7 +104,7 @@ public class JMSServerInstance implements Runnable {
 		
 		this.ingredientsDelivery_receiver.setMessageListener(incredientsDelivery_listener);
 		
-		this.ingredientsDelivery_sender = this.ingredientsDelivery_session.createSender(ingredientsDelivery_queue);
+		//this.ingredientsDelivery_sender = this.ingredientsDelivery_session.createSender(ingredientsDelivery_queue);
 		
 		this.ingredientsDelivery_connection.start();	
 		this.logger.info("Queue for incredients created and connection started.", (Object[]) null); 
@@ -94,14 +125,22 @@ public class JMSServerInstance implements Runnable {
 	}
 	
 	private void close() throws JMSException {
-		this.logger.info("Closing ingredients sender.", (Object[]) null);
-		this.ingredientsDelivery_sender.close();
-		this.logger.info("Closing ingredients receiver.", (Object[]) null);
+		//this.logger.info("Closing ingredients sender for queue.", (Object[]) null);
+		//this.ingredientsDelivery_sender.close();
+		this.logger.info("Closing ingredients receiver for queue.", (Object[]) null);
 		this.ingredientsDelivery_receiver.close();
-		this.logger.info("Closing ingredients session.", (Object[]) null);
+		this.logger.info("Closing ingredients session for queue.", (Object[]) null);
 		this.ingredientsDelivery_session.close();
-		this.logger.info("Closing ingredients connection.", (Object[]) null);
+		this.logger.info("Closing ingredients connection for queue.", (Object[]) null);
 		this.ingredientsDelivery_connection.close();
+		
+		this.logger.info("Closing ingredients publisher for topic.", (Object[]) null);
+		this.ingredientsTopic_publisher.close();
+		this.logger.info("Closing ingredients session for topic.", (Object[]) null);
+		this.ingredientsTopic_session.close();
+		this.logger.info("Closing ingredients connection for topic.", (Object[]) null);
+		this.ingredientsTopic_connection.close();
+		
 		this.logger.info("ServerInstance shutting down.", (Object[]) null); 
 	}
 	
@@ -109,19 +148,34 @@ public class JMSServerInstance implements Runnable {
 		this.isRunning = false;
 	}
 	
-	public void storeIncredient(Ingredient incredient) {
-		if (incredient.getType() == Ingredient.Type.FLOUR) {
+	public void storeIncredient(Ingredient ingredient) {
+		if (ingredient.getType() == Ingredient.Type.FLOUR) {
 			this.logger.info("Added flour to list.", (Object[]) null); 
-			this.flour_list.add(incredient);
+			this.flour_list.add(ingredient);
 		}
-		else if (incredient.getType() == Ingredient.Type.HONEY) {
+		else if (ingredient.getType() == Ingredient.Type.HONEY) {
 			this.logger.info("Added honey to list.", (Object[]) null); 
-			this.flour_list.add(incredient);
+			this.flour_list.add(ingredient);
 		}
-		else if (incredient.getType() == Ingredient.Type.EGG) {
+		else if (ingredient.getType() == Ingredient.Type.EGG) {
 			this.logger.info("Added egg to list.", (Object[]) null); 
-			this.egg_list.add(incredient);
+			this.egg_list.add(ingredient);
 		}
+		// Publish new ingredient
+		this.publishIngredient(ingredient);
+	}
+	
+	private void publishIngredient(Ingredient ingredient) {
+		try {
+			ObjectMessage objectMessage = this.ingredientsDelivery_session.createObjectMessage();
+			objectMessage.setObject(ingredient.getType());
+			this.ingredientsTopic_publisher.publish(objectMessage);
+		}
+		catch (JMSException e) {
+			this.logger.error("Cannot publish ingredient " + ingredient.getType().toString(), (Object[]) null);
+			e.printStackTrace();
+		}
+		this.logger.info("Published " + ingredient.getType().toString(), (Object[]) null);
 	}
 	
 	public QueueSession getIngredientsDelivery_session() {

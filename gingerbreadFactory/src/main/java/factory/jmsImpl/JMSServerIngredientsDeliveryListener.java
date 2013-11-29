@@ -23,18 +23,14 @@ public class JMSServerIngredientsDeliveryListener implements MessageListener {
 		this.server = jmsServerInstance;
 	}
 
-	@SuppressWarnings("unchecked")
 	public void onMessage(Message message) {
 		this.logger.info("Message received in ingredients queue.", (Object[]) null);
 		
 		ObjectMessage objectMessage = (ObjectMessage) message;
 		
 		try {
-			ArrayList<Ingredient> data;
-			data = (ArrayList<Ingredient>) objectMessage.getObject();
-		
-			for (Ingredient ingredient : data) {
-				this.server.storeIncredient(ingredient);
+			if (objectMessage.getObject() instanceof Ingredient) {
+				this.server.storeIncredient((Ingredient) objectMessage.getObject());
 			}
 			this.server.getIngredientsDelivery_session().commit();		
 		} catch (JMSException e) {

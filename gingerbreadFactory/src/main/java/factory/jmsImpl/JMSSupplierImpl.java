@@ -93,12 +93,13 @@ public class JMSSupplierImpl implements Supplier {
 					Thread.sleep(Utils.getRandomWaitTime());
 				}
 				// send them as object message
-				if (this.ingredients.size() > 0) {
+				for (Ingredient ingredient : this.ingredients) {
 					ObjectMessage objectMessage = this.ingredientsDelivery_session.createObjectMessage();
-					objectMessage.setObject(this.ingredients);
+					objectMessage.setObject(ingredient);
 					this.ingredientsDelivery_sender.send(objectMessage);
-					this.ingredientsDelivery_session.commit();
+					
 				}
+				this.ingredientsDelivery_session.commit();
 			}
 			catch (InterruptedException e) {
 				e.printStackTrace();
