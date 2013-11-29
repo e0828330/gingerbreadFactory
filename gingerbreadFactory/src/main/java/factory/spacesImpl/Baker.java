@@ -21,6 +21,7 @@ import org.mozartspaces.core.MzsCoreException;
 import org.mozartspaces.core.TransactionReference;
 
 import factory.entities.GingerBread;
+import factory.entities.GingerBread.State;
 import factory.entities.Ingredient;
 import factory.factory.App;
 import factory.utils.Utils;
@@ -163,7 +164,7 @@ public class Baker implements Runnable {
 		do {
 			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
 			for (GingerBread tmp : currentCharge)  {
-				capi.write(ovenContainer, new Entry(tmp, KeyCoordinator.newCoordinationData(tmp.getId().toString())));
+				capi.write(new Entry(tmp, KeyCoordinator.newCoordinationData(tmp.getId().toString())), ovenContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 			}
 			try {
 				capi.commitTransaction(tx);
@@ -181,10 +182,28 @@ public class Baker implements Runnable {
 		}
 		while (baked == false);
 		
-		// TODO: Remove from oven
-		// TODO: Change state
-		// TODO: Pass to QA
-		
+		TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
+		try {
+			ArrayList<GingerBread> items;
+			for (GingerBread tmp : currentCharge)  {
+				GingerBread current = null;
+				// Remove from oven
+				items = capi.take(ovenContainer, KeyCoordinator.newSelector(tmp.getId().toString()), MzsConstants.RequestTimeout.INFINITE, tx);
+				current = items.get(0);
+				// Remove from list
+				capi.take(gingerbreadsContainer, LindaCoordinator.newSelector(current), MzsConstants.RequestTimeout.INFINITE, tx);;
+				current.setState(State.BAKED);
+				capi.write(new Entry(current), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+			}
+			capi.commitTransaction(tx);
+			currentCharge.clear();
+		}
+		catch (MzsCoreException e) {
+			capi.rollbackTransaction(tx);
+		}
+
+		ContainerReference chargeContainer = capi.lookupContainer("charges", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+		capi.write(chargeContainer, new Entry(chargeId));
 	}
 	
 	public void run() {
@@ -212,10 +231,8 @@ public class Baker implements Runnable {
 		try {
 			processCharge();
 		} catch (MzsCoreException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
