@@ -14,7 +14,7 @@ public class JMSServer {
 			Thread thread = new Thread(jmsServerInstance);
 			thread.start();
 			
-			jmsServerInstance.shutDown();
+			//jmsServerInstance.shutDown();
 		}
 		catch (IOException e) {
 			// TODO handling

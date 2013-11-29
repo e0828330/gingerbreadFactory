@@ -1,10 +1,21 @@
 package factory.jmsImpl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.ObjectMessage;
+
+import org.apache.qpid.transport.util.Logger;
+
+import factory.entities.Ingredient;
 
 public class JMSServerIngredientsDeliveryListener implements MessageListener {
 
+	private Logger logger = Logger.get(getClass());
+	
 	private JMSServerInstance server;
 	
 	public JMSServerIngredientsDeliveryListener(
@@ -12,8 +23,27 @@ public class JMSServerIngredientsDeliveryListener implements MessageListener {
 		this.server = jmsServerInstance;
 	}
 
-	public void onMessage(Message arg0) {
+	@SuppressWarnings("unchecked")
+	public void onMessage(Message message) {
+		this.logger.info("Message received in ingredients queue.", (Object[]) null);
+		
+		ObjectMessage objectMessage = (ObjectMessage) message;
+		
+		try {
+			ArrayList<Ingredient> data;
+			data = (ArrayList<Ingredient>) objectMessage.getObject();
+		
+			for (Ingredient ingredient : data) {
+				this.server.storeIncredient(ingredient);
+			}
+			this.server.getIngredientsDelivery_session().commit();		
+		} catch (JMSException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			this.logger.error("Error occured by parsing message from ingredients queue.", (Object[]) null);
+			e.printStackTrace();
+		}
+		
 		
 	}
-
 }
