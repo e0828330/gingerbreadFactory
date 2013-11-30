@@ -100,7 +100,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 
 	public void run() {
 		do {
-
+			// TODO: On startup send request for ingredients
 		} while (isRunning);
 		try {
 			this.close();
@@ -111,6 +111,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	}
 	
 	public void sendRequestForIngredients() {
+		// TODO: Disconnect from Topic to avoid new receiving messages
 		try {
 			Destination tempDest = this.bakerIngredients_session.createTemporaryQueue();
 			MessageConsumer responseConsumer = bakerIngredients_session.createConsumer(tempDest);
@@ -145,7 +146,14 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 		this.logger.info("BakerInstance shutting down.", (Object[]) null); 		
 	}
 
+	/**
+	 * Receiving responses from server to requests for ingredients
+	 */
 	public void onMessage(Message message) {
 		this.logger.info("Response of ingredient-request received.", (Object[]) null); 
+		// TODO: Receive message
+		// TODO: Process ingredients (bake)
+		// TODO: If ready, ask again for new ingredients
+		// TODO: If no new ingredients are returend, Reconnect to Topic
 	}
 }
