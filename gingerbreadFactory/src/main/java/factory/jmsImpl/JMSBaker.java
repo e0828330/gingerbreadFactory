@@ -1,47 +1,22 @@
 package factory.jmsImpl;
 
-import javax.jms.Topic;
-import javax.jms.TopicConnection;
-import javax.jms.TopicSession;
-import javax.jms.TopicSubscriber;
+import java.io.IOException;
+
+import javax.naming.NamingException;
 
 public class JMSBaker {
 
 	public static void main(String[] args) {
-		JMSBakerInstance baker = new JMSBaker.JMSBakerInstance();
-		Thread bakerThread = new Thread(baker);	
-		bakerThread.start();
-	}
-	
-	private static class JMSBakerInstance implements Runnable {
-	
-		private boolean isRunning = true;
-		
-		// ingredients topic attributes
-		private Topic ingredientsTopic_topic;
-		private TopicConnection ingredientsTopic_connection;
-		private TopicSession ingredientsTopic_session;
-		private TopicSubscriber ingredientsTopic_subscriber;	
-		
-		public JMSBakerInstance() {
-			// TODO Auto-generated constructor stub
+		try {
+			JMSBakerInstance baker = new JMSBakerInstance("jms.properties");
+			Thread bakerThread = new Thread(baker);	
+			bakerThread.start();
 		}
-	
-		public void run() {
-			do {
-				
-				
-			} while (isRunning);
-			this.close();
+		catch (IOException e) {
+			e.printStackTrace();
 		}
-		
-		public void shutDown() {
-			this.isRunning = false;
-		}
-		
-		private void close() {
-			
+		catch (NamingException e) {
+			e.printStackTrace();
 		}
 	}
-
 }

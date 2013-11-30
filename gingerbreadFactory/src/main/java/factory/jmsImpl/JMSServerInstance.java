@@ -180,7 +180,7 @@ public class JMSServerInstance implements Runnable {
 			this.count_gingerBread_flour -= 1;
 			this.count_gingerBread_honey -= 1;
 			try {
-				TextMessage message = this.ingredientsDelivery_session.createTextMessage("");
+				TextMessage message = this.ingredientsDelivery_session.createTextMessage("INGREDIENTS_READY");
 				this.ingredientsTopic_publisher.publish(message);
 			}
 			catch (JMSException e) {
