@@ -26,7 +26,7 @@ import factory.entities.Ingredient;
 import factory.factory.App;
 import factory.utils.Utils;
 
-public class Baker implements Runnable {
+public class Baker {
 
 	private MzsCore core;
 	private ExecutorService executor;
