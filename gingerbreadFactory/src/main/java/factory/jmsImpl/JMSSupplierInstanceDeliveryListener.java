@@ -5,11 +5,11 @@ import javax.jms.MessageListener;
 
 import factory.interfaces.Supplier;
 
-public class JMSSupplierImplDeliveryListener implements MessageListener {
+public class JMSSupplierInstanceDeliveryListener implements MessageListener {
 
 	private Supplier supplier;
 	
-	public JMSSupplierImplDeliveryListener(Supplier supplier) {
+	public JMSSupplierInstanceDeliveryListener(Supplier supplier) {
 		this.supplier = supplier;
 	}
 	

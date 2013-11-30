@@ -13,6 +13,7 @@ import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
@@ -49,6 +50,12 @@ public class JMSServerInstance implements Runnable {
 	private ArrayList<Ingredient> honey_list;
 	private ArrayList<Ingredient> flour_list;
 	private ArrayList<Ingredient> egg_list;
+	
+	private int count_gingerBread_eggs = 0;
+	private int count_gingerBread_honey = 0;
+	private int count_gingerBread_flour = 0;
+	
+	private int gingerBreadCounter = 0;
 	
 	private JMSServerIngredientsDeliveryListener incredientsDelivery_listener;
 	
@@ -148,34 +155,59 @@ public class JMSServerInstance implements Runnable {
 		this.isRunning = false;
 	}
 	
-	public void storeIncredient(Ingredient ingredient) {
+	
+	public synchronized void storeIncredient(Ingredient ingredient) {
+		this.logger.info("Stored " + ingredient.getType().toString(), (Object[]) null);
 		if (ingredient.getType() == Ingredient.Type.FLOUR) {
 			this.logger.info("Added flour to list.", (Object[]) null); 
 			this.flour_list.add(ingredient);
+			this.count_gingerBread_flour++;
 		}
 		else if (ingredient.getType() == Ingredient.Type.HONEY) {
 			this.logger.info("Added honey to list.", (Object[]) null); 
 			this.honey_list.add(ingredient);
+			this.count_gingerBread_honey++;
 		}
 		else if (ingredient.getType() == Ingredient.Type.EGG) {
 			this.logger.info("Added egg to list.", (Object[]) null); 
 			this.egg_list.add(ingredient);
+			this.count_gingerBread_eggs++;
 		}
 		// Publish new ingredient
-		this.publishIngredient(ingredient);
+		//this.publishIngredients(ingredient);
+		this.logger.info("Published new gingerbread.\n"
+				+ "Remaining eggs = " + this.count_gingerBread_eggs + "\n"
+				+ "Remaining flour = " + this.count_gingerBread_flour + "\n"
+				+ "Remaining honey = " + this.count_gingerBread_honey + "\n"
+				+ "Enough for gingerbread = " + this.gingerBreadCounter, (Object[]) null);	
+		this.logger.info("Published new gingerbread.\n"
+				+ "Remaining eggs = " + egg_list.size() + "\n"
+				+ "Remaining flour = " + flour_list.size() + "\n"
+				+ "Remaining honey = " + honey_list.size() + "\n"
+				+ "Enough for gingerbread = " + this.gingerBreadCounter, (Object[]) null);			
 	}
 	
-	private void publishIngredient(Ingredient ingredient) {
-		try {
-			ObjectMessage objectMessage = this.ingredientsDelivery_session.createObjectMessage();
-			objectMessage.setObject(ingredient.getType());
-			this.ingredientsTopic_publisher.publish(objectMessage);
+	
+	private void publishIngredients(Ingredient ingredient) {
+		if (this.count_gingerBread_eggs >= 2 && this.count_gingerBread_flour >= 1 && this.count_gingerBread_honey >= 1) {
+			this.gingerBreadCounter++;
+			this.count_gingerBread_eggs -= 2;
+			this.count_gingerBread_flour -= 1;
+			this.count_gingerBread_honey -= 1;
+			try {
+				TextMessage message = this.ingredientsDelivery_session.createTextMessage("");
+				this.ingredientsTopic_publisher.publish(message);
+			}
+			catch (JMSException e) {
+				this.logger.error("Cannot publish new gingerbread.", (Object[]) null);
+				e.printStackTrace();
+			}			
+			this.logger.info("Published new gingerbread.\n"
+					+ "Remaining eggs = " + this.count_gingerBread_eggs + "\n"
+					+ "Remaining flour = " + this.count_gingerBread_flour + "\n"
+					+ "Remaining honey = " + this.count_gingerBread_honey + "\n"
+					+ "Enough for gingerbread = " + this.gingerBreadCounter, (Object[]) null);			
 		}
-		catch (JMSException e) {
-			this.logger.error("Cannot publish ingredient " + ingredient.getType().toString(), (Object[]) null);
-			e.printStackTrace();
-		}
-		this.logger.info("Published " + ingredient.getType().toString(), (Object[]) null);
 	}
 	
 	public QueueSession getIngredientsDelivery_session() {

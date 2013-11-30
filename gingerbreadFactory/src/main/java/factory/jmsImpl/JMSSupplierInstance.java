@@ -23,7 +23,7 @@ import factory.entities.Ingredient.Type;
 import factory.interfaces.Supplier;
 import factory.utils.Utils;
 
-public class JMSSupplierImpl implements Supplier {
+public class JMSSupplierInstance implements Supplier {
 
 	private Long id;
 	private int amount;
@@ -41,13 +41,13 @@ public class JMSSupplierImpl implements Supplier {
 	private QueueSender ingredientsDelivery_sender;
 	private QueueReceiver ingredientsDelivery_receiver;
 	
-	private JMSSupplierImplDeliveryListener incredientsDelivery_listener;
+	private JMSSupplierInstanceDeliveryListener incredientsDelivery_listener;
 	
 	// produced ingredients
 	private ArrayList<Ingredient> ingredients;
 
 	
-	public JMSSupplierImpl(String propertiesFile) throws IOException, NamingException, JMSException {
+	public JMSSupplierInstance(String propertiesFile) throws IOException, NamingException, JMSException {
 		Properties properties = new Properties();
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(propertiesFile));
 		this.ctx = new InitialContext(properties);
@@ -70,7 +70,7 @@ public class JMSSupplierImpl implements Supplier {
 		
 		this.ingredientsDelivery_session = this.ingredientsDelivery_connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);
 		
-		this.incredientsDelivery_listener = new JMSSupplierImplDeliveryListener(this);
+		this.incredientsDelivery_listener = new JMSSupplierInstanceDeliveryListener(this);
 		
 		this.ingredientsDelivery_receiver = this.ingredientsDelivery_session.createReceiver(this.ingredientsDelivery_queue);
 		
@@ -123,7 +123,7 @@ public class JMSSupplierImpl implements Supplier {
 		this.ingredientsDelivery_session.close();
 		this.logger.info("Closing ingredients connection.", (Object[]) null);
 		this.ingredientsDelivery_connection.close();
-		this.logger.info("ServerInstance shutting down.", (Object[]) null); 
+		this.logger.info("SupplierInstance shutting down.", (Object[]) null); 
 	}	
 
 	public void setId(Long id) {
