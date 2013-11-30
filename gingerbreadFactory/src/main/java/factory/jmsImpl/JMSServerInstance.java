@@ -155,7 +155,7 @@ public class JMSServerInstance implements Runnable {
 		}
 		else if (ingredient.getType() == Ingredient.Type.HONEY) {
 			this.logger.info("Added honey to list.", (Object[]) null); 
-			this.flour_list.add(ingredient);
+			this.honey_list.add(ingredient);
 		}
 		else if (ingredient.getType() == Ingredient.Type.EGG) {
 			this.logger.info("Added egg to list.", (Object[]) null); 

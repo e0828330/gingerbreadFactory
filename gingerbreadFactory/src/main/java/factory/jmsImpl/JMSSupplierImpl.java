@@ -17,7 +17,6 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.apache.qpid.transport.util.Logger;
-import org.mozartspaces.core.Entry;
 
 import factory.entities.Ingredient;
 import factory.entities.Ingredient.Type;
