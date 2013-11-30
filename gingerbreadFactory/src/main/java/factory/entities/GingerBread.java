@@ -29,7 +29,8 @@ public class GingerBread implements Serializable {
 		IN_OVEN,
 		BAKED,
 		CONTROLLED,
-		GARBAGE
+		GARBAGE,
+		DELIVERED
 	}
 	
 	private State state;

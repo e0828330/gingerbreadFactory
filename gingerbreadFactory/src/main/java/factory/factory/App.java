@@ -26,6 +26,7 @@ public class App {
 		capi.createContainer("charges", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 		capi.createContainer("oven", new URI(spaceURL), 10, null, new KeyCoordinator());
 		capi.createContainer("gingerbreads", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false));
+		capi.createContainer("qaPassed", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 		
 		System.out.println("Server running");
 		

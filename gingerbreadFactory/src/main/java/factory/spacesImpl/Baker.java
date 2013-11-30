@@ -136,8 +136,7 @@ public class Baker implements Runnable {
 	}
 	
 
-	private void processCharge() throws MzsCoreException, URISyntaxException {
-		Long chargeId = Utils.getID();
+	private void processCharge(Long chargeId) throws MzsCoreException, URISyntaxException {
 		int size = getChargeSize();
 		Capi capi = new Capi(core);
 		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
@@ -208,6 +207,8 @@ public class Baker implements Runnable {
 	
 	public void run() {
 
+		// TODO: Pick up unfinished tasks
+		
 		while(true) {
 			/* Get at least enough for one */
 			getNextIngredientSet(MzsConstants.RequestTimeout.INFINITE);
@@ -229,7 +230,7 @@ public class Baker implements Runnable {
 		}
 		System.out.println("DONE");
 		try {
-			processCharge();
+			processCharge(Utils.getID());
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		} catch (URISyntaxException e) {
