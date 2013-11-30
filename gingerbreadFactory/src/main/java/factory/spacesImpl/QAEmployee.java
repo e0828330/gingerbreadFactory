@@ -33,6 +33,9 @@ public class QAEmployee {
 	
 	public void run() {
 		Capi capi = new Capi(core);
+		
+		boolean needsCheck = false;
+		
 		while (true) {
 			try {
 				ContainerReference chargeContainer = capi.lookupContainer("charges", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
@@ -53,10 +56,10 @@ public class QAEmployee {
 				Collections.shuffle(testList);
 				
 				// Mark as controlled or garbage based on the defectRate
-				if (Math.random() < defectRate) {
+				if (Math.random() < defectRate && needsCheck) {
 					for (GingerBread tested : testList) {
 						tested.setState(State.GARBAGE);
-						System.out.println("Gargabe");
+						System.out.println("GARBAGE");
 					}
 				}
 				else {
@@ -67,10 +70,14 @@ public class QAEmployee {
 				}
 				
 				boolean eatedSkipped = false; // We need to skip the first one because we did eat it
+				if (!needsCheck) {
+					eatedSkipped = true; // No check means nothing eaten
+				}
 				for (GingerBread tested : testList) {
 					tested.setQaId(id);
 					capi.write(new Entry(tested), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 					// Ready for delivery
+					System.out.println(tested);
 					if (eatedSkipped && tested.getState().equals(State.CONTROLLED)) {
 						capi.write(new Entry(tested.getId()), qaPassedContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 					}
@@ -83,6 +90,9 @@ public class QAEmployee {
 				catch (MzsCoreException e) {
 					capi.rollbackTransaction(tx);
 				}
+				
+				// Toggle needs check state
+				needsCheck = !needsCheck;
 				
 			} catch (MzsCoreException e) {
 				e.printStackTrace();

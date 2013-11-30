@@ -54,10 +54,6 @@ public class Main {
 				public void entryOperationFinished(Notification arg0, Operation arg1,
 						List<? extends Serializable> arg2) {
 					System.out.println("OVEN - NOTIFY!");
-					for (Object tmp : arg2) {
-						GingerBread gb = (GingerBread)((Entry) tmp).getValue();
-						System.out.println(gb.getId());
-					}
 				}
 			}, Operation.WRITE, Operation.DELETE, Operation.TAKE);
 		} catch (MzsCoreException e) {
