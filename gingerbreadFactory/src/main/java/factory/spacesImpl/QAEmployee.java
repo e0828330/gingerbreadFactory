@@ -42,8 +42,7 @@ public class QAEmployee {
 				TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
 				
 				// Get next charge
-				ArrayList<Long> items = capi.take(chargeContainer, FifoCoordinator.newSelector(), MzsConstants.RequestTimeout.INFINITE, tx);
-				Long chargeId = items.get(0);
+				Long chargeId =  (Long) capi.take(chargeContainer, FifoCoordinator.newSelector(), MzsConstants.RequestTimeout.INFINITE, tx).get(0);
 				
 				// Get gingerbreads of this charge
 				GingerBread tpl = new GingerBread();
@@ -73,7 +72,7 @@ public class QAEmployee {
 					capi.write(new Entry(tested), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 					// Ready for delivery
 					if (eatedSkipped && tested.getState().equals(State.CONTROLLED)) {
-						capi.write(new Entry(tested), qaPassedContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+						capi.write(new Entry(tested.getId()), qaPassedContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 					}
 					eatedSkipped = true;
 				}
