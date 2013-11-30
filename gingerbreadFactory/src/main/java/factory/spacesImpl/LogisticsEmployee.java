@@ -34,24 +34,18 @@ public class LogisticsEmployee {
 			try {
 				ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 				ContainerReference qaPassedContainer = capi.lookupContainer("qaPassed", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
-				
-				System.out.println("got containers");
-				
+								
 				TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
 				
-				System.out.println("got tx");
 				// Get next 6
-				ArrayList<Long> ids = capi.take(qaPassedContainer, FifoCoordinator.newSelector(), MzsConstants.RequestTimeout.INFINITE, tx);
+				ArrayList<Long> ids = capi.take(qaPassedContainer, FifoCoordinator.newSelector(6), MzsConstants.RequestTimeout.INFINITE, tx);
 				System.out.println(ids);
 				for (Long gid : ids) {
 					GingerBread current = null;
 					GingerBread tpl = new GingerBread();
-					tpl.setChargeId(gid);
-					//tpl.setState(State.CONTROLLED);
+					tpl.setId(gid);
 					// Get, update state and write back
-					System.out.println("QUERY");
 					current = (GingerBread) capi.take(gingerbreadsContainer, LindaCoordinator.newSelector(tpl), MzsConstants.RequestTimeout.INFINITE, tx).get(0);
-					System.out.println("RES");
 					current.setLogisticsId(id);
 					current.setState(State.DONE);
 					capi.write(new Entry(current), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);

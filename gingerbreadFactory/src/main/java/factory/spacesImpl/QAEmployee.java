@@ -29,8 +29,7 @@ public class QAEmployee {
 	public QAEmployee(MzsCore core) {
 		this.core = core;
 	}
-	
-	
+
 	public void run() {
 		Capi capi = new Capi(core);
 		
@@ -78,9 +77,9 @@ public class QAEmployee {
 					capi.write(new Entry(tested), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 					// Ready for delivery
 					System.out.println(tested);
-				//	if (eatedSkipped && tested.getState().equals(State.CONTROLLED)) {
+					if (eatedSkipped && tested.getState().equals(State.CONTROLLED)) {
 						capi.write(new Entry(tested.getId()), qaPassedContainer, MzsConstants.RequestTimeout.INFINITE, tx);
-//					}
+					}
 					eatedSkipped = true;
 				}
 				
