@@ -1,10 +1,12 @@
-package factory.jmsImpl;
+package factory.jmsImpl.server;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -37,8 +39,15 @@ public class JMSServerInstance implements Runnable {
 	private QueueConnection ingredientsDelivery_connection;
 	private QueueSession ingredientsDelivery_session;
 	private Queue ingredientsDelivery_queue;
-	
 	private QueueReceiver ingredientsDelivery_receiver;
+	
+	// baker queue
+	private QueueConnection bakerIngredients_connection;
+	private QueueSession bakerIngredients_session;
+	private Queue bakerIngredients_queue;
+	private QueueReceiver bakerIngredients_receiver;
+	
+	private MessageProducer bakerIngredients_replyProducer;
 
 	// ingredient topic
 	private Topic ingredientsTopic_topic;
@@ -57,6 +66,7 @@ public class JMSServerInstance implements Runnable {
 	private int gingerBreadCounter = 0;
 	
 	private JMSServerIngredientsDeliveryListener incredientsDelivery_listener;
+	private JMSServerBakerIngredientsQueueListener bakerIngredientsQueue_listener;
 	
 	public JMSServerInstance(String propertiesFile) throws IOException, NamingException, JMSException {
 		Properties properties = new Properties();
@@ -71,6 +81,9 @@ public class JMSServerInstance implements Runnable {
 		// Set queue connection for ingredients
 		this.setup_ingredientsQueue();
 		
+		// Set queue connection for baker
+		this.setup_bakerIngredientsQueue();
+		
 		// Set topic for ingredients
 		this.setup_ingredientsTopic();
 
@@ -83,14 +96,27 @@ public class JMSServerInstance implements Runnable {
 				  (TopicConnectionFactory) ctx.lookup("qpidConnectionfactory");
 		
 		this.ingredientsTopic_topic = (Topic) ctx.lookup("ingredientsTopic");
-		
 		this.ingredientsTopic_connection = topicConnectionFactory.createTopicConnection();
-		
 		this.ingredientsTopic_session = this.ingredientsTopic_connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-	
 		this.ingredientsTopic_publisher = this.ingredientsTopic_session.createPublisher(this.ingredientsTopic_topic);
+	}
 	
+	private void setup_bakerIngredientsQueue() throws NamingException, JMSException {
+		this.logger.info("Initializing queue for bakers ingredients requests...", (Object[]) null); 
+		QueueConnectionFactory queueConnectionFactory = 
+				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		this.bakerIngredients_queue = (Queue) ctx.lookup("bakerIngredientsQueue");
+		this.bakerIngredients_connection = queueConnectionFactory.createQueueConnection();
+		this.bakerIngredients_session = this.bakerIngredients_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+		this.bakerIngredientsQueue_listener = new JMSServerBakerIngredientsQueueListener(this);
+		this.bakerIngredients_receiver = this.bakerIngredients_session.createReceiver(this.bakerIngredients_queue);
+		this.bakerIngredients_receiver.setMessageListener(this.bakerIngredientsQueue_listener);
+		// reply message producer for ingredient requests of baker
+		this.bakerIngredients_replyProducer = this.bakerIngredients_session.createProducer(null);
+		this.bakerIngredients_replyProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 		
+		this.bakerIngredients_connection.start();	
+		this.logger.info("Queue for baker created and connection started.", (Object[]) null); 		
 	}
 	
 	private void setup_ingredientsQueue() throws IOException, NamingException, JMSException {
@@ -99,17 +125,11 @@ public class JMSServerInstance implements Runnable {
 				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
 		
 		this.ingredientsDelivery_queue = (Queue) ctx.lookup("ingredientsDelivery");
-		
-		this.ingredientsDelivery_connection = queueConnectionFactory.createQueueConnection();
-		
-		this.ingredientsDelivery_session = this.ingredientsDelivery_connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);
-		
+		this.ingredientsDelivery_connection = queueConnectionFactory.createQueueConnection();	
+		this.ingredientsDelivery_session = this.ingredientsDelivery_connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);	
 		this.incredientsDelivery_listener = new JMSServerIngredientsDeliveryListener(this);
-		
 		this.ingredientsDelivery_receiver = this.ingredientsDelivery_session.createReceiver(this.ingredientsDelivery_queue);
-		
-		this.ingredientsDelivery_receiver.setMessageListener(incredientsDelivery_listener);
-		
+		this.ingredientsDelivery_receiver.setMessageListener(this.incredientsDelivery_listener);
 		this.ingredientsDelivery_connection.start();	
 		this.logger.info("Queue for incredients created and connection started.", (Object[]) null); 
 	}
@@ -117,7 +137,6 @@ public class JMSServerInstance implements Runnable {
 
 	public void run() {
 		while (isRunning) {
-
 			
 		}
 		try {
@@ -129,18 +148,20 @@ public class JMSServerInstance implements Runnable {
 	}
 	
 	private void close() throws JMSException {
-		this.logger.info("Closing ingredients receiver for queue.", (Object[]) null);
+		this.logger.info("Closing ingredients queue.", (Object[]) null);
 		this.ingredientsDelivery_receiver.close();
-		this.logger.info("Closing ingredients session for queue.", (Object[]) null);
 		this.ingredientsDelivery_session.close();
-		this.logger.info("Closing ingredients connection for queue.", (Object[]) null);
 		this.ingredientsDelivery_connection.close();
 		
-		this.logger.info("Closing ingredients publisher for topic.", (Object[]) null);
+		this.logger.info("Closing baker queue.", (Object[]) null);
+		this.bakerIngredients_receiver.close();
+		this.bakerIngredients_replyProducer.close();
+		this.bakerIngredients_session.close();
+		this.bakerIngredients_connection.close();		
+		
+		this.logger.info("Closing ingredients topic.", (Object[]) null);
 		this.ingredientsTopic_publisher.close();
-		this.logger.info("Closing ingredients session for topic.", (Object[]) null);
 		this.ingredientsTopic_session.close();
-		this.logger.info("Closing ingredients connection for topic.", (Object[]) null);
 		this.ingredientsTopic_connection.close();
 		
 		this.logger.info("ServerInstance shutting down.", (Object[]) null); 
@@ -196,6 +217,14 @@ public class JMSServerInstance implements Runnable {
 	
 	public QueueSession getIngredientsDelivery_session() {
 		return this.ingredientsDelivery_session;
+	}
+	
+	public QueueSession getBakerIngredients_session() {
+		return this.bakerIngredients_session;
+	}
+	
+	public MessageProducer getBakerIngredientsSender() {
+		return this.bakerIngredients_replyProducer;
 	}
 
 }

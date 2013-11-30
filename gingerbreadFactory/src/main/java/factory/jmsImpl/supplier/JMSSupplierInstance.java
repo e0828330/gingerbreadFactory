@@ -1,4 +1,4 @@
-package factory.jmsImpl;
+package factory.jmsImpl.supplier;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -59,16 +59,11 @@ public class JMSSupplierInstance implements Supplier {
 	private void setup_ingredientsQueue() throws IOException, NamingException, JMSException {
 		this.logger.info("Initializing queue for ingredients...", (Object[]) null); 
 		QueueConnectionFactory queueConnectionFactory = 
-				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		
+				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");		
 		this.ingredientsDelivery_queue = (Queue) ctx.lookup("ingredientsDelivery");
-		
 		this.ingredientsDelivery_connection = queueConnectionFactory.createQueueConnection();
-		
 		this.ingredientsDelivery_session = this.ingredientsDelivery_connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);
-		
 		this.ingredientsDelivery_sender = this.ingredientsDelivery_session.createSender(ingredientsDelivery_queue);
-		
 		this.ingredientsDelivery_connection.start();	
 		this.logger.info("Queue for incredients created and connection started.", (Object[]) null); 
 	}	
@@ -106,11 +101,9 @@ public class JMSSupplierInstance implements Supplier {
 	
 	
 	private void close() throws JMSException {
-		this.logger.info("Closing ingredients sender.", (Object[]) null);
+		this.logger.info("Closing connection for queue.", (Object[]) null);
 		this.ingredientsDelivery_sender.close();
-		this.logger.info("Closing ingredients session.", (Object[]) null);
 		this.ingredientsDelivery_session.close();
-		this.logger.info("Closing ingredients connection.", (Object[]) null);
 		this.ingredientsDelivery_connection.close();
 		this.logger.info("SupplierInstance shutting down.", (Object[]) null); 
 	}	

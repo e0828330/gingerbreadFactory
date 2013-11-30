@@ -1,4 +1,4 @@
-package factory.jmsImpl;
+package factory.jmsImpl.server;
 
 import javax.jms.JMSException;
 import javax.jms.Message;

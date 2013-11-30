@@ -1,4 +1,4 @@
-package factory.jmsImpl;
+package factory.jmsImpl.baker;
 
 import java.io.IOException;
 
