@@ -23,9 +23,10 @@ public class App {
 		MzsCore core = DefaultMzsCore.newInstance();
 		Capi capi = new Capi(core);
 		capi.createContainer("ingredients", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false));
-		capi.createContainer("charges", new URI(spaceURL), 10, null, new FifoCoordinator());
+		capi.createContainer("charges", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 		capi.createContainer("oven", new URI(spaceURL), 10, null, new KeyCoordinator());
 		capi.createContainer("gingerbreads", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false));
+		capi.createContainer("qaPassed", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 		
 		System.out.println("Server running");
 		
