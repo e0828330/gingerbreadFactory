@@ -39,9 +39,6 @@ public class JMSSupplierInstance implements Supplier {
 	private Queue ingredientsDelivery_queue;
 	
 	private QueueSender ingredientsDelivery_sender;
-	private QueueReceiver ingredientsDelivery_receiver;
-	
-	private JMSSupplierInstanceDeliveryListener incredientsDelivery_listener;
 	
 	// produced ingredients
 	private ArrayList<Ingredient> ingredients;
@@ -69,12 +66,6 @@ public class JMSSupplierInstance implements Supplier {
 		this.ingredientsDelivery_connection = queueConnectionFactory.createQueueConnection();
 		
 		this.ingredientsDelivery_session = this.ingredientsDelivery_connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);
-		
-		this.incredientsDelivery_listener = new JMSSupplierInstanceDeliveryListener(this);
-		
-		this.ingredientsDelivery_receiver = this.ingredientsDelivery_session.createReceiver(this.ingredientsDelivery_queue);
-		
-		this.ingredientsDelivery_receiver.setMessageListener(incredientsDelivery_listener);
 		
 		this.ingredientsDelivery_sender = this.ingredientsDelivery_session.createSender(ingredientsDelivery_queue);
 		
@@ -117,8 +108,6 @@ public class JMSSupplierInstance implements Supplier {
 	private void close() throws JMSException {
 		this.logger.info("Closing ingredients sender.", (Object[]) null);
 		this.ingredientsDelivery_sender.close();
-		this.logger.info("Closing ingredients receiver.", (Object[]) null);
-		this.ingredientsDelivery_receiver.close();
 		this.logger.info("Closing ingredients session.", (Object[]) null);
 		this.ingredientsDelivery_session.close();
 		this.logger.info("Closing ingredients connection.", (Object[]) null);

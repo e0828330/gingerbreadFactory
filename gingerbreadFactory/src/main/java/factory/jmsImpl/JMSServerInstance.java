@@ -38,7 +38,6 @@ public class JMSServerInstance implements Runnable {
 	private QueueSession ingredientsDelivery_session;
 	private Queue ingredientsDelivery_queue;
 	
-	//private QueueSender ingredientsDelivery_sender;
 	private QueueReceiver ingredientsDelivery_receiver;
 
 	// ingredient topic
@@ -111,8 +110,6 @@ public class JMSServerInstance implements Runnable {
 		
 		this.ingredientsDelivery_receiver.setMessageListener(incredientsDelivery_listener);
 		
-		//this.ingredientsDelivery_sender = this.ingredientsDelivery_session.createSender(ingredientsDelivery_queue);
-		
 		this.ingredientsDelivery_connection.start();	
 		this.logger.info("Queue for incredients created and connection started.", (Object[]) null); 
 	}
@@ -132,8 +129,6 @@ public class JMSServerInstance implements Runnable {
 	}
 	
 	private void close() throws JMSException {
-		//this.logger.info("Closing ingredients sender for queue.", (Object[]) null);
-		//this.ingredientsDelivery_sender.close();
 		this.logger.info("Closing ingredients receiver for queue.", (Object[]) null);
 		this.ingredientsDelivery_receiver.close();
 		this.logger.info("Closing ingredients session for queue.", (Object[]) null);
@@ -174,17 +169,7 @@ public class JMSServerInstance implements Runnable {
 			this.count_gingerBread_eggs++;
 		}
 		// Publish new ingredient
-		//this.publishIngredients(ingredient);
-		this.logger.info("Published new gingerbread.\n"
-				+ "Remaining eggs = " + this.count_gingerBread_eggs + "\n"
-				+ "Remaining flour = " + this.count_gingerBread_flour + "\n"
-				+ "Remaining honey = " + this.count_gingerBread_honey + "\n"
-				+ "Enough for gingerbread = " + this.gingerBreadCounter, (Object[]) null);	
-		this.logger.info("Published new gingerbread.\n"
-				+ "Remaining eggs = " + egg_list.size() + "\n"
-				+ "Remaining flour = " + flour_list.size() + "\n"
-				+ "Remaining honey = " + honey_list.size() + "\n"
-				+ "Enough for gingerbread = " + this.gingerBreadCounter, (Object[]) null);			
+		this.publishIngredients(ingredient);
 	}
 	
 	
@@ -202,12 +187,11 @@ public class JMSServerInstance implements Runnable {
 				this.logger.error("Cannot publish new gingerbread.", (Object[]) null);
 				e.printStackTrace();
 			}			
-			this.logger.info("Published new gingerbread.\n"
-					+ "Remaining eggs = " + this.count_gingerBread_eggs + "\n"
-					+ "Remaining flour = " + this.count_gingerBread_flour + "\n"
-					+ "Remaining honey = " + this.count_gingerBread_honey + "\n"
-					+ "Enough for gingerbread = " + this.gingerBreadCounter, (Object[]) null);			
+			this.logger.info("Published new gingerbread. Count = " + this.gingerBreadCounter, (Object[]) null);		
 		}
+		this.logger.info("eggs = " + this.count_gingerBread_eggs + "\n"
+					+ "flour = " + this.count_gingerBread_flour + "\n"
+					+ "honey = " + this.count_gingerBread_honey + "\n", (Object[]) null);
 	}
 	
 	public QueueSession getIngredientsDelivery_session() {
