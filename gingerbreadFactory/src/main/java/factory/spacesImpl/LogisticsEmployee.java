@@ -46,7 +46,7 @@ public class LogisticsEmployee {
 				for (Long gid : ids) {
 					GingerBread current = null;
 					GingerBread tpl = new GingerBread();
-				//	tpl.setChargeId(gid);
+					tpl.setChargeId(gid);
 					//tpl.setState(State.CONTROLLED);
 					// Get, update state and write back
 					System.out.println("QUERY");
