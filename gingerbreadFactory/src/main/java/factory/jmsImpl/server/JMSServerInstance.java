@@ -158,13 +158,10 @@ public class JMSServerInstance implements Runnable {
 			}
 			catch (IOException e) {
 				e.printStackTrace();
-			}
-			finally {
 				try {
 					this.close();
-				}
-				catch (JMSException e) {
-					e.printStackTrace();
+				} catch (JMSException e1) {
+					e1.printStackTrace();
 				}
 			}
 		}
@@ -201,7 +198,7 @@ public class JMSServerInstance implements Runnable {
 	}
 	
 	
-	public void storeIncredient(Ingredient ingredient) {
+	public synchronized void storeIncredient(Ingredient ingredient) {
 		this.logger.info("Stored " + ingredient.getType().toString(), (Object[]) null);
 		if (ingredient.getType() == Ingredient.Type.FLOUR) {
 			this.logger.info("Added flour to list.", (Object[]) null); 

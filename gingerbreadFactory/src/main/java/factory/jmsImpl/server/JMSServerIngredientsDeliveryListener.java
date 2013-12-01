@@ -36,7 +36,5 @@ public class JMSServerIngredientsDeliveryListener implements MessageListener {
 			this.logger.error("Error occured by parsing message from ingredients queue.", (Object[]) null);
 			e.printStackTrace();
 		}
-		
-		
 	}
 }
