@@ -29,6 +29,7 @@ import javax.naming.NamingException;
 import org.apache.qpid.transport.util.Logger;
 
 import factory.jmsImpl.server.JMSServerBakerIngredientsQueueListener;
+import factory.utils.Messages;
 import factory.utils.Utils;
 
 public class JMSBakerInstance implements Runnable, MessageListener {
@@ -36,6 +37,13 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	private Context ctx;
 	private boolean isRunning = true;
 	private Logger logger = Logger.get(getClass());
+	
+	// Identifier for baker
+	private Long id = 0L;
+	
+	// Helper attributes for topic and request handling
+	private boolean serverHasNewIngredients = false;
+	private boolean isWorking = false;
 
 	// ingredients topic attributes
 	private Topic ingredientsTopic_topic;
@@ -99,8 +107,9 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	}	
 
 	public void run() {
-		do {
-			// TODO: On startup send request for ingredients
+		// On startup send request for ingredients
+		sendRequestForIngredients();
+		do {	
 		} while (isRunning);
 		try {
 			this.close();
@@ -111,20 +120,26 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	}
 	
 	public void sendRequestForIngredients() {
-		// TODO: Disconnect from Topic to avoid new receiving messages
-		try {
-			Destination tempDest = this.bakerIngredients_session.createTemporaryQueue();
-			MessageConsumer responseConsumer = bakerIngredients_session.createConsumer(tempDest);
-			responseConsumer.setMessageListener(this);
-			
-			TextMessage message = this.bakerIngredients_session.createTextMessage("INGREDIENTS_REQUEST");	
-			message.setJMSReplyTo(tempDest);
-			message.setJMSCorrelationID(String.valueOf(UUID.randomUUID().hashCode()));
-			this.bakerIngredients_sender.send(message);
-			this.logger.info("Send request for ingredients to server", (Object[]) null);
+		// Avoid requests while already requesting
+		if (this.isWorking == false) {
+			this.isWorking = true;
+			try {
+				Destination tempDest = this.bakerIngredients_session.createTemporaryQueue();
+				MessageConsumer responseConsumer = bakerIngredients_session.createConsumer(tempDest);
+				responseConsumer.setMessageListener(this);
+				
+				TextMessage message = this.bakerIngredients_session.createTextMessage(Messages.INGREDIENTS_REQUEST_MESSAGE);	
+				message.setJMSReplyTo(tempDest);
+				message.setJMSCorrelationID(String.valueOf(UUID.randomUUID().hashCode()) + String.valueOf(this.id));
+				this.bakerIngredients_sender.send(message);
+				this.logger.info("Send request for ingredients to server", (Object[]) null);
+			}
+			catch (JMSException e) {
+				e.printStackTrace();
+			}
 		}
-		catch (JMSException e) {
-			e.printStackTrace();
+		else {
+			this.serverHasNewIngredients = true;
 		}
 	}
 

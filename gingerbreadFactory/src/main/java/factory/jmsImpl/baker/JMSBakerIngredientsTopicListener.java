@@ -8,6 +8,8 @@ import javax.jms.TextMessage;
 import org.apache.qpid.transport.util.Logger;
 import org.w3c.dom.Text;
 
+import factory.utils.Messages;
+
 public class JMSBakerIngredientsTopicListener implements MessageListener {
 
 	private JMSBakerInstance baker;
@@ -23,7 +25,7 @@ public class JMSBakerIngredientsTopicListener implements MessageListener {
 		try {
 			if (message instanceof TextMessage) {
 				String txt = ((TextMessage) message).getText();
-				if (txt != null && txt.equals("INGREDIENTS_READY")) {
+				if (txt != null && txt.equals(Messages.INGREDIENTS_READY_MESSAGE)) {
 					this.baker.sendRequestForIngredients();
 				}
 			}

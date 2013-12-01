@@ -1,18 +1,21 @@
 package factory.jmsImpl.server;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -26,8 +29,12 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.apache.qpid.transport.util.Logger;
+import org.mozartspaces.core.Entry;
 
+import factory.entities.GingerBread;
 import factory.entities.Ingredient;
+import factory.utils.Messages;
+import factory.utils.Utils;
 
 public class JMSServerInstance implements Runnable {
 
@@ -55,15 +62,15 @@ public class JMSServerInstance implements Runnable {
 	private TopicSession ingredientsTopic_session;
 	private TopicPublisher ingredientsTopic_publisher;
 	
-	private ArrayList<Ingredient> honey_list;
-	private ArrayList<Ingredient> flour_list;
-	private ArrayList<Ingredient> egg_list;
+	private List<Ingredient> honey_list;
+	private List<Ingredient> flour_list;
+	private List<Ingredient> egg_list;
 	
-	private int count_gingerBread_eggs = 0;
-	private int count_gingerBread_honey = 0;
-	private int count_gingerBread_flour = 0;
+	private AtomicInteger count_gingerBread_eggs;
+	private AtomicInteger count_gingerBread_honey;
+	private AtomicInteger count_gingerBread_flour;
 	
-	private int gingerBreadCounter = 0;
+	private AtomicInteger gingerBreadCounter;
 	
 	private JMSServerIngredientsDeliveryListener incredientsDelivery_listener;
 	private JMSServerBakerIngredientsQueueListener bakerIngredientsQueue_listener;
@@ -74,9 +81,14 @@ public class JMSServerInstance implements Runnable {
 		this.ctx = new InitialContext(properties);
 		
 		// set ingredient storage
-		this.honey_list = new ArrayList<Ingredient>();
+		this.honey_list = Collections.synchronizedList(new ArrayList<Ingredient>());
 		this.flour_list = new ArrayList<Ingredient>();
 		this.egg_list = new ArrayList<Ingredient>();
+		
+		this.count_gingerBread_eggs = new AtomicInteger(0);
+		this.count_gingerBread_flour = new AtomicInteger(0);
+		this.count_gingerBread_honey = new AtomicInteger(0);
+		this.gingerBreadCounter = new AtomicInteger(0);
 		
 		// Set queue connection for ingredients
 		this.setup_ingredientsQueue();
@@ -137,7 +149,24 @@ public class JMSServerInstance implements Runnable {
 
 	public void run() {
 		while (isRunning) {
-			
+			try {
+				BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+				String s = bufferRead.readLine();
+				if (s.equalsIgnoreCase("storage")) {
+					this.printStorage();
+				}
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+			finally {
+				try {
+					this.close();
+				}
+				catch (JMSException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 		try {
 			this.close();
@@ -172,22 +201,22 @@ public class JMSServerInstance implements Runnable {
 	}
 	
 	
-	public synchronized void storeIncredient(Ingredient ingredient) {
+	public void storeIncredient(Ingredient ingredient) {
 		this.logger.info("Stored " + ingredient.getType().toString(), (Object[]) null);
 		if (ingredient.getType() == Ingredient.Type.FLOUR) {
 			this.logger.info("Added flour to list.", (Object[]) null); 
 			this.flour_list.add(ingredient);
-			this.count_gingerBread_flour++;
+			this.count_gingerBread_flour.incrementAndGet();
 		}
 		else if (ingredient.getType() == Ingredient.Type.HONEY) {
 			this.logger.info("Added honey to list.", (Object[]) null); 
 			this.honey_list.add(ingredient);
-			this.count_gingerBread_honey++;
+			this.count_gingerBread_honey.incrementAndGet();
 		}
 		else if (ingredient.getType() == Ingredient.Type.EGG) {
 			this.logger.info("Added egg to list.", (Object[]) null); 
 			this.egg_list.add(ingredient);
-			this.count_gingerBread_eggs++;
+			this.count_gingerBread_eggs.incrementAndGet();
 		}
 		// Publish new ingredient
 		this.publishIngredients(ingredient);
@@ -195,13 +224,14 @@ public class JMSServerInstance implements Runnable {
 	
 	
 	private void publishIngredients(Ingredient ingredient) {
-		if (this.count_gingerBread_eggs >= 2 && this.count_gingerBread_flour >= 1 && this.count_gingerBread_honey >= 1) {
-			this.gingerBreadCounter++;
-			this.count_gingerBread_eggs -= 2;
-			this.count_gingerBread_flour -= 1;
-			this.count_gingerBread_honey -= 1;
+		if (this.count_gingerBread_eggs.get() >= 2 && this.count_gingerBread_flour.get() >= 1 && this.count_gingerBread_honey.get() >= 1) {
+			this.gingerBreadCounter.incrementAndGet();
+			this.count_gingerBread_eggs.decrementAndGet();
+			this.count_gingerBread_eggs.decrementAndGet();
+			this.count_gingerBread_flour.decrementAndGet();
+			this.count_gingerBread_honey.decrementAndGet();
 			try {
-				TextMessage message = this.ingredientsDelivery_session.createTextMessage("INGREDIENTS_READY");
+				TextMessage message = this.ingredientsDelivery_session.createTextMessage(Messages.INGREDIENTS_READY_MESSAGE);
 				this.ingredientsTopic_publisher.publish(message);
 			}
 			catch (JMSException e) {
@@ -210,9 +240,7 @@ public class JMSServerInstance implements Runnable {
 			}			
 			this.logger.info("Published new gingerbread. Count = " + this.gingerBreadCounter, (Object[]) null);		
 		}
-		this.logger.info("eggs = " + this.count_gingerBread_eggs + "\n"
-					+ "flour = " + this.count_gingerBread_flour + "\n"
-					+ "honey = " + this.count_gingerBread_honey + "\n", (Object[]) null);
+		debugMessageStoredIngredients();
 	}
 	
 	public QueueSession getIngredientsDelivery_session() {
@@ -225,6 +253,88 @@ public class JMSServerInstance implements Runnable {
 	
 	public MessageProducer getBakerIngredientsSender() {
 		return this.bakerIngredients_replyProducer;
+	}
+	
+	public synchronized List<GingerBread> getGingerBreadIngredients(int max) {
+		int i = 0;
+		List<GingerBread> tmpList = new ArrayList<GingerBread>(max);
+		List<Ingredient> ingredients = new ArrayList<Ingredient>(max);
+		int limit = this.gingerBreadCounter.get();
+		try {
+			for (; i < limit; i++) {
+				System.err.println("I =============" + i);
+				if (i >= max) break;
+				Ingredient egg1 = this.egg_list.remove(0);
+				Ingredient egg2 = this.egg_list.remove(0);
+				Ingredient flour = this.flour_list.remove(0);
+				Ingredient honey = this.honey_list.remove(0);
+			
+				Long chargeId = Utils.getID();
+				GingerBread tmp = new GingerBread();
+				tmp.setId(Utils.getID());
+				tmp.setChargeId(chargeId);
+				tmp.setFlourId(flour.getId());
+				tmp.setHoneyId(honey.getId());
+				tmp.setFirstEggId(egg1.getId());
+				tmp.setSecondEggId(egg2.getId());
+				tmpList.add(tmp);
+				
+				// for rollback
+				ingredients.add(egg1);
+				ingredients.add(egg2);
+				ingredients.add(honey);
+				ingredients.add(flour);
+
+				this.gingerBreadCounter.decrementAndGet();
+			}
+			debugMessageStoredIngredients();
+			return tmpList;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			// rollback
+			int eggs = 0;
+			int flour = 0;
+			int honey = 0;
+			for (Ingredient ingredient : ingredients) {
+				if (ingredient.getType() == Ingredient.Type.EGG) {
+					this.count_gingerBread_eggs.incrementAndGet();
+					this.egg_list.add(ingredient);
+					eggs++;
+				}
+				if (ingredient.getType() == Ingredient.Type.HONEY) {
+					this.count_gingerBread_honey.incrementAndGet();
+					this.honey_list.add(ingredient);
+					honey++;
+				}
+				if (ingredient.getType() == Ingredient.Type.FLOUR) {
+					this.count_gingerBread_flour.incrementAndGet();
+					this.flour_list.add(ingredient);
+					flour++;
+				}
+				if (eggs >= 2 && flour >= 1 && honey >= 1) {
+					eggs -= 2;
+					flour -= 1;
+					honey -= 1;
+					this.gingerBreadCounter.incrementAndGet();
+				}
+			}
+		}
+		return null;
+	}
+	
+	private void debugMessageStoredIngredients() {
+		this.logger.info("\neggs = " + this.count_gingerBread_eggs + "\n"
+				+ "flour = " + this.count_gingerBread_flour + "\n"
+				+ "honey = " + this.count_gingerBread_honey + "\n"
+				+ "gingerbreads possible = " + this.gingerBreadCounter.get() + "\n", (Object[]) null);
+	}
+	
+	private void printStorage() {
+		System.out.println("\neggs = " + this.count_gingerBread_eggs + "\n"
+				+ "flour = " + this.count_gingerBread_flour + "\n"
+				+ "honey = " + this.count_gingerBread_honey + "\n"
+				+ "gingerbreads possible = " + this.gingerBreadCounter.get() + "\n");
 	}
 
 }

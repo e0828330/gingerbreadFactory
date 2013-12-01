@@ -1,11 +1,16 @@
 package factory.jmsImpl.server;
 
+import java.util.List;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 
 import org.apache.qpid.transport.util.Logger;
+
+import factory.entities.GingerBread;
+import factory.utils.Messages;
 
 public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 	
@@ -21,12 +26,14 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 		try {
 			if (message instanceof TextMessage) {
 				String txt = ((TextMessage) message).getText();
-				if (txt != null && txt.equals("INGREDIENTS_REQUEST")) {
-					System.err.println("TODO: Send ingredients");
+				if (txt != null && txt.equals(Messages.INGREDIENTS_REQUEST_MESSAGE)) {
 					TextMessage response = this.server.getBakerIngredients_session().createTextMessage();
 					response.setJMSCorrelationID(message.getJMSCorrelationID());
-					// TODO
-					response.setText("TODO: SEND INGREDIENT DATA");
+					
+					List<GingerBread> ingredients = this.server.getGingerBreadIngredients(5);
+					
+					
+					response.setText("SEND Gingerbreads: " + ingredients.size());
 					this.logger.info("Send response for ingredients request to baker", (Object[]) null);
 					this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
 				}
