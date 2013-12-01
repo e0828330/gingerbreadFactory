@@ -38,4 +38,8 @@ public class Ingredient implements Serializable {
 		 return "[ | " + this.getSupplierId() + " | " + this.getId() + " - " + this.type + " ]";
 	 }
 
+	public Type getType() {
+		return type;
+	}
+
 }

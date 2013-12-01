@@ -15,6 +15,10 @@
 			<id>mozartspaces</id>
 			<url>http://www.mozartspaces.org/maven-snapshots</url>
 		</repository>
+		<repository>
+			<id>codehaus</id>
+			<url>http://repository.codehaus.org/org/codehaus</url>
+		</repository>
 	</repositories>
 
 	<properties>
@@ -80,6 +84,12 @@
 			<groupId>org.apache.geronimo.specs</groupId>
 			<artifactId>geronimo-jms_1.1_spec</artifactId>
 			<version>1.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>1.8.5</version>
 		</dependency>
 
 	</dependencies>

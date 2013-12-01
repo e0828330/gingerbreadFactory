@@ -28,24 +28,24 @@
 						</TabPane.tabData>
 						<Border styles="{padding:2}">
 							<ScrollPane horizontalScrollBarPolicy="fill_to_capacity">
-								<TableView bxml:id="testTable"
+								<TableView bxml:id="testTable" 
 									styles="{includeTrailingVerticalGridLine:true}">
 									<columns>
-										<TableView.Column name="id" headerData="ID" />
-										<TableView.Column name="baker" headerData="Bäcker" />
+										<TableView.Column name="id" headerData="Id" />
+										<TableView.Column name="supplierId" headerData="Lieferant ID" />
+										<TableView.Column name="type" headerData="Typ" />
 									</columns>
-
+									
 									<tableViewSortListeners>
-										function sortChanged(tableView) {
-											var tableData = tableView.getTableData();
-											tableData.setComparator(new org.apache.pivot.wtk.content.TableViewRowComparator(tableView));
-										}
-									</tableViewSortListeners>
-
-
+					                    function sortChanged(tableView) {
+					                        var tableData = tableView.getTableData();
+					                        tableData.setComparator(new org.apache.pivot.wtk.content.TableViewRowComparator(tableView));
+					                    }
+					                </tableViewSortListeners>
+									
 								</TableView>
 								<columnHeader>
-									<TableViewHeader tableView="$testTable" />
+									<TableViewHeader tableView="$testTable" sortMode="single_column" />
 								</columnHeader>
 							</ScrollPane>
 						</Border>

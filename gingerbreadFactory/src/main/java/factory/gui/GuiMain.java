@@ -16,14 +16,14 @@ public class GuiMain implements Application {
 	}
 
 	public boolean shutdown(boolean arg0) throws Exception {
-		// TODO Auto-generated method stub
+		window.close();
 		return false;
 	}
 
 	public void startup(Display dsp, Map<String, String> props)
 			throws Exception {
 		BXMLSerializer bxmlSerializer = new BXMLSerializer();
-		TabbedWindow window = (TabbedWindow) bxmlSerializer.readObject(GuiMain.class, "TabbedWindow.xml");
+		window = (TabbedWindow) bxmlSerializer.readObject(GuiMain.class, "TabbedWindow.xml");
 		window.setWidth(800);
 		window.setHeight(600);
 		window.open(dsp);
