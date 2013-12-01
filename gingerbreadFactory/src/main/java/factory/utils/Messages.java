@@ -8,4 +8,6 @@ public class Messages {
 	
 	public static final String INGREDIENTS_RESPONSE_MESSAGE_NONE = "NO_INGREDIENTS";
 	
+	public static final String MESSAGE_END = "MESSAGE_END";
+	
 }

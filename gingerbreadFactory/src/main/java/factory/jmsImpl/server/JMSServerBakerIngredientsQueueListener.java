@@ -45,6 +45,10 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 							response.setObject(ingredient);
 							this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
 						}
+						TextMessage response = this.server.getBakerIngredients_session().createTextMessage();
+						response.setJMSCorrelationID(message.getJMSCorrelationID());
+						response.setText(Messages.MESSAGE_END);
+						this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);						
 					}
 					this.server.getBakerIngredients_session().commit();
 				}

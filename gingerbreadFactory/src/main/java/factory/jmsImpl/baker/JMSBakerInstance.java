@@ -187,6 +187,20 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 				if (msg != null && msg.getText().equals(Messages.INGREDIENTS_RESPONSE_MESSAGE_NONE)) {
 					this.logger.info("No ingredients available.", (Object[]) null);
 				}
+				else if (msg != null && msg.getText().equals(Messages.MESSAGE_END)) {
+					// Bake
+					
+					// Check if new ingredients are published in topic, if not, we are ready and
+					// we can listen to the topic again.
+					// Else we request to server and set the serverHasNewIngredients variable to false
+					if (this.serverHasNewIngredients == false) {
+						this.isWorking = false;
+					}
+					else {
+						this.serverHasNewIngredients = false;
+						this.sendRequestForIngredients();
+					}
+				}
 			}
 			catch (JMSException e) {
 				e.printStackTrace();
@@ -198,8 +212,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
-		// TODO: Receive message
-		// TODO: Process ingredients (bake)
+
 		// TODO: If ready, ask again for new ingredients
 		// TODO: If no new ingredients are returend, Reconnect to Topic
 	}
