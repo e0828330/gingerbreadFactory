@@ -5,11 +5,13 @@ import java.util.List;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 
 import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.GingerBread;
+import factory.entities.GingerBreadTransactionObject;
 import factory.utils.Messages;
 
 public class JMSServerBakerIngredientsQueueListener implements MessageListener {
@@ -27,15 +29,24 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 			if (message instanceof TextMessage) {
 				String txt = ((TextMessage) message).getText();
 				if (txt != null && txt.equals(Messages.INGREDIENTS_REQUEST_MESSAGE)) {
-					TextMessage response = this.server.getBakerIngredients_session().createTextMessage();
-					response.setJMSCorrelationID(message.getJMSCorrelationID());
 					
-					List<GingerBread> ingredients = this.server.getGingerBreadIngredients(5);
+					List<GingerBreadTransactionObject> ingredients = this.server.getGingerBreadIngredients(5);
 					
-					
-					response.setText("SEND Gingerbreads: " + ingredients.size());
-					this.logger.info("Send response for ingredients request to baker", (Object[]) null);
-					this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
+					if (ingredients == null || (ingredients != null && ingredients.size() == 0)) {
+						TextMessage response = this.server.getBakerIngredients_session().createTextMessage();
+						response.setJMSCorrelationID(message.getJMSCorrelationID());
+						response.setText(Messages.INGREDIENTS_RESPONSE_MESSAGE_NONE);
+						this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
+					}
+					else {
+						for (GingerBreadTransactionObject ingredient : ingredients) {
+							ObjectMessage response = this.server.getBakerIngredients_session().createObjectMessage();
+							response.setJMSCorrelationID(message.getJMSCorrelationID());
+							response.setObject(ingredient);
+							this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
+						}
+					}
+					this.server.getBakerIngredients_session().commit();
 				}
 			}
 		}

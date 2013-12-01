@@ -6,4 +6,6 @@ public class Messages {
 	
 	public static final String INGREDIENTS_READY_MESSAGE = "INGREDIENTS_READY";
 	
+	public static final String INGREDIENTS_RESPONSE_MESSAGE_NONE = "NO_INGREDIENTS";
+	
 }

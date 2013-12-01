@@ -23,18 +23,20 @@ public class JMSServerIngredientsDeliveryListener implements MessageListener {
 	public void onMessage(Message message) {
 		this.logger.info("Message received in ingredients queue.", (Object[]) null);
 		
-		ObjectMessage objectMessage = (ObjectMessage) message;
-		
-		try {
-			if (objectMessage.getObject() instanceof Ingredient) {
-				this.server.storeIncredient((Ingredient) objectMessage.getObject());
+		if (message instanceof ObjectMessage) {
+			ObjectMessage objectMessage = (ObjectMessage) message;
+			
+			try {
+				if (objectMessage.getObject() instanceof Ingredient) {
+					this.server.storeIncredient((Ingredient) objectMessage.getObject());
+				}
+				this.server.getIngredientsDelivery_session().commit();		
+			} catch (JMSException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				this.logger.error("Error occured by parsing message from ingredients queue.", (Object[]) null);
+				e.printStackTrace();
 			}
-			this.server.getIngredientsDelivery_session().commit();		
-		} catch (JMSException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			this.logger.error("Error occured by parsing message from ingredients queue.", (Object[]) null);
-			e.printStackTrace();
 		}
 	}
 }

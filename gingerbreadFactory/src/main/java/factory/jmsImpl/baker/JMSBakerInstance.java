@@ -9,6 +9,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
@@ -28,6 +29,7 @@ import javax.naming.NamingException;
 
 import org.apache.qpid.transport.util.Logger;
 
+import factory.entities.GingerBreadTransactionObject;
 import factory.jmsImpl.server.JMSServerBakerIngredientsQueueListener;
 import factory.utils.Messages;
 import factory.utils.Utils;
@@ -100,7 +102,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
 		this.bakerIngredients_queue = (Queue) ctx.lookup("bakerIngredientsQueue");
 		this.bakerIngredients_connection = queueConnectionFactory.createQueueConnection();
-		this.bakerIngredients_session = this.bakerIngredients_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+		this.bakerIngredients_session = this.bakerIngredients_connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);
 		this.bakerIngredients_sender = this.bakerIngredients_session.createSender(this.bakerIngredients_queue);
 		this.bakerIngredients_connection.start();	
 		this.logger.info("Queue for baker created and connection started.", (Object[]) null); 		
@@ -132,6 +134,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 				message.setJMSReplyTo(tempDest);
 				message.setJMSCorrelationID(String.valueOf(UUID.randomUUID().hashCode()) + String.valueOf(this.id));
 				this.bakerIngredients_sender.send(message);
+				this.bakerIngredients_session.commit();
 				this.logger.info("Send request for ingredients to server", (Object[]) null);
 			}
 			catch (JMSException e) {
@@ -166,6 +169,35 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	 */
 	public void onMessage(Message message) {
 		this.logger.info("Response of ingredient-request received.", (Object[]) null); 
+		if (message instanceof ObjectMessage) {
+			ObjectMessage objMessage = (ObjectMessage) message;
+			try {
+				if (objMessage.getObject() instanceof GingerBreadTransactionObject) {
+					GingerBreadTransactionObject obj = (GingerBreadTransactionObject) objMessage.getObject();
+					System.out.println(obj.getEgg1().getType().toString() + " from Supplier with id = " + 
+					obj.getEgg1().getSupplierId());
+				}
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
+		}
+		else if (message instanceof TextMessage) {
+			TextMessage msg = (TextMessage) message;
+			try {
+				if (msg != null && msg.getText().equals(Messages.INGREDIENTS_RESPONSE_MESSAGE_NONE)) {
+					this.logger.info("No ingredients available.", (Object[]) null);
+				}
+			}
+			catch (JMSException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		try {
+			this.bakerIngredients_session.commit();
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
 		// TODO: Receive message
 		// TODO: Process ingredients (bake)
 		// TODO: If ready, ask again for new ingredients
