@@ -256,9 +256,9 @@ public class JMSServerInstance implements Runnable {
 		return this.bakerIngredients_replyProducer;
 	}
 	
-	public synchronized List<GingerBreadTransactionObject> getGingerBreadIngredients(int max) {
+	public synchronized ArrayList<GingerBreadTransactionObject> getGingerBreadIngredients(int max) {
 		int i = 0;
-		List<GingerBreadTransactionObject> tmpList = new ArrayList<GingerBreadTransactionObject>(max);
+		ArrayList<GingerBreadTransactionObject> tmpList = new ArrayList<GingerBreadTransactionObject>(max);
 		int limit = this.gingerBreadCounter.get();
 		try {
 			for (; i < limit; i++) {
@@ -295,6 +295,10 @@ public class JMSServerInstance implements Runnable {
 			}
 		}
 		return null;
+	}
+	
+	public int getGingerBreadCounter() {
+		return this.gingerBreadCounter.get();
 	}
 	
 	private void debugMessageStoredIngredients() {

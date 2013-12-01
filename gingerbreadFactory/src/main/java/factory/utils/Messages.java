@@ -10,4 +10,6 @@ public class Messages {
 	
 	public static final String MESSAGE_END = "MESSAGE_END";
 	
+	public static final String MESSAGE_MORE_INGREDIENTS_AVAILABLE = "REQUEST MORE"; // because moar
+	
 }

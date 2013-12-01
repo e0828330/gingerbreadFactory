@@ -78,12 +78,16 @@ public class JMSSupplierInstance implements Supplier {
 					Thread.sleep(Utils.getRandomWaitTime());
 				}
 				// send them as object message
-				for (Ingredient ingredient : this.ingredients) {
+				/*for (Ingredient ingredient : this.ingredients) {
 					ObjectMessage objectMessage = this.ingredientsDelivery_session.createObjectMessage();
 					objectMessage.setObject(ingredient);
 					this.ingredientsDelivery_sender.send(objectMessage);
 					
-				}
+				}*/
+				ObjectMessage objectMessage = this.ingredientsDelivery_session.createObjectMessage();
+				objectMessage.setObject(this.ingredients);
+				objectMessage.setStringProperty("TYPE", "ArrayList<Ingredient>");
+				this.ingredientsDelivery_sender.send(objectMessage);
 				this.ingredientsDelivery_session.commit();
 			}
 			catch (InterruptedException e) {

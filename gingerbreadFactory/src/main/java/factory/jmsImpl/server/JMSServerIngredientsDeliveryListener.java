@@ -1,5 +1,7 @@
 package factory.jmsImpl.server;
 
+import java.util.ArrayList;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -27,8 +29,13 @@ public class JMSServerIngredientsDeliveryListener implements MessageListener {
 			ObjectMessage objectMessage = (ObjectMessage) message;
 			
 			try {
-				if (objectMessage.getObject() instanceof Ingredient) {
-					this.server.storeIncredient((Ingredient) objectMessage.getObject());
+				
+				if (objectMessage.getStringProperty("TYPE").equalsIgnoreCase("ArrayList<Ingredient>")) {
+					@SuppressWarnings("unchecked")
+					ArrayList<Ingredient> ingredients = (ArrayList<Ingredient>) objectMessage.getObject();
+					for (Ingredient ingredient : ingredients) {
+						this.server.storeIncredient(ingredient);
+					}
 				}
 				this.server.getIngredientsDelivery_session().commit();		
 			} catch (JMSException e) {

@@ -1,6 +1,9 @@
 package factory.jmsImpl.baker;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -28,7 +31,10 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.apache.qpid.transport.util.Logger;
+import org.mozartspaces.core.Entry;
 
+import factory.entities.Charge;
+import factory.entities.GingerBread;
 import factory.entities.GingerBreadTransactionObject;
 import factory.jmsImpl.server.JMSServerBakerIngredientsQueueListener;
 import factory.utils.Messages;
@@ -40,11 +46,21 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	private boolean isRunning = true;
 	private Logger logger = Logger.get(getClass());
 	
+	// Charge
+	private ArrayList<GingerBread> charge;
+	
+	// Ingredients
+	private ArrayList<GingerBreadTransactionObject> gingerBreadList;
+	
 	// Identifier for baker
 	private Long id = 0L;
 	
+	// total number of charges produced
+	private int chargeCounter = 1;
+	private Hashtable<Integer, Integer> producedCharges;
+	
 	// Helper attributes for topic and request handling
-	private boolean serverHasNewIngredients = false;
+	private boolean serverHasMoreIngredients = false;
 	private boolean isWorking = false;
 
 	// ingredients topic attributes
@@ -59,13 +75,13 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	private Queue bakerIngredients_queue;
 	private QueueSender bakerIngredients_sender;	
 
-	public JMSBakerInstance(String propertiesFile) throws IOException,
-			NamingException {
+	public JMSBakerInstance(String propertiesFile) throws IOException, NamingException {
 		Properties properties = new Properties();
-		properties.load(this.getClass().getClassLoader()
-				.getResourceAsStream(propertiesFile));
+		properties.load(this.getClass().getClassLoader().getResourceAsStream(propertiesFile));
 		this.ctx = new InitialContext(properties);
-		
+		this.gingerBreadList = new ArrayList<GingerBreadTransactionObject>(5);
+		this.charge = new ArrayList<GingerBread>(10);
+		this.producedCharges = new Hashtable<Integer, Integer>();
 		try {
 			// init topic for ingredients
 			this.setup_ingredientsTopic();
@@ -80,19 +96,13 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	}
 
 	private void setup_ingredientsTopic() throws NamingException, JMSException {
-		this.logger.info("Initializing topic for ingredients...",
-				(Object[]) null);
-		TopicConnectionFactory topicConnectionFactory = (TopicConnectionFactory) ctx
-				.lookup("qpidConnectionfactory");
+		this.logger.info("Initializing topic for ingredients...", (Object[]) null);
+		TopicConnectionFactory topicConnectionFactory = (TopicConnectionFactory) ctx.lookup("qpidConnectionfactory");
 		this.ingredientsTopic_topic = (Topic) ctx.lookup("ingredientsTopic");
-		this.ingredientsTopic_connection = topicConnectionFactory
-				.createTopicConnection();
-		this.ingredientsTopic_session = this.ingredientsTopic_connection
-				.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-		this.ingredientsTopic_subscriber = this.ingredientsTopic_session
-				.createSubscriber(this.ingredientsTopic_topic);
-		this.ingredientsTopic_subscriber
-				.setMessageListener(new JMSBakerIngredientsTopicListener(this));
+		this.ingredientsTopic_connection = topicConnectionFactory.createTopicConnection();
+		this.ingredientsTopic_session = this.ingredientsTopic_connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+		this.ingredientsTopic_subscriber = this.ingredientsTopic_session.createSubscriber(this.ingredientsTopic_topic);
+		this.ingredientsTopic_subscriber.setMessageListener(new JMSBakerIngredientsTopicListener(this));
 		this.ingredientsTopic_connection.start();
 	}
 	
@@ -109,10 +119,24 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	}	
 
 	public void run() {
+		int showProducedChargesSteps = 0;
 		// On startup send request for ingredients
 		sendRequestForIngredients();
-		do {	
-		} while (isRunning);
+		while (isRunning) {
+			if (showProducedChargesSteps == 200) {
+				for (Integer key: this.producedCharges.keySet()) {
+					System.out.println("Charge " + key + " produced with " + this.producedCharges.get(key) + " gingerbreads.");
+				}
+				System.out.print("\n");
+				showProducedChargesSteps = 0;
+			}
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			showProducedChargesSteps++;
+		}
 		try {
 			this.close();
 		}
@@ -142,7 +166,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 			}
 		}
 		else {
-			this.serverHasNewIngredients = true;
+			this.serverHasMoreIngredients = true;
 		}
 	}
 
@@ -172,10 +196,13 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 		if (message instanceof ObjectMessage) {
 			ObjectMessage objMessage = (ObjectMessage) message;
 			try {
-				if (objMessage.getObject() instanceof GingerBreadTransactionObject) {
-					GingerBreadTransactionObject obj = (GingerBreadTransactionObject) objMessage.getObject();
-					System.out.println(obj.getEgg1().getType().toString() + " from Supplier with id = " + 
-					obj.getEgg1().getSupplierId());
+				if (objMessage.getStringProperty("TYPE").equals("ArrayList<GingerBreadTransactionObject>")) {
+					@SuppressWarnings("unchecked")
+					ArrayList<GingerBreadTransactionObject> list = (ArrayList<GingerBreadTransactionObject>) objMessage.getObject();
+					for (GingerBreadTransactionObject obj : list) {
+						this.gingerBreadList.add(obj);
+					}
+					this.logger.info("Add gingerbread for producing step.", (Object[]) null);
 				}
 			} catch (JMSException e) {
 				e.printStackTrace();
@@ -186,23 +213,52 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 			try {
 				if (msg != null && msg.getText().equals(Messages.INGREDIENTS_RESPONSE_MESSAGE_NONE)) {
 					this.logger.info("No ingredients available.", (Object[]) null);
+					this.isWorking = false;
+				}
+				else if (msg != null && msg.getText().equals(Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE)) {
+					this.serverHasMoreIngredients = true;
 				}
 				else if (msg != null && msg.getText().equals(Messages.MESSAGE_END)) {
-					// Bake
+					this.logger.info("Produce gingerbread.", (Object[]) null);
+					// Produce
+					for (GingerBreadTransactionObject obj : this.gingerBreadList) {
+						GingerBread tmp = new GingerBread();
+						tmp.setId(Utils.getID());
+						tmp.setBakerId(this.id);
+						tmp.setChargeId(Utils.getID());
+						tmp.setFlourId(obj.getFlour().getId());
+						tmp.setHoneyId(obj.getHoney().getId());
+						tmp.setFirstEggId(obj.getEgg1().getId());
+						tmp.setSecondEggId(obj.getEgg2().getId());
+						tmp.setState(GingerBread.State.PRODUCED);
+						this.charge.add(tmp);
+						Thread.sleep(Utils.getRandomWaitTime());
+					}
+					this.producedCharges.put(chargeCounter++, this.charge.size());					
+					// Ready with producing, reset gingerBreadList for next request
+					this.gingerBreadList.clear();
+					
+					// TODO Send list for baking
+					System.out.println("Send charge with size " + this.charge.size() + " to oven");
+					
+					// Reset charge for next request
+					this.charge.clear();
 					
 					// Check if new ingredients are published in topic, if not, we are ready and
 					// we can listen to the topic again.
 					// Else we request to server and set the serverHasNewIngredients variable to false
-					if (this.serverHasNewIngredients == false) {
-						this.isWorking = false;
-					}
-					else {
-						this.serverHasNewIngredients = false;
+					// Set isWorking to false, because current producing step is finished
+					this.isWorking = false;
+					if (this.serverHasMoreIngredients == true) {
 						this.sendRequestForIngredients();
+						this.serverHasMoreIngredients = false;
 					}
 				}
 			}
 			catch (JMSException e) {
+				e.printStackTrace();
+			} 
+			catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
