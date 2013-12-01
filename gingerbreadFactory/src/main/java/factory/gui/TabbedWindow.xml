@@ -1,0 +1,59 @@
+<gui:TabbedWindow title="Lebkuchenfarbik Simulator" maximized="true"
+	xmlns:bxml="http://pivot.apache.org/bxml" xmlns:content="org.apache.pivot.wtk.content"
+	xmlns:gui="factory.gui" xmlns="org.apache.pivot.wtk">
+
+	<TablePane styles="{padding:8, horizontalSpacing:6}">
+		<columns>
+			<TablePane.Column width="1*" />
+		</columns>
+
+		<TablePane.Row height="1*">
+				<FillPane>
+					<TabPane bxml:id="tabPane">
+						<FillPane>
+							<TabPane.tabData>
+								<content:ButtonData text="Anzeigetafel" />
+							</TabPane.tabData>
+							<Border styles="{padding:2}">
+								<Label text="Hier kommen noch die ganzen anzeigen" preferredWidth="800" preferredHeight="600"
+									styles="{horizontalAlignment:'center', verticalAlignment:'center'}" />
+							</Border>
+						</FillPane>
+
+						<BoxPane
+							styles="{horizontalAlignment:'center', verticalAlignment:'center'}">
+							<TabPane.tabData>
+								<content:ButtonData text="Bestellung" />
+							</TabPane.tabData>
+							<Border styles="{padding:2}">
+								<Form>
+									<Form.Section heading="Bestellung">
+										<BoxPane Form.label="Lieferant Id">
+											<TextInput bxml:id="supplierId" />
+										</BoxPane>
+										<BoxPane Form.label="Anzahl">
+											<TextInput bxml:id="amount" />
+										</BoxPane>
+										<BoxPane orientation="horizontal" styles="{padding:4}">
+											<bxml:define>
+												<ButtonGroup bxml:id="type" />
+											</bxml:define>
+											<RadioButton buttonData="Honig"
+												buttonGroup="$type" selected="true" />
+											<RadioButton  buttonData="Eier"
+												buttonGroup="$type" />
+											<RadioButton  buttonData="Mehl"
+												buttonGroup="$type" />
+										</BoxPane>
+									</Form.Section>
+									<Form.Section>
+										<PushButton bxml:id="submitButton" buttonData="Bestellung abschicken" styles="{minimumAspectRatio:3}"/>
+									</Form.Section>
+								</Form>
+							</Border>
+						</BoxPane>
+					</TabPane>
+				</FillPane>
+		</TablePane.Row>
+	</TablePane>
+</gui:TabbedWindow>
