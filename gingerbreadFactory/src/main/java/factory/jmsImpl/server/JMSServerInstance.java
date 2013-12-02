@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.DeliveryMode;
@@ -45,7 +46,7 @@ public class JMSServerInstance implements Runnable {
 	private Logger logger = Logger.get(getClass());
 	
 	// Stores the bakerid -> ingredients relationship
-	private Hashtable<Long, ArrayList<GingerBreadTransactionObject>> delivered_ingredients;
+	private ConcurrentHashMap<Long, ArrayList<GingerBreadTransactionObject>> delivered_ingredients;
 	
 	// ingredient queue
 	private QueueConnection ingredientsDelivery_connection;
@@ -155,6 +156,7 @@ public class JMSServerInstance implements Runnable {
 	public void run() {
 		System.out.println("\n======================================");
 		System.out.println("Type 'storage' to see the stored ingredients");
+		System.out.println("Type 'exit' to to shut down the server");
 		System.out.println("======================================\n");
 		while (isRunning) {
 			try {
@@ -162,6 +164,9 @@ public class JMSServerInstance implements Runnable {
 				String s = bufferRead.readLine();
 				if (s.equalsIgnoreCase("storage")) {
 					this.printStorage();
+				}
+				else if (s.equals("exit")) {
+					break;
 				}
 			}
 			catch (IOException e) {
@@ -319,7 +324,7 @@ public class JMSServerInstance implements Runnable {
 				+ "gingerbreads possible = " + this.gingerBreadCounter.get() + "\n");
 	}
 
-	public Hashtable<Long, ArrayList<GingerBreadTransactionObject>> getDelivered_ingredients() {
+	public ConcurrentHashMap<Long, ArrayList<GingerBreadTransactionObject>> getDelivered_ingredients() {
 		return delivered_ingredients;
 	}
 

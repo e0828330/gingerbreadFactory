@@ -1,11 +1,15 @@
 package factory.jmsImpl.baker;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -57,7 +61,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	
 	// total number of charges produced
 	private int chargeCounter = 1;
-	private Hashtable<Integer, Integer> producedCharges;
+	private ConcurrentHashMap<Long, Integer> producedCharges;
 	
 	// Helper attributes for topic and request handling
 	private boolean serverHasMoreIngredients = false;
@@ -81,7 +85,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 		this.ctx = new InitialContext(properties);
 		this.gingerBreadList = new ArrayList<GingerBreadTransactionObject>(5);
 		this.charge = new ArrayList<GingerBread>(10);
-		this.producedCharges = new Hashtable<Integer, Integer>();
+		this.producedCharges = new ConcurrentHashMap<Long, Integer>();
 		try {
 			// init topic for ingredients
 			this.setup_ingredientsTopic();
@@ -119,23 +123,34 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	}	
 
 	public void run() {
-		int showProducedChargesSteps = 0;
+		System.out.println("\n======================================");
+		System.out.println("Type 'exit' to to shut down the baker");
+		System.out.println("Type 'info' to show already produced charges.");
+		System.out.println("======================================\n");
 		// On startup send request for ingredients
 		sendRequestForIngredients();
-		while (isRunning) {
-			if (showProducedChargesSteps == 200) {
-				for (Integer key: this.producedCharges.keySet()) {
-					System.out.println("Charge " + key + " produced with " + this.producedCharges.get(key) + " gingerbreads.");
-				}
-				System.out.print("\n");
-				showProducedChargesSteps = 0;
-			}
+		while (isRunning) {		
 			try {
-				Thread.sleep(200);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+				String s = bufferRead.readLine();
+				if (s.equals("exit")) {
+					break;
+				}
+				else if (s.equals("info")) {
+					for (Map.Entry<Long, Integer> element: this.producedCharges.entrySet()) {
+						System.out.println("Charge with id = " + element.getKey() + " produced with " + element.getValue() + " gingerbreads.");
+					}
+				}
 			}
-			showProducedChargesSteps++;
+			catch (IOException e) {
+				e.printStackTrace();
+				try {
+					this.close();
+				} catch (JMSException e1) {
+					e1.printStackTrace();
+				}
+			}			
+		
 		}
 		try {
 			this.close();
@@ -221,11 +236,13 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 				else if (msg != null && msg.getText().equals(Messages.MESSAGE_END)) {
 					this.logger.info("Produce gingerbread.", (Object[]) null);
 					// Produce
+					Long chargeId = Utils.getID();
 					for (GingerBreadTransactionObject obj : this.gingerBreadList) {
+						
 						GingerBread tmp = new GingerBread();
 						tmp.setId(Utils.getID());
 						tmp.setBakerId(this.id);
-						tmp.setChargeId(Utils.getID());
+						tmp.setChargeId(chargeId);
 						tmp.setFlourId(obj.getFlour().getId());
 						tmp.setHoneyId(obj.getHoney().getId());
 						tmp.setFirstEggId(obj.getEgg1().getId());
@@ -234,7 +251,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 						this.charge.add(tmp);
 						Thread.sleep(Utils.getRandomWaitTime());
 					}
-					this.producedCharges.put(chargeCounter++, this.charge.size());					
+					this.producedCharges.put(chargeId, this.charge.size());					
 					// Ready with producing, reset gingerBreadList for next request
 					this.gingerBreadList.clear();
 					
