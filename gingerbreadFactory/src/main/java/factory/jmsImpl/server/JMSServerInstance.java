@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,6 +43,9 @@ public class JMSServerInstance implements Runnable {
 	private Context ctx;
 	private boolean isRunning = true;
 	private Logger logger = Logger.get(getClass());
+	
+	// Stores the bakerid -> ingredients relationship
+	private Hashtable<Long, ArrayList<GingerBreadTransactionObject>> delivered_ingredients;
 	
 	// ingredient queue
 	private QueueConnection ingredientsDelivery_connection;
@@ -313,6 +317,10 @@ public class JMSServerInstance implements Runnable {
 				+ "flour = " + this.flour_list.size() + "\n"
 				+ "honey = " + this.honey_list.size() + "\n"
 				+ "gingerbreads possible = " + this.gingerBreadCounter.get() + "\n");
+	}
+
+	public Hashtable<Long, ArrayList<GingerBreadTransactionObject>> getDelivered_ingredients() {
+		return delivered_ingredients;
 	}
 
 }

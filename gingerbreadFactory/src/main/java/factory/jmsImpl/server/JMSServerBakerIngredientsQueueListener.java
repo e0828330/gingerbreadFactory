@@ -36,6 +36,7 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 						response.setJMSCorrelationID(message.getJMSCorrelationID());
 						response.setText(Messages.INGREDIENTS_RESPONSE_MESSAGE_NONE);
 						this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
+						this.server.getBakerIngredients_session().commit();
 					}
 					else {
 						/*for (GingerBreadTransactionObject ingredient : ingredients) {
@@ -60,9 +61,11 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 						TextMessage responseEnd = this.server.getBakerIngredients_session().createTextMessage();
 						responseEnd.setJMSCorrelationID(message.getJMSCorrelationID());
 						responseEnd.setText(Messages.MESSAGE_END);
-						this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), responseEnd);						
+						this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), responseEnd);	
+						//this.server.getDelivered_ingredients().put(key, ingredients);
+						this.server.getBakerIngredients_session().commit();
 					}
-					this.server.getBakerIngredients_session().commit();
+					
 				}
 			}
 		}
