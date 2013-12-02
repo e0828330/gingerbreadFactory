@@ -29,8 +29,7 @@ public class QAEmployee {
 	public QAEmployee(MzsCore core) {
 		this.core = core;
 	}
-	
-	
+
 	public void run() {
 		Capi capi = new Capi(core);
 		
