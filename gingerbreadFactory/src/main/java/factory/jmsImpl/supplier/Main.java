@@ -18,21 +18,21 @@ public class Main {
 		try {
 			Supplier jmsSupplier1 = new JMSSupplierInstance("jms.properties");
 			jmsSupplier1.setId(1L);
-			jmsSupplier1.placeOrder(12, Ingredient.Type.HONEY);
+			jmsSupplier1.placeOrder(7, Ingredient.Type.HONEY);
 			supplier1 = new Thread(jmsSupplier1);
 			supplier1.start();
 			
 			
 			Supplier jmsSupplier2 = new JMSSupplierInstance("jms.properties");
 			jmsSupplier2.setId(2L);
-			jmsSupplier2.placeOrder(24, Ingredient.Type.EGG);
+			jmsSupplier2.placeOrder(14, Ingredient.Type.EGG);
 			supplier2 = new Thread(jmsSupplier2);
 			supplier2.start();
 			
 			
 			Supplier jmsSupplier3 = new JMSSupplierInstance("jms.properties");
 			jmsSupplier3.setId(3L);
-			jmsSupplier3.placeOrder(12, Ingredient.Type.FLOUR);
+			jmsSupplier3.placeOrder(7, Ingredient.Type.FLOUR);
 			supplier3 = new Thread(jmsSupplier3);
 			supplier3.start();			
 		} catch (IOException e) {

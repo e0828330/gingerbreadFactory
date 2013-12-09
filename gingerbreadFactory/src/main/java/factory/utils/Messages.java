@@ -10,6 +10,10 @@ public class Messages {
 	
 	public static final String MESSAGE_END = "MESSAGE_END";
 	
+	public static final String MESSAGE_BAKER_CONTINUE = "BAKER_CONTINUE";
+	
+	public static final String MESSAGE_NO_MORE_INGREDIENTS_AVAILABLE = "BAKER_REQUEST_REST";
+	
 	public static final String MESSAGE_MORE_INGREDIENTS_AVAILABLE = "REQUEST MORE"; // because moar
 	
 }

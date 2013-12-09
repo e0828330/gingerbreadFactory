@@ -27,6 +27,7 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 		try {
 			if (message instanceof TextMessage) {
 				String txt = ((TextMessage) message).getText();
+				Long bakerID = ((TextMessage) message).getLongProperty("BAKER_ID");
 				if (txt != null && txt.equals(Messages.INGREDIENTS_REQUEST_MESSAGE)) {
 					
 					ArrayList<GingerBreadTransactionObject> ingredients = this.server.getGingerBreadIngredients(5);
@@ -39,12 +40,6 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 						this.server.getBakerIngredients_session().commit();
 					}
 					else {
-						/*for (GingerBreadTransactionObject ingredient : ingredients) {
-							ObjectMessage response = this.server.getBakerIngredients_session().createObjectMessage();
-							response.setJMSCorrelationID(message.getJMSCorrelationID());
-							response.setObject(ingredient);
-							this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
-						}*/
 						ObjectMessage response = this.server.getBakerIngredients_session().createObjectMessage();
 						response.setJMSCorrelationID(message.getJMSCorrelationID());
 						response.setObject(ingredients);
@@ -58,11 +53,10 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 							this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), responseMore);	
 						}
 						
-						TextMessage responseEnd = this.server.getBakerIngredients_session().createTextMessage();
-						responseEnd.setJMSCorrelationID(message.getJMSCorrelationID());
-						responseEnd.setText(Messages.MESSAGE_END);
-						this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), responseEnd);	
-						//this.server.getDelivered_ingredients().put(key, ingredients);
+						if (bakerID != null) {
+							this.server.getDelivered_ingredients().put(bakerID, ingredients);
+						}
+						
 						this.server.getBakerIngredients_session().commit();
 					}
 					
