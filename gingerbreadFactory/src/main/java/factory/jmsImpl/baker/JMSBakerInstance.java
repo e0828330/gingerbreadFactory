@@ -63,7 +63,6 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	private Long id = 0L;
 	
 	// total number of charges produced
-	private int chargeCounter = 1;
 	private ConcurrentHashMap<Long, Integer> producedCharges;
 	
 	// Helper attributes for topic and request handling
@@ -91,6 +90,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 
 
 	public JMSBakerInstance(String propertiesFile) throws IOException, NamingException {
+		this.id = Utils.getID().longValue();
 		Properties properties = new Properties();
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(propertiesFile));
 		this.ctx = new InitialContext(properties);
@@ -208,7 +208,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 			try {
 				Destination tempDest = this.bakerIngredients_session.createTemporaryQueue();
 				MessageConsumer responseConsumer = bakerIngredients_session.createConsumer(tempDest);
-				responseConsumer.setMessageListener(this);
+				//responseConsumer.setMessageListener(this);
 				
 				TextMessage message = this.bakerIngredients_session.createTextMessage(Messages.INGREDIENTS_REQUEST_MESSAGE);	
 				message.setLongProperty("BAKER_ID", this.id);
@@ -216,11 +216,11 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 				message.setJMSCorrelationID(String.valueOf(UUID.randomUUID().hashCode()) + String.valueOf(this.id));
 				this.bakerIngredients_sender.send(message);
 				this.bakerIngredients_session.commit();
-				
-				// Wait for receive
-				
-				
 				this.logger.info("Send request for ingredients to server", (Object[]) null);
+				// Wait for receive
+				this.logger.info("Waiting for response for new ingredients and blocking..", (Object[]) null);
+				Message responseMessage = responseConsumer.receive();
+				this.checkReponseMessage(responseMessage);
 			}
 			catch (JMSException e) {
 				e.printStackTrace();
@@ -261,6 +261,20 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	 * Receiving responses from server to requests for ingredients
 	 */
 	public void onMessage(Message message) {
+		if (message instanceof TextMessage) {
+			TextMessage msg = (TextMessage) message;
+			try {
+				if (msg != null && msg.getText().equals(Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE)) {
+					this.serverHasMoreIngredients = true;
+				}
+			}
+			catch (JMSException e) {
+				e.printStackTrace();
+			} 
+		}		
+	}
+	
+	private void checkReponseMessage(Message message) {
 		this.logger.info("Response of ingredient-request received.", (Object[]) null); 
 		if (message instanceof ObjectMessage) {
 			ObjectMessage objMessage = (ObjectMessage) message;
@@ -271,7 +285,6 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 					for (GingerBreadTransactionObject obj : list) {
 						this.gingerBreadList.add(obj);
 					}
-					this.logger.info("Add gingerbread for producing step.", (Object[]) null);
 				}
 				this.logger.info("Produce charge...", (Object[]) null);
 				// Produce the charge
@@ -292,14 +305,6 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 				}
 				this.producedCharges.put(chargeId, this.charge.size());
 				
-				// Send charge to oven
-				/*ObjectMessage chargeMessage = this.ovenQueue_session.createObjectMessage();
-				chargeMessage.setStringProperty("TYPE", "ArrayList<GingerBread>");
-				chargeMessage.setObject(this.charge);
-				this.ovenQueue_sender.send(chargeMessage);
-				this.ovenQueue_session.commit();
-*/
-				
 				Destination tempDest = this.ovenQueue_session.createTemporaryQueue();
 				MessageConsumer responseConsumer = ovenQueue_session.createConsumer(tempDest);
 				
@@ -316,13 +321,16 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 				
 				this.logger.info("Waiting for oven and blocking..", (Object[]) null);
 				
-				Message myMessage = responseConsumer.receive();
+				Message responseMessage = responseConsumer.receive();
 				
-				this.logger.info("RECEIVED " + ((TextMessage) myMessage).getText() + ", I am baker = " + this.id, (Object[]) null);
+				this.logger.info("RECEIVED " + ((TextMessage) responseMessage).getText() + ", I am baker = " + this.id, (Object[]) null);
+				
+				if (responseMessage.getStringProperty("INFO") != null && 
+						responseMessage.getStringProperty("INFO").equals(Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE)) {
+					this.serverHasMoreIngredients = true;
+				}
 				
 				this.reset();
-				
-				
 			} catch (JMSException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
@@ -336,12 +344,6 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 					this.logger.info("No ingredients available.", (Object[]) null);
 					this.isWorking = false;
 				}
-				else if (msg != null && msg.getText().equals(Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE)) {
-					this.serverHasMoreIngredients = true;
-				}
-				else if (msg != null && msg.getText().equals(Messages.MESSAGE_BAKER_CONTINUE)) {
-					this.reset();
-				}
 			}
 			catch (JMSException e) {
 				e.printStackTrace();
@@ -352,7 +354,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 			this.bakerIngredients_session.commit();
 		} catch (JMSException e) {
 			e.printStackTrace();
-		}
+		}		
 	}
 	
 	private void reset() {

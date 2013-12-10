@@ -44,19 +44,12 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 						response.setJMSCorrelationID(message.getJMSCorrelationID());
 						response.setObject(ingredients);
 						response.setStringProperty("TYPE", "ArrayList<GingerBreadTransactionObject>");
-						this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
-
-						if (this.server.getGingerBreadCounter() > 0) {
-							TextMessage responseMore = this.server.getBakerIngredients_session().createTextMessage();
-							responseMore.setJMSCorrelationID(message.getJMSCorrelationID());
-							responseMore.setText(Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE);
-							this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), responseMore);	
-						}
+					
 						
 						if (bakerID != null) {
 							this.server.getDelivered_ingredients().put(bakerID, ingredients);
 						}
-						
+						this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
 						this.server.getBakerIngredients_session().commit();
 					}
 					

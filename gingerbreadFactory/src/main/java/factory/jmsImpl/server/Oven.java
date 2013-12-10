@@ -24,6 +24,8 @@ public class Oven implements Runnable {
 	}
 	
 	public void run() {
+		this.logger.info("OVEN STARTED", (Object[]) null);
+
 		for (ChargeReplyObject charge : this.charges) {
 			this.logger.info("Baking charge with id = " + charge.getCharge().get(0).getChargeId(), (Object[]) null);
 			for (GingerBread gingerBread : charge.getCharge()) {

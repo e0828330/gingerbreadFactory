@@ -405,25 +405,24 @@ public class JMSServerInstance implements Runnable {
 	public synchronized void startOven() {
 		int currentSize = 0;
 		ArrayList<ChargeReplyObject> nextOvenCharges = new ArrayList<ChargeReplyObject>(10);
-		ArrayList<Integer> removedCharges = new ArrayList<Integer>(10);
+
 		int i = 0;
 		for (ChargeReplyObject charge : this.waitingList) {
 			int chargeSize = charge.getCharge().size();
 			if (currentSize + chargeSize <= this.MAX_OVEN_CHARGE) {
 				currentSize += chargeSize;
 				nextOvenCharges.add(charge);
-				removedCharges.add(i++);
 			}
 		}
 		// Remove charges from waiting list
-		for (int j : removedCharges) {
-			this.waitingList.remove(j);
-		}
+		this.waitingList.removeAll(nextOvenCharges);
 		
 		// Start oven
-		this.ovenIsRunning.set(true);
-		Thread oven = new Thread(new Oven(this, nextOvenCharges));
-		oven.start();
+		if (this.ovenIsRunning.get() == false) {
+			this.ovenIsRunning.set(true);
+			Thread oven = new Thread(new Oven(this, nextOvenCharges));
+			oven.start();
+		}
 	}
 	
 	public synchronized void stopOven(ArrayList<ChargeReplyObject> charges) {
@@ -437,18 +436,20 @@ public class JMSServerInstance implements Runnable {
 				TextMessage responseMessage = this.ovenQueue_session.createTextMessage();
 				responseMessage.setJMSCorrelationID(replyObject.getId());	
 				responseMessage.setText("CHARGE READY: " + replyObject.getCharge().get(0).getChargeId() + ", bakerid=" + replyObject.getCharge().get(0).getBakerId());
+				
+				if (this.gingerBreadCounter.get() > 0) {
+					responseMessage.setStringProperty("INFO", Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE);
+				}
+				
 				this.bakerOven_replyProducer.send(replyObject.getDestination(), responseMessage);
 				this.ovenQueue_session.commit();
 			}
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
-		
+		this.ovenIsRunning.set(false);
 		if (this.waitingList.size() > 0) {
 			startOven();
-		}
-		else {
-			this.ovenIsRunning.set(false);
 		}
 	}
 
