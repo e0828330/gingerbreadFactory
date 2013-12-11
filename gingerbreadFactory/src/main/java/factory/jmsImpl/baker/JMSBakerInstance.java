@@ -40,6 +40,7 @@ import org.apache.qpid.transport.util.Logger;
 import org.mozartspaces.core.Entry;
 
 import factory.entities.Charge;
+import factory.entities.ChargeReplyObject;
 import factory.entities.GingerBread;
 import factory.entities.GingerBreadTransactionObject;
 import factory.jmsImpl.server.JMSServerBakerIngredientsQueueListener;
@@ -322,8 +323,18 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 				this.logger.info("Waiting for oven and blocking..", (Object[]) null);
 				
 				Message responseMessage = responseConsumer.receive();
+				if (responseMessage instanceof ObjectMessage) {
+					ObjectMessage responseObjectMessage = (ObjectMessage) responseMessage;
+					if (responseObjectMessage.getStringProperty("TYPE") != null &&
+							responseObjectMessage.getStringProperty("TYPE").equals("ArrayList<GingerBread>")) {
+						@SuppressWarnings("unchecked")
+						ArrayList<GingerBread> bakedCharge = (ArrayList<GingerBread>) responseObjectMessage.getObject();
+						System.out.println(bakedCharge.get(0).getState().toString());
+					}
+				}
+				this.logger.info("Received baked charge.", (Object[]) null);
 				
-				this.logger.info("RECEIVED " + ((TextMessage) responseMessage).getText() + ", I am baker = " + this.id, (Object[]) null);
+				// TODO forward to qualitycontrol
 				
 				if (responseMessage.getStringProperty("INFO") != null && 
 						responseMessage.getStringProperty("INFO").equals(Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE)) {

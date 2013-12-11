@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,8 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
@@ -33,20 +32,18 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.apache.qpid.transport.util.Logger;
-import org.mozartspaces.core.Entry;
 
 import factory.entities.ChargeReplyObject;
-import factory.entities.GingerBread;
 import factory.entities.GingerBreadTransactionObject;
 import factory.entities.Ingredient;
 import factory.utils.Messages;
-import factory.utils.Utils;
 
 public class JMSServerInstance implements Runnable {
 
 	private Context ctx;
 	private boolean isRunning = true;
 	private Logger logger = Logger.get(getClass());
+	
 	
 	// Stores the bakerid -> ingredients relationship
 	private ConcurrentHashMap<Long, ArrayList<GingerBreadTransactionObject>> delivered_ingredients;
@@ -433,9 +430,10 @@ public class JMSServerInstance implements Runnable {
 		// Tell baker that his charges is alright
 		try {
 			for (ChargeReplyObject replyObject : charges) {
-				TextMessage responseMessage = this.ovenQueue_session.createTextMessage();
-				responseMessage.setJMSCorrelationID(replyObject.getId());	
-				responseMessage.setText("CHARGE READY: " + replyObject.getCharge().get(0).getChargeId() + ", bakerid=" + replyObject.getCharge().get(0).getBakerId());
+				ObjectMessage responseMessage = this.ovenQueue_session.createObjectMessage();
+				responseMessage.setJMSCorrelationID(replyObject.getId());
+				responseMessage.setStringProperty("TYPE", "ArrayList<GingerBread>");
+				responseMessage.setObject(replyObject.getCharge());
 				
 				if (this.gingerBreadCounter.get() > 0) {
 					responseMessage.setStringProperty("INFO", Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE);
