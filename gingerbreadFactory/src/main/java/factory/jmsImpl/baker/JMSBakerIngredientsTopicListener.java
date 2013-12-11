@@ -26,7 +26,12 @@ public class JMSBakerIngredientsTopicListener implements MessageListener {
 			if (message instanceof TextMessage) {
 				String txt = ((TextMessage) message).getText();
 				if (txt != null && txt.equals(Messages.INGREDIENTS_READY_MESSAGE)) {
-					this.baker.sendRequestForIngredients();
+					if (baker.getIsWorking() == false) {
+						this.baker.sendRequestForIngredients(false);
+					}
+					else if (baker.getIsWorking() && baker.getServerHasMoreIngredients() == false) {
+						this.baker.setServerHasMoreIngredients(true);
+					}
 				}
 			}
 		}

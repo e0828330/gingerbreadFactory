@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -67,8 +68,8 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	private ConcurrentHashMap<Long, Integer> producedCharges;
 	
 	// Helper attributes for topic and request handling
-	private boolean serverHasMoreIngredients = false;
-	private boolean isWorking = false;
+	private AtomicBoolean serverHasMoreIngredients;
+	private AtomicBoolean isWorking;
 
 	// ingredients topic attributes
 	private Topic ingredientsTopic_topic;
@@ -117,6 +118,12 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 			// set queue for quality control
 			this.setup_qualityControlQueue();
 			
+			this.isWorking = new AtomicBoolean();
+			this.serverHasMoreIngredients = new AtomicBoolean();
+			
+			this.isWorking.set(false);
+			this.serverHasMoreIngredients.set(false);
+			
 		} catch (NamingException e) {
 			e.printStackTrace();
 		} catch (JMSException e) {
@@ -131,7 +138,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
 		this.qualityQueue_queue = (Queue) ctx.lookup("qualityControlQueue");
 		this.qualityQueue_connection = queueConnectionFactory.createQueueConnection();
-		this.qualityQueue_session = this.qualityQueue_connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);
+		this.qualityQueue_session = this.qualityQueue_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.qualityQueue_sender = this.qualityQueue_session.createSender(this.qualityQueue_queue);
 		this.qualityQueue_connection.start();	
 		this.logger.info("Queue for quality-control startet.", (Object[]) null); 		
@@ -184,7 +191,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 		System.out.println("Type 'state' to show the current state.");
 		System.out.println("======================================\n");
 		// On startup send request for ingredients
-		sendRequestForIngredients();
+		sendRequestForIngredients(true);
 		while (isRunning) {		
 			try {
 				BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
@@ -198,7 +205,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 					}
 				}
 				else if (s.equals("state")) {
-					if (this.isWorking) {
+					if (this.isWorking.get()) {
 						System.out.println("Baker ist working at the moment...");
 					}
 					else {
@@ -224,10 +231,10 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 		}
 	}
 	
-	public void sendRequestForIngredients() {
+	public synchronized void sendRequestForIngredients(boolean explicitRequest) {
 		// Avoid requests while already requesting
-		if (this.isWorking == false) {
-			this.isWorking = true;
+		if (this.isWorking.get() == false || explicitRequest) {
+			this.isWorking.set(true);
 			try {
 				Destination tempDest = this.bakerIngredients_session.createTemporaryQueue();
 				MessageConsumer responseConsumer = bakerIngredients_session.createConsumer(tempDest);
@@ -250,7 +257,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 			}
 		}
 		else {
-			this.serverHasMoreIngredients = true;
+			this.serverHasMoreIngredients.set(true);
 		}
 	}
 
@@ -291,7 +298,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 			TextMessage msg = (TextMessage) message;
 			try {
 				if (msg != null && msg.getText().equals(Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE)) {
-					this.serverHasMoreIngredients = true;
+					this.serverHasMoreIngredients.set(true);
 				}
 			}
 			catch (JMSException e) {
@@ -357,8 +364,9 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 						// forward to qualitycontrol
 						ObjectMessage qualityObjectMessage = this.qualityQueue_session.createObjectMessage();
 						qualityObjectMessage.setObject(bakedCharge);
+						qualityObjectMessage.setStringProperty("TYPE", "ArrayList<GingerBread>");
 						this.qualityQueue_sender.send(qualityObjectMessage);
-						this.qualityQueue_session.commit();
+						//this.qualityQueue_session.commit();
 					}
 				}
 				this.logger.info("Received baked charge and forwarded to quality control.", (Object[]) null);
@@ -366,7 +374,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 				
 				if (responseMessage.getStringProperty("INFO") != null && 
 						responseMessage.getStringProperty("INFO").equals(Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE)) {
-					this.serverHasMoreIngredients = true;
+					this.serverHasMoreIngredients.set(true);
 				}
 				
 				this.reset();
@@ -381,7 +389,7 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 			try {
 				if (msg != null && msg.getText().equals(Messages.INGREDIENTS_RESPONSE_MESSAGE_NONE)) {
 					this.logger.info("No ingredients available.", (Object[]) null);
-					this.isWorking = false;
+					this.isWorking.set(false);
 				}
 			}
 			catch (JMSException e) {
@@ -389,11 +397,11 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 			} 
 		}
 		
-		try {
+		/*try {
 			this.bakerIngredients_session.commit();
 		} catch (JMSException e) {
 			e.printStackTrace();
-		}		
+		}	*/	
 	}
 	
 	private void reset() {
@@ -406,10 +414,21 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 		// we can listen to the topic again.
 		// Else we request to server and set the serverHasNewIngredients variable to false
 		// Set isWorking to false, because current producing step is finished
-		this.isWorking = false;
-		if (this.serverHasMoreIngredients == true) {
-			this.sendRequestForIngredients();
-			this.serverHasMoreIngredients = false;
+		if (this.serverHasMoreIngredients.get() == true) {
+			this.sendRequestForIngredients(true);
+			this.serverHasMoreIngredients.set(false);
 		}							
+	}
+	
+	public boolean getIsWorking() {
+		return this.isWorking.get();
+	}
+	
+	public boolean getServerHasMoreIngredients() {
+		return this.serverHasMoreIngredients.get();
+	}
+	
+	public void setServerHasMoreIngredients(boolean value) {
+		this.serverHasMoreIngredients.set(true);
 	}
 }
