@@ -88,6 +88,12 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 	private Queue ovenQueue_queue;
 	private QueueSender ovenQueue_sender;
 	private MessageProducer ovenProducer;
+	
+	// quality-control queue
+	private QueueConnection qualityQueue_connection;
+	private QueueSession qualityQueue_session;
+	private Queue qualityQueue_queue;	
+	private QueueSender qualityQueue_sender;
 
 
 	public JMSBakerInstance(String propertiesFile) throws IOException, NamingException {
@@ -108,12 +114,28 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 			// Set queue for oven
 			this.setup_ovenQueue();
 			
+			// set queue for quality control
+			this.setup_qualityControlQueue();
+			
 		} catch (NamingException e) {
 			e.printStackTrace();
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
 	}
+	
+	
+	private void setup_qualityControlQueue() throws NamingException, JMSException {
+		this.logger.info("Initializing queue for bakers quality-control requests...", (Object[]) null); 
+		QueueConnectionFactory queueConnectionFactory = 
+				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		this.qualityQueue_queue = (Queue) ctx.lookup("qualityControlQueue");
+		this.qualityQueue_connection = queueConnectionFactory.createQueueConnection();
+		this.qualityQueue_session = this.qualityQueue_connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);
+		this.qualityQueue_sender = this.qualityQueue_session.createSender(this.qualityQueue_queue);
+		this.qualityQueue_connection.start();	
+		this.logger.info("Queue for quality-control startet.", (Object[]) null); 		
+	}	
 
 	private void setup_ingredientsTopic() throws NamingException, JMSException {
 		this.logger.info("Initializing topic for ingredients...", (Object[]) null);
@@ -246,13 +268,16 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 		this.bakerIngredients_sender.close();
 		this.bakerIngredients_session.close();
 		this.bakerIngredients_connection.close();
-		
+
+		this.logger.info("Closing quality queue.", (Object[]) null);
+		this.qualityQueue_sender.close();
+		this.qualityQueue_session.close();
+		this.qualityQueue_connection.close();
 		
 		this.logger.info("Closing oven queue.", (Object[]) null);
 		this.ovenQueue_sender.close();
 		this.ovenQueue_session.close();
 		this.ovenQueue_connection.close();
-		
 		this.ovenProducer.close();
 		
 		this.logger.info("BakerInstance shutting down.", (Object[]) null); 		
@@ -329,12 +354,15 @@ public class JMSBakerInstance implements Runnable, MessageListener {
 							responseObjectMessage.getStringProperty("TYPE").equals("ArrayList<GingerBread>")) {
 						@SuppressWarnings("unchecked")
 						ArrayList<GingerBread> bakedCharge = (ArrayList<GingerBread>) responseObjectMessage.getObject();
-						System.out.println(bakedCharge.get(0).getState().toString());
+						// forward to qualitycontrol
+						ObjectMessage qualityObjectMessage = this.qualityQueue_session.createObjectMessage();
+						qualityObjectMessage.setObject(bakedCharge);
+						this.qualityQueue_sender.send(qualityObjectMessage);
+						this.qualityQueue_session.commit();
 					}
 				}
-				this.logger.info("Received baked charge.", (Object[]) null);
+				this.logger.info("Received baked charge and forwarded to quality control.", (Object[]) null);
 				
-				// TODO forward to qualitycontrol
 				
 				if (responseMessage.getStringProperty("INFO") != null && 
 						responseMessage.getStringProperty("INFO").equals(Messages.MESSAGE_MORE_INGREDIENTS_AVAILABLE)) {
