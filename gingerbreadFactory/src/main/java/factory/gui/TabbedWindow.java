@@ -29,6 +29,7 @@ public class TabbedWindow extends Window implements Bindable{
 	private TableView testTable;
 	
 	public void initialize(Map<String, Object> namespace, URL location, Resources resources) {
+		
 		supplierId = (TextInput) namespace.get("supplierId");
 		amount = (TextInput) namespace.get("amount");
 		type = (ButtonGroup) namespace.get("type");
@@ -37,7 +38,7 @@ public class TabbedWindow extends Window implements Bindable{
 		
 		
 		/* Add some stuff to the table */
-		ArrayList<Ingredient> tableData = new ArrayList<Ingredient>();
+		/*ArrayList<Ingredient> tableData = new ArrayList<Ingredient>();
 		tableData.add(new Ingredient(15L, 10L, Ingredient.Type.EGG));
 		tableData.add(new Ingredient(112L, 15L, Ingredient.Type.EGG));
 		ObjectMapper mapper = new ObjectMapper();
@@ -50,7 +51,7 @@ public class TabbedWindow extends Window implements Bindable{
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 		
 		submitButton.getButtonPressListeners().add(new ButtonPressListener() {
@@ -59,7 +60,7 @@ public class TabbedWindow extends Window implements Bindable{
 				System.out.println("ID:" + supplierId.getText());
 				System.out.println("AMOUNT:" + amount.getText());
 				System.out.println("TYPE: " + type.getSelection().getButtonData());
-			
+			/*
 				ArrayList<Ingredient> tableData = new ArrayList<Ingredient>();
 				tableData.add(new Ingredient(20L, 10L, Ingredient.Type.HONEY));
 				tableData.add(new Ingredient(112L, 15L, Ingredient.Type.EGG));
@@ -73,7 +74,7 @@ public class TabbedWindow extends Window implements Bindable{
 					e.printStackTrace();
 				} catch (IOException e) {
 					e.printStackTrace();
-				}
+				}*/
 				
 			}
 		});
