@@ -2,13 +2,13 @@ package factory.gui;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
 import org.apache.pivot.util.Resources;
 import org.apache.pivot.wtk.Alert;
+import org.apache.pivot.wtk.ApplicationContext;
 import org.apache.pivot.wtk.Button;
 import org.apache.pivot.wtk.ButtonGroup;
 import org.apache.pivot.wtk.ButtonPressListener;
@@ -35,7 +35,30 @@ public class MainWindow extends Window implements Bindable{
 	
 	private ObjectMapper mapper;
 	
-
+	public synchronized void updateTable(String tableId, List<?> data) throws JsonGenerationException, JsonMappingException, IOException {
+		final String _tableId = tableId;
+		final List<?> _data = data;
+		ApplicationContext.queueCallback(new Runnable() {
+			public void run() {
+				TableView table = (TableView) namespace.get(_tableId);
+				try {
+					System.out.println(_tableId);
+					System.out.println(mapper.writeValueAsString(_data));
+					table.setTableData(mapper.writeValueAsString(_data));
+				} catch (JsonGenerationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JsonMappingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+	
 	public void initialize(Map<String, Object> namespace, URL location, Resources resources) {
 		
 		this.namespace = namespace;
@@ -45,6 +68,8 @@ public class MainWindow extends Window implements Bindable{
 		type = (ButtonGroup) namespace.get("type");
 		submitButton = (PushButton) namespace.get("submitButton");
 		
+		DataThread dataThread = new DataThread(this);
+		new Thread(dataThread).start();
 		
 		submitButton.getButtonPressListeners().add(new ButtonPressListener() {
 			public void buttonPressed(Button btn) {

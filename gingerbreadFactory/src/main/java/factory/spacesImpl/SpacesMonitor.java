@@ -94,6 +94,7 @@ public class SpacesMonitor implements Monitor {
 	public List<GingerBread> getGingerBreads() {
 		List<GingerBread> result = null;
 		try {
+			System.out.println("getGB");
 			result = capi.read(gingerbreadContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, null);
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
