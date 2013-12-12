@@ -14,10 +14,10 @@ public interface EventListener {
 	public void onOvenChanged(List<GingerBread> ovenContent);
 	
 	/**
-	 * Called when new ingredient gets delivered
+	 * Called when new ingredient gets delivered or old ones get used
 	 * @param item
 	 */
-	public void onIngredientDelivered(Ingredient item);
+	public void onIngredientChanged(List<Ingredient> list);
 	
 	/**
 	 * Called when the gingerbread status changed, gives a list of current state
