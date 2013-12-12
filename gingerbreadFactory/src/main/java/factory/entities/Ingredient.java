@@ -9,16 +9,13 @@ public class Ingredient implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private Long id;
 	private Long supplierId;
-	
+
 	public enum Type {
-		HONEY,
-		FLOUR,
-		EGG
+		HONEY, FLOUR, EGG
 	};
-	
+
 	private Type type;
 
-	
 	public Long getId() {
 		return id;
 	}
@@ -31,10 +28,6 @@ public class Ingredient implements Serializable {
 		this.id = id;
 		this.type = type;
 		this.supplierId = supplierId;
-	}
-	
-	 public Type getType() {
-		return type;
 	}
 
 	public void setType(Type type) {
@@ -50,9 +43,9 @@ public class Ingredient implements Serializable {
 	}
 
 	@Override
-     public String toString() {
-		 return "[ | " + this.getSupplierId() + " | " + this.getId() + " - " + this.type + " ]";
-	 }
+	public String toString() {
+		return "[ | " + this.getSupplierId() + " | " + this.getId() + " - " + this.type + " ]";
+	}
 
 	public Type getType() {
 		return type;
