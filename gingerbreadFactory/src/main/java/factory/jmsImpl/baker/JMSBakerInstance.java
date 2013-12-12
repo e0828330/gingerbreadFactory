@@ -4,10 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -18,7 +16,6 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -27,8 +24,10 @@ import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.GingerBread;
 import factory.entities.GingerBreadTransactionObject;
+import factory.jmsImpl.server.JMSServerMonitoringListener;
 import factory.utils.JMSUtils;
 import factory.utils.JMSUtils.MessageType;
+import factory.utils.JMSMonitoringSender;
 import factory.utils.Messages;
 import factory.utils.Utils;
 
@@ -38,6 +37,9 @@ public class JMSBakerInstance implements Runnable {
 	private boolean isRunning = true;
 	private Logger logger = Logger.get(getClass());
 
+	// For monitoring
+	private JMSMonitoringSender monitoringSender;
+	
 	// Charge
 	private ArrayList<GingerBread> charge;
 
@@ -78,6 +80,8 @@ public class JMSBakerInstance implements Runnable {
 		this.charge = new ArrayList<GingerBread>(10);
 		this.producedCharges = new ConcurrentHashMap<Long, Integer>();
 		try {
+			this.monitoringSender = new JMSMonitoringSender(this.ctx);
+			
 			// Set queue connection for baker
 			this.setup_bakerIngredientsQueue();
 
@@ -135,11 +139,7 @@ public class JMSBakerInstance implements Runnable {
 				Hashtable<String, String> properties = new Hashtable<String, String>();
 				properties.put("BAKER_ID", String.valueOf(this.id));
 				this.logger.info("Waiting for response for new ingredients and blocking..", (Object[]) null);
-				Message responseMessage = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, 
-						Messages.INGREDIENTS_REQUEST_MESSAGE, 
-						properties, 
-						this.bakerIngredients_session, 
-						true, 
+				Message responseMessage = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, Messages.INGREDIENTS_REQUEST_MESSAGE, properties, this.bakerIngredients_session, true,
 						this.bakerIngredients_sender);
 				this.logger.info("Received answer..", (Object[]) null);
 				this.checkReponseMessage(responseMessage);
@@ -177,6 +177,8 @@ public class JMSBakerInstance implements Runnable {
 		this.ovenQueue_session.close();
 		this.ovenQueue_connection.close();
 		this.logger.info("BakerInstance shutting down.", (Object[]) null);
+		
+		this.monitoringSender.closeConnection();
 	}
 
 	private void checkReponseMessage(Message message) {
@@ -208,6 +210,8 @@ public class JMSBakerInstance implements Runnable {
 						tmp.setState(GingerBread.State.PRODUCED);
 						this.charge.add(tmp);
 						Thread.sleep(Utils.getRandomWaitTime());
+						
+						this.monitoringSender.sendMonitoringMessage(tmp);
 					}
 					this.producedCharges.put(chargeId, this.charge.size());
 					// acknowledge for receiving ingredients
@@ -218,12 +222,7 @@ public class JMSBakerInstance implements Runnable {
 					properties.put("BAKER_ID", String.valueOf(this.id));
 					properties.put("TYPE", "ArrayList<GingerBread>");
 					this.logger.info("Waiting for oven and blocking..", (Object[]) null);
-					Message responseMessage = JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, 
-							this.charge, 
-							properties, 
-							this.ovenQueue_session, 
-							true, 
-							this.ovenQueue_sender);
+					Message responseMessage = JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, this.charge, properties, this.ovenQueue_session, true, this.ovenQueue_sender);
 
 					if (responseMessage instanceof ObjectMessage) {
 						ObjectMessage responseObjectMessage = (ObjectMessage) responseMessage;
@@ -235,12 +234,7 @@ public class JMSBakerInstance implements Runnable {
 							// forward to qualitycontrol
 							properties = new Hashtable<String, String>();
 							properties.put("TYPE", "ArrayList<GingerBread>");
-							JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, 
-									bakedCharge,
-									properties,
-									this.qualityQueue_session, 
-									false, 
-									this.qualityQueue_sender);
+							JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, bakedCharge, properties, this.qualityQueue_session, false, this.qualityQueue_sender);
 							this.logger.info("Received baked charge of size= " + bakedCharge.size() + " and forwarded to quality control.", (Object[]) null);
 						}
 					}
@@ -249,6 +243,8 @@ public class JMSBakerInstance implements Runnable {
 			} catch (JMSException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (NamingException e) {
 				e.printStackTrace();
 			}
 		}

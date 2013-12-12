@@ -30,6 +30,7 @@ public class Oven implements Runnable {
 			this.logger.info("Baking charge " + charge.toString(), (Object[]) null);
 			for (GingerBread gingerBread : charge.getCharge()) {
 				gingerBread.setState(State.BAKED);
+				this.server.getGingerBreads().put(gingerBread.getId(), gingerBread);
 			}
 		}
 		try {

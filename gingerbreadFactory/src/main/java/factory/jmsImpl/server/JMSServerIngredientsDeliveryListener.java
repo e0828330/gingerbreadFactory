@@ -36,14 +36,13 @@ public class JMSServerIngredientsDeliveryListener implements MessageListener {
 						this.server.storeIncredient(ingredient);
 					}
 				}
-				
+
 				TextMessage response = this.server.getIngredientsDelivery_session().createTextMessage();
 				response.setJMSCorrelationID(message.getJMSCorrelationID());
 				response.setText("Thanks!");
 				MessageProducer producer = this.server.getIngredientsDelivery_session().createProducer(message.getJMSReplyTo());
 				producer.send(response);
 				producer.close();
-				//this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
 			}
 		} catch (JMSException e) {
 			e.printStackTrace();

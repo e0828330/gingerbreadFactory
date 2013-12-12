@@ -10,9 +10,17 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.ObjectMessage;
+import javax.jms.Queue;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
+import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.naming.Context;
+import javax.naming.NamingException;
+
+import factory.entities.GingerBread;
 
 public class JMSUtils {
 
@@ -41,8 +49,7 @@ public class JMSUtils {
 				Message response = consumer.receive();
 				consumer.close();
 				return response;
-			}
-			else {
+			} else {
 				TextMessage message = session.createTextMessage();
 				message.setText((String) payLoad);
 				if (stringProperties != null) {
@@ -52,8 +59,7 @@ public class JMSUtils {
 				}
 				sender.send(message);
 			}
-		}
-		else if (messageType == MessageType.OBJECTMESSAGE) {
+		} else if (messageType == MessageType.OBJECTMESSAGE) {
 			if (hasReplyQueue) {
 				Destination tempDest = session.createTemporaryQueue();
 				MessageConsumer consumer = session.createConsumer(tempDest);
@@ -72,8 +78,7 @@ public class JMSUtils {
 				Message response = consumer.receive();
 				consumer.close();
 				return response;
-			}
-			else {
+			} else {
 				ObjectMessage message = session.createObjectMessage();
 				message.setObject((Serializable) payLoad);
 				if (stringProperties != null) {
@@ -84,9 +89,7 @@ public class JMSUtils {
 				sender.send(message);
 			}
 		}
-		
 		return null;
-
 	}
 
 }
