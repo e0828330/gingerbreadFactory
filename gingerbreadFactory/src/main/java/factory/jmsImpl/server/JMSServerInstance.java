@@ -21,6 +21,7 @@ import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueReceiver;
+import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.naming.Context;
@@ -34,6 +35,8 @@ import factory.entities.ChargeReplyObject;
 import factory.entities.GingerBread;
 import factory.entities.GingerBreadTransactionObject;
 import factory.entities.Ingredient;
+import factory.utils.JMSUtils;
+import factory.utils.JMSUtils.MessageType;
 
 public class JMSServerInstance implements Runnable {
 
@@ -43,7 +46,7 @@ public class JMSServerInstance implements Runnable {
 
 	// Stores the bakerid -> ingredients relationship
 	private ConcurrentHashMap<Long, ArrayList<GingerBreadTransactionObject>> delivered_ingredients;
-	
+
 	// Stores the gingerbread-ID -> gingerbread
 	private ConcurrentHashMap<Long, GingerBread> gingerBreads;
 
@@ -52,7 +55,7 @@ public class JMSServerInstance implements Runnable {
 
 	// Stores all bakers which are waiting for new ingredients
 	private LinkedList<BakerWaitingObject> bakerWaitingList;
-	
+
 	// Stores the current charges in the oven
 	ArrayList<ChargeReplyObject> nextOvenCharges;
 
@@ -65,15 +68,15 @@ public class JMSServerInstance implements Runnable {
 	private QueueConnection monitoring_connection;
 	private QueueSession monitoring_session;
 	private Queue monitoring_queue;
-	private QueueReceiver monitoring_receiver;	
-	
+	private QueueReceiver monitoring_receiver;
+
 	// command queue
 	// Receives commands from the monitor/gui
 	private QueueConnection command_connection;
 	private QueueSession command_session;
 	private Queue command_queue;
-	private QueueReceiver command_receiver;	
-	
+	private QueueReceiver command_receiver;
+
 	// ingredient queue
 	private QueueConnection ingredientsDelivery_connection;
 	private QueueSession ingredientsDelivery_session;
@@ -91,6 +94,12 @@ public class JMSServerInstance implements Runnable {
 	private QueueSession ovenQueue_session;
 	private Queue ovenQueue_queue;
 	private QueueReceiver ovenQueue_receiver;
+
+	// event queue (sending events to gui)
+	private QueueConnection eventQueue_connection;
+	private QueueSession eventQueue_session;
+	private Queue eventQueue_queue;
+	private QueueSender eventQueue_sender;
 
 	private List<Ingredient> honey_list;
 	private List<Ingredient> flour_list;
@@ -126,9 +135,9 @@ public class JMSServerInstance implements Runnable {
 		this.delivered_ingredients = new ConcurrentHashMap<Long, ArrayList<GingerBreadTransactionObject>>(40);
 
 		this.nextOvenCharges = new ArrayList<ChargeReplyObject>(10);
-		
+
 		this.setGingerBreads(new ConcurrentHashMap<Long, GingerBread>(100));
-		
+
 		this.count_gingerBread_eggs = new AtomicInteger(0);
 		this.count_gingerBread_flour = new AtomicInteger(0);
 		this.count_gingerBread_honey = new AtomicInteger(0);
@@ -140,11 +149,11 @@ public class JMSServerInstance implements Runnable {
 		// Init all queues
 		this.initQueues();
 	}
-	
+
 	private void initQueues() throws IOException, NamingException, JMSException {
 		// set queue for monitoring
 		this.setup_monitoringQueue();
-		
+
 		// Set queue connection for ingredients
 		this.setup_ingredientsQueue();
 
@@ -153,11 +162,23 @@ public class JMSServerInstance implements Runnable {
 
 		// Set queue connection for oven
 		this.setup_ovenQueue();
-		
+
 		// set command queue
 		this.setup_commandQueue();
+
+		// set event queue
+		this.setup_eventQueue();
 	}
-	
+
+	private void setup_eventQueue() throws NamingException, JMSException {
+		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		this.eventQueue_queue = (Queue) ctx.lookup("eventQueue");
+		this.eventQueue_connection = queueConnectionFactory.createQueueConnection();
+		this.eventQueue_session = this.eventQueue_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+		this.eventQueue_sender = this.eventQueue_session.createSender(this.eventQueue_queue);
+		this.eventQueue_connection.start();
+	}
+
 	private void setup_commandQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
 		this.command_queue = (Queue) ctx.lookup("commandQueue");
@@ -166,9 +187,9 @@ public class JMSServerInstance implements Runnable {
 		this.command_receiver = this.command_session.createReceiver(this.command_queue);
 		this.command_listener = new JMSServerCommandListener(this);
 		this.command_receiver.setMessageListener(this.command_listener);
-		this.command_connection.start();		
+		this.command_connection.start();
 	}
-	
+
 	private void setup_monitoringQueue() throws JMSException, NamingException {
 		this.logger.info("Initializing queue for monitoring...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
@@ -179,7 +200,7 @@ public class JMSServerInstance implements Runnable {
 		this.monitoring_listener = new JMSServerMonitoringListener(this);
 		this.monitoring_receiver.setMessageListener(monitoring_listener);
 		this.monitoring_connection.start();
-		this.logger.info("Queue monitoring created and connection started.", (Object[]) null);		
+		this.logger.info("Queue monitoring created and connection started.", (Object[]) null);
 	}
 
 	private void setup_bakerIngredientsQueue() throws NamingException, JMSException {
@@ -240,19 +261,16 @@ public class JMSServerInstance implements Runnable {
 					} else {
 						System.out.println("Oven is ready.");
 					}
-					
-				} 
-				else if (s.equals("monitor")) {
+
+				} else if (s.equals("monitor")) {
 					System.out.print("\n");
 					System.out.println("GINGERBREAD_ID \t\t CHARGE_ID \t\t BAKER_ID \t\t STATE");
 					for (Entry<Long, GingerBread> gingerBread : this.gingerBreads.entrySet()) {
-						System.out.println(gingerBread.getKey() + "\t\t" + gingerBread.getValue().getChargeId() 
-								+ "\t\t" + gingerBread.getValue().getBakerId() + "\t\t"
+						System.out.println(gingerBread.getKey() + "\t\t" + gingerBread.getValue().getChargeId() + "\t\t" + gingerBread.getValue().getBakerId() + "\t\t"
 								+ gingerBread.getValue().getState().toString());
 					}
 					System.out.print("\n");
-				}
-				else if (s.equals("exit")) {
+				} else if (s.equals("exit")) {
 					break;
 				}
 			} catch (IOException e) {
@@ -287,11 +305,16 @@ public class JMSServerInstance implements Runnable {
 		this.ovenQueue_session.close();
 		this.ovenQueue_connection.close();
 
+		this.logger.info("Closing event queue.", (Object[]) null);
+		this.eventQueue_sender.close();
+		this.eventQueue_session.close();
+		this.eventQueue_connection.close();
+
 		this.logger.info("Closing monitoring queue.", (Object[]) null);
 		this.monitoring_receiver.close();
 		this.monitoring_session.close();
 		this.monitoring_connection.close();
-		
+
 		this.logger.info("Closing command queue.", (Object[]) null);
 		this.command_receiver.close();
 		this.command_session.close();
@@ -378,17 +401,17 @@ public class JMSServerInstance implements Runnable {
 				Ingredient egg2 = this.egg_list.remove(0);
 				Ingredient flour = this.flour_list.remove(0);
 				Ingredient honey = this.honey_list.remove(0);
-				
+
 				tmpList.add(new GingerBreadTransactionObject(egg1, egg2, flour, honey));
-				
+
 				this.gingerBreadCounter.decrementAndGet();
-				
+
 				this.total_ingredients_list.remove(egg1.getId());
 				this.total_ingredients_list.remove(egg2.getId());
 				this.total_ingredients_list.remove(flour.getId());
 				this.total_ingredients_list.remove(honey.getId());
 			}
-			
+
 			debugMessageStoredIngredients();
 			return tmpList;
 		} catch (Exception e) {
@@ -456,6 +479,7 @@ public class JMSServerInstance implements Runnable {
 		// Start oven
 		if (this.ovenIsRunning.get() == false) {
 			this.ovenIsRunning.set(true);
+			// TODO: send event
 			Thread oven = new Thread(new Oven(this, this.nextOvenCharges));
 			oven.start();
 		}
@@ -501,17 +525,25 @@ public class JMSServerInstance implements Runnable {
 	public void setGingerBreads(ConcurrentHashMap<Long, GingerBread> gingerBreads) {
 		this.gingerBreads = gingerBreads;
 	}
-	
+
 	public ConcurrentHashMap<Long, Ingredient> get_total_ingredients_list() {
 		return this.total_ingredients_list;
 	}
-	
+
 	public QueueSession get_CommandSession() {
 		return this.command_session;
 	}
-	
+
 	public ArrayList<ChargeReplyObject> get_nextOvenCharges() {
 		return this.nextOvenCharges;
+	}
+
+	public void sendEventToGUI(Object payLoad, Hashtable<String, String> properties) {
+		try {
+			JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, payLoad, properties, this.eventQueue_session, false, this.eventQueue_sender);
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
 	}
 
 }
