@@ -7,7 +7,6 @@ import javax.naming.NamingException;
 
 import factory.entities.Ingredient;
 import factory.interfaces.Supplier;
-import factory.utils.Utils;
 
 public class Main {
 

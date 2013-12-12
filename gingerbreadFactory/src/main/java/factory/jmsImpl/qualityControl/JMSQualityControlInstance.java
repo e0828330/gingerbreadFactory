@@ -21,8 +21,6 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.apache.qpid.transport.util.Logger;
-import org.mozartspaces.core.Entry;
-import org.mozartspaces.core.MzsConstants;
 
 import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
