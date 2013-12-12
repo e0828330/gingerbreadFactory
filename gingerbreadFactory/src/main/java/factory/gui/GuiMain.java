@@ -10,6 +10,13 @@ public class GuiMain implements Application {
 
 	private MainWindow window = null;
 	
+	public enum Mode {
+		SPACES,
+		JMS
+	}
+	
+	public static Mode mode;
+	
 	public void resume() throws Exception {
 		// TODO Auto-generated method stub
 		
@@ -35,6 +42,7 @@ public class GuiMain implements Application {
 	}
 	
 	public static void main(String[] args) {
+		mode = Mode.SPACES;
 	    DesktopApplicationContext.main(GuiMain.class, args);
 	}
 
