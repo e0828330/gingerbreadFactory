@@ -24,7 +24,7 @@ public class GuiMain implements Application {
 			throws Exception {
 		BXMLSerializer bxmlSerializer = new BXMLSerializer();
 		window = (TabbedWindow) bxmlSerializer.readObject(GuiMain.class, "TabbedWindow.xml");
-		window.setWidth(1100);
+		window.setWidth(1000);
 		window.setHeight(720);
 		window.open(dsp);
 	}
