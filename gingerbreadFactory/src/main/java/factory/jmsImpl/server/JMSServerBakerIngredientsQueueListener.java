@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 
@@ -28,7 +29,7 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 		try {
 			if (message instanceof TextMessage) {
 				String txt = ((TextMessage) message).getText();
-				Long bakerID = ((TextMessage) message).getLongProperty("BAKER_ID");
+				Long bakerID = new Long(((TextMessage) message).getStringProperty("BAKER_ID"));
 				if (txt != null && txt.equals(Messages.INGREDIENTS_REQUEST_MESSAGE)) {
 
 					ArrayList<GingerBreadTransactionObject> ingredients = this.server.getGingerBreadIngredients(5);
@@ -46,7 +47,11 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 						if (bakerID != null) {
 							this.server.getDelivered_ingredients().put(bakerID, ingredients);
 						}
-						this.server.getBakerIngredientsProducer().send(message.getJMSReplyTo(), response);
+						
+						MessageProducer producer = this.server.getIngredientsDelivery_session().createProducer(message.getJMSReplyTo());
+						producer.send(response);
+						producer.close();
+						//this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
 					}
 
 				}

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 
@@ -39,7 +40,10 @@ public class JMSServerIngredientsDeliveryListener implements MessageListener {
 				TextMessage response = this.server.getIngredientsDelivery_session().createTextMessage();
 				response.setJMSCorrelationID(message.getJMSCorrelationID());
 				response.setText("Thanks!");
-				this.server.getBakerIngredientsProducer().send(message.getJMSReplyTo(), response);
+				MessageProducer producer = this.server.getIngredientsDelivery_session().createProducer(message.getJMSReplyTo());
+				producer.send(response);
+				producer.close();
+				//this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
 			}
 		} catch (JMSException e) {
 			e.printStackTrace();

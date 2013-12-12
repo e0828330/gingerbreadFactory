@@ -2,23 +2,17 @@ package factory.jmsImpl.supplier;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Properties;
-import java.util.UUID;
 
 import javax.jms.DeliveryMode;
-import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
-import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -28,7 +22,8 @@ import org.apache.qpid.transport.util.Logger;
 import factory.entities.Ingredient;
 import factory.entities.Ingredient.Type;
 import factory.interfaces.Supplier;
-import factory.utils.Messages;
+import factory.utils.JMSUtils;
+import factory.utils.JMSUtils.MessageType;
 import factory.utils.Utils;
 
 public class JMSSupplierInstance implements Supplier {
@@ -38,7 +33,6 @@ public class JMSSupplierInstance implements Supplier {
 	private Type type;
 
 	private Context ctx;
-	private boolean isRunning = false;
 	private Logger logger = Logger.get(getClass());
 
 	// ingredient queue
@@ -84,19 +78,15 @@ public class JMSSupplierInstance implements Supplier {
 				this.ingredients.add(item);
 				Thread.sleep(Utils.getRandomWaitTime());
 			}
-			ObjectMessage objectMessage = this.ingredientsDelivery_session.createObjectMessage();
-			objectMessage.setObject(this.ingredients);
-			objectMessage.setStringProperty("TYPE", "ArrayList<Ingredient>");
-
-			Destination tempDest = this.ingredientsDelivery_session.createTemporaryQueue();
-			MessageConsumer consumer = this.ingredientsDelivery_session.createConsumer(tempDest);
-			objectMessage.setJMSReplyTo(tempDest);
-			objectMessage.setJMSCorrelationID(String.valueOf(UUID.randomUUID().hashCode()) + String.valueOf(this.id));
-			this.ingredientsDelivery_sender.send(objectMessage);
-
-			TextMessage textMessage = (TextMessage) consumer.receive();
-			System.out.println("received = " + textMessage);
-
+			
+			Hashtable<String, String> properties = new Hashtable<String, String>();
+			properties.put("TYPE", "ArrayList<Ingredient>");
+			JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, 
+					ingredients, 
+					properties,
+					this.ingredientsDelivery_session, 
+					true, 
+					this.ingredientsDelivery_sender);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (JMSException e) {
@@ -126,10 +116,6 @@ public class JMSSupplierInstance implements Supplier {
 		this.amount = amount;
 		this.type = type;
 
-	}
-
-	public void shutDown() {
-		this.isRunning = false;
 	}
 
 }

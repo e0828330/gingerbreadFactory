@@ -23,6 +23,8 @@ import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
+import factory.utils.JMSUtils;
+import factory.utils.JMSUtils.MessageType;
 
 public class JMSQualityControlInstance implements Runnable {
 
@@ -172,9 +174,12 @@ public class JMSQualityControlInstance implements Runnable {
 			if (isGarbage == false) {
 				this.logger.info("Send charge to logistic", (Object[]) null);
 				for (GingerBread gingerBread : charge) {
-					ObjectMessage message = this.logisticsQueue_session.createObjectMessage();
-					message.setObject(gingerBread);
-					this.logisticsQueue_sender.send(message);
+					JMSUtils.sendMessage(MessageType.OBJECTMESSAGE,
+							gingerBread, 
+							null, 
+							this.logisticsQueue_session, 
+							false,
+							this.logisticsQueue_sender);
 				}
 			}
 		}
