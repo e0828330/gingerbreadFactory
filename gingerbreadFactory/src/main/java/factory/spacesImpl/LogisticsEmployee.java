@@ -18,6 +18,7 @@ import org.mozartspaces.core.TransactionReference;
 import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
 import factory.factory.App;
+import factory.utils.Utils;
 
 public class LogisticsEmployee {
 	
@@ -39,7 +40,7 @@ public class LogisticsEmployee {
 				
 				// Get next 6
 				ArrayList<Long> ids = capi.take(qaPassedContainer, FifoCoordinator.newSelector(6), MzsConstants.RequestTimeout.INFINITE, tx);
-				System.out.println(ids);
+				Long packageId = Utils.getID();
 				for (Long gid : ids) {
 					GingerBread current = null;
 					GingerBread tpl = new GingerBread();
@@ -47,6 +48,7 @@ public class LogisticsEmployee {
 					// Get, update state and write back
 					current = (GingerBread) capi.take(gingerbreadsContainer, LindaCoordinator.newSelector(tpl), MzsConstants.RequestTimeout.INFINITE, tx).get(0);
 					current.setLogisticsId(id);
+					current.setPackageId(packageId);
 					current.setState(State.DONE);
 					capi.write(new Entry(current), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 					System.out.println("delivered: " + current.getId());
