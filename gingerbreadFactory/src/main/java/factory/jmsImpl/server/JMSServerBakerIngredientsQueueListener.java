@@ -51,7 +51,6 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 						MessageProducer producer = this.server.getIngredientsDelivery_session().createProducer(message.getJMSReplyTo());
 						producer.send(response);
 						producer.close();
-						//this.server.getBakerIngredientsSender().send(message.getJMSReplyTo(), response);
 					}
 
 				}

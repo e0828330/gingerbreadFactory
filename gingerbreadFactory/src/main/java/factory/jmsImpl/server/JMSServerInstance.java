@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -60,10 +61,18 @@ public class JMSServerInstance implements Runnable {
 	private final int MAX_OVEN_CHARGE = 10;
 
 	// monitoring queue
+	// Stores the states of the gingerbreads
 	private QueueConnection monitoring_connection;
 	private QueueSession monitoring_session;
 	private Queue monitoring_queue;
 	private QueueReceiver monitoring_receiver;	
+	
+	// command queue
+	// Receives commands from the monitor/gui
+	private QueueConnection command_connection;
+	private QueueSession command_session;
+	private Queue command_queue;
+	private QueueReceiver command_receiver;	
 	
 	// ingredient queue
 	private QueueConnection ingredientsDelivery_connection;
@@ -86,6 +95,7 @@ public class JMSServerInstance implements Runnable {
 	private List<Ingredient> honey_list;
 	private List<Ingredient> flour_list;
 	private List<Ingredient> egg_list;
+	private ConcurrentHashMap<Long, Ingredient> total_ingredients_list;
 
 	private AtomicInteger count_gingerBread_eggs;
 	private AtomicInteger count_gingerBread_honey;
@@ -97,6 +107,7 @@ public class JMSServerInstance implements Runnable {
 	private JMSServerBakerIngredientsQueueListener bakerIngredientsQueue_listener;
 	private JMSServerOvenQueueListener ovenQueue_listener;
 	private JMSServerMonitoringListener monitoring_listener;
+	private JMSServerCommandListener command_listener;
 
 	public JMSServerInstance(String propertiesFile) throws IOException, NamingException, JMSException {
 		Properties properties = new Properties();
@@ -107,6 +118,7 @@ public class JMSServerInstance implements Runnable {
 		this.honey_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
 		this.flour_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
 		this.egg_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
+		this.total_ingredients_list = new ConcurrentHashMap<Long, Ingredient>(150);
 		this.setBakerWaitingList(new LinkedList<BakerWaitingObject>());
 
 		this.ovenWaitingList = Collections.synchronizedList(new ArrayList<ChargeReplyObject>());
@@ -141,6 +153,20 @@ public class JMSServerInstance implements Runnable {
 
 		// Set queue connection for oven
 		this.setup_ovenQueue();
+		
+		// set command queue
+		this.setup_commandQueue();
+	}
+	
+	private void setup_commandQueue() throws NamingException, JMSException {
+		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		this.command_queue = (Queue) ctx.lookup("commandQueue");
+		this.command_connection = queueConnectionFactory.createQueueConnection();
+		this.command_session = this.command_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+		this.command_receiver = this.command_session.createReceiver(this.command_queue);
+		this.command_listener = new JMSServerCommandListener(this);
+		this.command_receiver.setMessageListener(this.command_listener);
+		this.command_connection.start();		
 	}
 	
 	private void setup_monitoringQueue() throws JMSException, NamingException {
@@ -266,6 +292,10 @@ public class JMSServerInstance implements Runnable {
 		this.monitoring_session.close();
 		this.monitoring_connection.close();
 		
+		this.logger.info("Closing command queue.", (Object[]) null);
+		this.command_receiver.close();
+		this.command_session.close();
+		this.command_connection.close();
 
 		this.logger.info("ServerInstance shutting down.", (Object[]) null);
 	}
@@ -275,6 +305,7 @@ public class JMSServerInstance implements Runnable {
 	}
 
 	public synchronized void storeIncredient(Ingredient ingredient) {
+		this.total_ingredients_list.put(ingredient.getId(), ingredient);
 		this.logger.info("Stored " + ingredient.getType().toString(), (Object[]) null);
 		if (ingredient.getType() == Ingredient.Type.FLOUR) {
 			this.logger.info("Added flour to list.", (Object[]) null);
@@ -347,11 +378,17 @@ public class JMSServerInstance implements Runnable {
 				Ingredient egg2 = this.egg_list.remove(0);
 				Ingredient flour = this.flour_list.remove(0);
 				Ingredient honey = this.honey_list.remove(0);
-
+				
 				tmpList.add(new GingerBreadTransactionObject(egg1, egg2, flour, honey));
-
+				
 				this.gingerBreadCounter.decrementAndGet();
+				
+				this.total_ingredients_list.remove(egg1.getId());
+				this.total_ingredients_list.remove(egg2.getId());
+				this.total_ingredients_list.remove(flour.getId());
+				this.total_ingredients_list.remove(honey.getId());
 			}
+			
 			debugMessageStoredIngredients();
 			return tmpList;
 		} catch (Exception e) {
@@ -463,6 +500,18 @@ public class JMSServerInstance implements Runnable {
 
 	public void setGingerBreads(ConcurrentHashMap<Long, GingerBread> gingerBreads) {
 		this.gingerBreads = gingerBreads;
+	}
+	
+	public ConcurrentHashMap<Long, Ingredient> get_total_ingredients_list() {
+		return this.total_ingredients_list;
+	}
+	
+	public QueueSession get_CommandSession() {
+		return this.command_session;
+	}
+	
+	public ArrayList<ChargeReplyObject> get_nextOvenCharges() {
+		return this.nextOvenCharges;
 	}
 
 }
