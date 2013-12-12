@@ -31,6 +31,7 @@ public class GingerBread implements Serializable {
 		BAKED,
 		CONTROLLED,
 		GARBAGE,
+		EATEN,
 		DONE
 	}
 	
