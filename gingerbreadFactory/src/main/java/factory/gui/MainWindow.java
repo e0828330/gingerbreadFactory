@@ -20,7 +20,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import factory.entities.Ingredient;
 
-public class TabbedWindow extends Window implements Bindable{
+public class MainWindow extends Window implements Bindable{
 
 	private TextInput supplierId;
 	private TextInput amount;

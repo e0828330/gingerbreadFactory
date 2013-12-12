@@ -1,4 +1,4 @@
-<gui:TabbedWindow title="Lebkuchenfarbik Simulator"
+<gui:MainWindow title="Lebkuchenfarbik Simulator"
 	maximized="true" xmlns:bxml="http://pivot.apache.org/bxml"
 	xmlns:content="org.apache.pivot.wtk.content" xmlns:gui="factory.gui"
 	xmlns="org.apache.pivot.wtk">
@@ -152,4 +152,4 @@
 		</TablePane>
 	</Border>
 
-</gui:TabbedWindow>
+</gui:MainWindow>

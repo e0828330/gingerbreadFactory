@@ -8,7 +8,7 @@ import org.apache.pivot.wtk.Display;
 
 public class GuiMain implements Application {
 
-	private TabbedWindow window = null;
+	private MainWindow window = null;
 	
 	public void resume() throws Exception {
 		// TODO Auto-generated method stub
@@ -23,7 +23,7 @@ public class GuiMain implements Application {
 	public void startup(Display dsp, Map<String, String> props)
 			throws Exception {
 		BXMLSerializer bxmlSerializer = new BXMLSerializer();
-		window = (TabbedWindow) bxmlSerializer.readObject(GuiMain.class, "TabbedWindow.xml");
+		window = (MainWindow) bxmlSerializer.readObject(GuiMain.class, "Window.xml");
 		window.setWidth(1000);
 		window.setHeight(720);
 		window.open(dsp);
