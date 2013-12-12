@@ -44,12 +44,13 @@ public class QAEmployee {
 				TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
 				
 				// Get next charge
+				System.out.println("WAIT FOR NEXT");
 				Long chargeId =  (Long) capi.take(chargeContainer, FifoCoordinator.newSelector(), MzsConstants.RequestTimeout.INFINITE, tx).get(0);
 				
 				// Get gingerbreads of this charge
 				GingerBread tpl = new GingerBread();
 				tpl.setChargeId(chargeId);
-				ArrayList<GingerBread> testList = capi.take(gingerbreadsContainer, LindaCoordinator.newSelector(tpl), MzsConstants.RequestTimeout.INFINITE, tx);
+				ArrayList<GingerBread> testList = capi.take(gingerbreadsContainer, LindaCoordinator.newSelector(tpl, MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, tx);
 				
 				// Shuffle to have a random selection for testing
 				Collections.shuffle(testList);

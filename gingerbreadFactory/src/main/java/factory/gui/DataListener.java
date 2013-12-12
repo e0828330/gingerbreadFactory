@@ -16,11 +16,11 @@ import factory.interfaces.EventListener;
 public class DataListener implements EventListener {
 
 	private MainWindow window;
-	
+
 	public DataListener(MainWindow window) {
 		this.window = window;
 	}
-	
+
 	public void onOvenChanged(List<GingerBread> ovenContent) {
 		try {
 			window.updateTable("ovenTable", ovenContent);
@@ -35,7 +35,7 @@ public class DataListener implements EventListener {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public class IngredientCount implements Serializable {
 		/**
 		 * 
@@ -51,15 +51,15 @@ public class DataListener implements EventListener {
 		public void setAmount(int amount) {
 			this.amount = amount;
 		}
-	
+
 		public String getName() {
 			return name;
 		}
-	
+
 		public void setName(String name) {
 			this.name = name;
 		}
-		
+
 		public void incAmount() {
 			this.amount++;
 		}
@@ -71,23 +71,39 @@ public class DataListener implements EventListener {
 		for (Ingredient item : list) {
 			if (countMap.containsKey(item.getType())) {
 				countMap.get(item.getType()).incAmount();
-			}
-			else {
+			} else {
 				IngredientCount tmp = new IngredientCount();
-				tmp.setAmount(0);
+				tmp.setAmount(1);
 				if (item.getType().equals(Ingredient.Type.HONEY)) {
 					tmp.setName("Honig");
-				}
-				else if (item.getType().equals(Ingredient.Type.FLOUR)) {
+				} else if (item.getType().equals(Ingredient.Type.FLOUR)) {
 					tmp.setName("Mehl");
-				}
-				else if (item.getType().equals(Ingredient.Type.EGG)) {
+				} else if (item.getType().equals(Ingredient.Type.EGG)) {
 					tmp.setName("Eier");
 				}
 				countMap.put(item.getType(), tmp);
 			}
 		}
-		
+
+		if (!countMap.containsKey(Ingredient.Type.HONEY)) {
+			IngredientCount tmp = new IngredientCount();
+			tmp.setName("Honig");
+			tmp.setAmount(0);
+			countMap.put(Ingredient.Type.HONEY, tmp);
+		}
+		if (!countMap.containsKey(Ingredient.Type.FLOUR)) {
+			IngredientCount tmp = new IngredientCount();
+			tmp.setName("Mehl");
+			tmp.setAmount(0);
+			countMap.put(Ingredient.Type.FLOUR, tmp);
+		}
+		if (!countMap.containsKey(Ingredient.Type.EGG)) {
+			IngredientCount tmp = new IngredientCount();
+			tmp.setName("Eier");
+			tmp.setAmount(0);
+			countMap.put(Ingredient.Type.EGG, tmp);
+		}
+
 		try {
 			window.updateTable("ingredientsTable", new ArrayList<IngredientCount>(countMap.values()));
 		} catch (JsonGenerationException e) {

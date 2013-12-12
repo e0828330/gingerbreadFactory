@@ -6,11 +6,9 @@ import factory.spacesImpl.SpacesMonitor;
 
 public class DataThread implements Runnable {
 
-	private MainWindow window;
 	private DataListener listener;
 	
 	public DataThread(MainWindow window) {
-		this.window = window;
 		listener = new DataListener(window);
 	}
 	

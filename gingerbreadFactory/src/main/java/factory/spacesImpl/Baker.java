@@ -203,6 +203,7 @@ public class Baker {
 
 		ContainerReference chargeContainer = capi.lookupContainer("charges", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 		capi.write(chargeContainer, new Entry(chargeId));
+		System.out.println("ADDING " + chargeId + " to charges container");
 	}
 	
 	public void run() {
@@ -231,6 +232,7 @@ public class Baker {
 		System.out.println("DONE");
 		try {
 			processCharge(Utils.getID());
+			run(); // Restart loop
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		} catch (URISyntaxException e) {
