@@ -62,7 +62,7 @@ public class JMSSupplierInstance implements Supplier {
 				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");		
 		this.ingredientsDelivery_queue = (Queue) ctx.lookup("ingredientsDelivery");
 		this.ingredientsDelivery_connection = queueConnectionFactory.createQueueConnection();
-		this.ingredientsDelivery_session = this.ingredientsDelivery_connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);
+		this.ingredientsDelivery_session = this.ingredientsDelivery_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.ingredientsDelivery_sender = this.ingredientsDelivery_session.createSender(ingredientsDelivery_queue);
 		this.ingredientsDelivery_connection.start();	
 		this.logger.info("Queue for incredients created and connection started.", (Object[]) null); 
@@ -88,7 +88,7 @@ public class JMSSupplierInstance implements Supplier {
 				objectMessage.setObject(this.ingredients);
 				objectMessage.setStringProperty("TYPE", "ArrayList<Ingredient>");
 				this.ingredientsDelivery_sender.send(objectMessage);
-				this.ingredientsDelivery_session.commit();
+				//this.ingredientsDelivery_session.commit();
 			}
 			catch (InterruptedException e) {
 				e.printStackTrace();

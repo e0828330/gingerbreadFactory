@@ -30,7 +30,7 @@ public class JMSQualityControlInstance implements Runnable {
 	private boolean isRunning = true;
 	private Logger logger = Logger.get(getClass());	
 	
-	private float defectRate = 0.2f; // TODO: Set at startup
+	private float defectRate = 0.4f; // TODO: Set at startup
 	private Long id = 1L; // TODO: Set at startup	
 	
 	// QualityControlQueue Baker -> QualityControl

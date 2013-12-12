@@ -6,13 +6,11 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
-import javax.jms.TextMessage;
 
 import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.ChargeReplyObject;
 import factory.entities.GingerBread;
-import factory.utils.Messages;
 
 public class JMSServerOvenQueueListener implements MessageListener {
 	
@@ -32,13 +30,11 @@ public class JMSServerOvenQueueListener implements MessageListener {
 					System.out.println("Received charge for oven...");
 					@SuppressWarnings("unchecked")
 					ArrayList<GingerBread> charge = (ArrayList<GingerBread>) objMessage.getObject();
-					
+
 					ChargeReplyObject replyObject = new ChargeReplyObject(charge, message.getJMSCorrelationID(), message.getJMSReplyTo());
 					
 					
 					this.server.addToOven(replyObject);
-					this.server.getOven_session().commit();
-	
 				}
 			}
 			catch (JMSException e) {
