@@ -33,7 +33,23 @@ public class Ingredient implements Serializable {
 		this.supplierId = supplierId;
 	}
 	
-	 @Override
+	 public Type getType() {
+		return type;
+	}
+
+	public void setType(Type type) {
+		this.type = type;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public void setSupplierId(Long supplierId) {
+		this.supplierId = supplierId;
+	}
+
+	@Override
      public String toString() {
 		 return "[ | " + this.getSupplierId() + " | " + this.getId() + " - " + this.type + " ]";
 	 }
