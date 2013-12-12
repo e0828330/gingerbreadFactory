@@ -12,6 +12,7 @@ public class GingerBread implements Serializable {
 	private Long id;
 
 	private Long chargeId;
+	private Long packageId;
 	
 	/* Ingredients used */
 	private Long honeyId;
@@ -49,6 +50,14 @@ public class GingerBread implements Serializable {
 
 	public void setChargeId(Long chargeId) {
 		this.chargeId = chargeId;
+	}
+
+	public Long getPackageId() {
+		return packageId;
+	}
+
+	public void setPackageId(Long packageId) {
+		this.packageId = packageId;
 	}
 
 	public Long getHoneyId() {
