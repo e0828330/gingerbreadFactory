@@ -65,7 +65,7 @@ public class JMSQualityControlInstance implements Runnable {
 				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
 		this.logisticsQueue_queue = (Queue) ctx.lookup("logisticsQueue");
 		this.logisticsQueue_connection = queueConnectionFactory.createQueueConnection();
-		this.logisticsQueue_session = this.logisticsQueue_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+		this.logisticsQueue_session = this.logisticsQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.logisticsQueue_sender = this.logisticsQueue_session.createSender(this.logisticsQueue_queue);
 		this.logisticsQueue_connection.start();	
 		this.logger.info("Queue for quality-control startet.", (Object[]) null); 		
@@ -77,7 +77,7 @@ public class JMSQualityControlInstance implements Runnable {
 				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
 		this.qualityQueue_queue = (Queue) ctx.lookup("qualityControlQueue");
 		this.qualityQueue_connection = queueConnectionFactory.createQueueConnection();
-		this.qualityQueue_session = this.qualityQueue_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+		this.qualityQueue_session = this.qualityQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.qualityQueue_consumer = this.qualityQueue_session.createConsumer(this.qualityQueue_queue);
 		this.qualityQueue_connection.start();	
 		this.logger.info("Queue for quality-control startet.", (Object[]) null); 		
@@ -132,6 +132,7 @@ public class JMSQualityControlInstance implements Runnable {
 						needsCheck = !needsCheck;
 					}
 				}
+				message.acknowledge();
 			}
 		}
 		catch (JMSException e) {

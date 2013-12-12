@@ -23,23 +23,24 @@ public class JMSServerOvenQueueListener implements MessageListener {
 	
 	public void onMessage(Message message) {
 		this.logger.info("Received message from baker for oven", (Object[]) null);
-		if (message instanceof ObjectMessage) {
-			ObjectMessage objMessage = (ObjectMessage) message;
-			try {
+		try {
+			if (message instanceof ObjectMessage) {
+				ObjectMessage objMessage = (ObjectMessage) message;
 				if (objMessage.getStringProperty("TYPE").equals("ArrayList<GingerBread>")) {
 					System.out.println("Received charge for oven...");
 					@SuppressWarnings("unchecked")
 					ArrayList<GingerBread> charge = (ArrayList<GingerBread>) objMessage.getObject();
-
+	
 					ChargeReplyObject replyObject = new ChargeReplyObject(charge, message.getJMSCorrelationID(), message.getJMSReplyTo());
 					
 					
 					this.server.addToOven(replyObject);
 				}
 			}
-			catch (JMSException e) {
-				e.printStackTrace();
+			message.acknowledge();
 			}
+		catch (JMSException e) {
+			e.printStackTrace();
 		}
 	}
 }

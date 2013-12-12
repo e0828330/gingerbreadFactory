@@ -55,7 +55,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 				  (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
 		this.logisticsQueue_queue = (Queue) ctx.lookup("logisticsQueue");
 		this.logisticsQueue_connection = queueConnectionFactory.createQueueConnection();
-		this.logisticsQueue_session = this.logisticsQueue_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+		this.logisticsQueue_session = this.logisticsQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.logisticsQueue_consumer = this.logisticsQueue_session.createConsumer(this.logisticsQueue_queue);
 		this.logisticsQueue_connection.start();	
 		this.logger.info("Queue for quality-control startet.", (Object[]) null); 		
@@ -84,6 +84,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 						}
 					}
 				}
+				message.acknowledge();
 			}
 		}
 		catch (JMSException e) {
