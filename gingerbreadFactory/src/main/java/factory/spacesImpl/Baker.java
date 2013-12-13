@@ -150,9 +150,13 @@ public class Baker {
 			tmp.setId(Utils.getID());
 			tmp.setBakerId(id);
 			tmp.setChargeId(chargeId);
+			tmp.setFlourSupplierId(flour.peek().getSupplierId());
+			tmp.setHoneySupplierId(honey.peek().getSupplierId());
 			tmp.setFlourId(flour.poll().getId());
 			tmp.setHoneyId(honey.poll().getId());
+			tmp.setFirstEggSupplierId(eggs.peek().getSupplierId());
 			tmp.setFirstEggId(eggs.poll().getId());
+			tmp.setFirstEggSupplierId(eggs.peek().getSupplierId());
 			tmp.setSecondEggId(eggs.poll().getId());
 			tmp.setState(GingerBread.State.PRODUCED);
 			capi.write(gingerbreadsContainer, new Entry(tmp));
