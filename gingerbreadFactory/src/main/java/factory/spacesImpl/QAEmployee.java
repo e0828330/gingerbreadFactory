@@ -19,15 +19,17 @@ import org.mozartspaces.core.TransactionReference;
 import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
 import factory.factory.App;
+import factory.utils.Utils;
 
 public class QAEmployee {
 
 	private MzsCore core;
 	private float defectRate = 0.2f; // TODO: Set at startup
-	private Long id = 1L; // TODO: Set at startup
+	private Long id = 1L;
 	
-	public QAEmployee(MzsCore core) {
+	public QAEmployee(MzsCore core, Long id) {
 		this.core = core;
+		this.id = id;
 	}
 
 	public void run() {
@@ -110,7 +112,7 @@ public class QAEmployee {
 	public static void main(String[] args) {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
-		new QAEmployee(core).run();
+		new QAEmployee(core, Utils.getStartupId(args)).run();
 	}
 
 }
