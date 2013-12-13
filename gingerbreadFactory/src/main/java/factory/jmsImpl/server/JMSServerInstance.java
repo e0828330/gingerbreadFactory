@@ -37,6 +37,7 @@ import factory.entities.GingerBreadTransactionObject;
 import factory.entities.Ingredient;
 import factory.utils.JMSUtils;
 import factory.utils.JMSUtils.MessageType;
+import factory.utils.Messages;
 
 public class JMSServerInstance implements Runnable {
 
@@ -479,7 +480,10 @@ public class JMSServerInstance implements Runnable {
 		// Start oven
 		if (this.ovenIsRunning.get() == false) {
 			this.ovenIsRunning.set(true);
-			// TODO: send event
+			Hashtable<String, String> properties = new Hashtable<String, String>(2);
+			properties.put("EVENT", Messages.EVENT_NEW_OVENT_CHARGE);
+			properties.put("TYPE", "ArrayList<GingerBread>");
+			this.sendEventToGUI(this.nextOvenCharges, properties);
 			Thread oven = new Thread(new Oven(this, this.nextOvenCharges));
 			oven.start();
 		}

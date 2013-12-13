@@ -10,6 +10,7 @@ import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 
 import factory.entities.GingerBread;
+import factory.utils.Messages;
 
 public class JMSServerMonitoringListener implements MessageListener {
 
@@ -28,7 +29,7 @@ public class JMSServerMonitoringListener implements MessageListener {
 					this.server.getGingerBreads().put(gingerBread.getId(), gingerBread);
 					Hashtable<String, String> properties = new Hashtable<String, String>();
 					properties.put("TYPE", "ArrayList<GingerBread>");
-					properties.put("EVENT", "Gingerbread");
+					properties.put("EVENT", Messages.EVENT_GINGERBREAD_STATE_CHANGED);
 					ArrayList<GingerBread> result = new ArrayList<GingerBread>();
 					for (Entry<Long, GingerBread> tmp : this.server.getGingerBreads().entrySet()) {
 						result.add(tmp.getValue());

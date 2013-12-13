@@ -9,6 +9,15 @@ public class MonitorStart {
 		System.out.println(monitor.getIngredients());
 		System.out.println(monitor.getGingerBreads());
 		System.out.println(monitor.getOvenContent());
+		while(true) {
+
+			try {
+				Thread.sleep(300);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 }
