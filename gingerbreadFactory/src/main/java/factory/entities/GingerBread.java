@@ -25,6 +25,12 @@ public class GingerBread implements Serializable {
 	private Long qaId;
 	private Long logisticsId;
 
+	/* Ingredients suppliers */
+	private Long honeySupplierId;
+	private Long flourSupplierId;
+	private Long firstEggSupplierId;
+	private Long secondEggSupplierId;
+	
 	public enum State {
 		PRODUCED,
 		BAKED,
@@ -122,6 +128,38 @@ public class GingerBread implements Serializable {
 
 	public void setState(State state) {
 		this.state = state;
+	}
+
+	public Long getHoneySupplierId() {
+		return honeySupplierId;
+	}
+
+	public void setHoneySupplierId(Long honeySupplierId) {
+		this.honeySupplierId = honeySupplierId;
+	}
+
+	public Long getFlourSupplierId() {
+		return flourSupplierId;
+	}
+
+	public void setFlourSupplierId(Long flourSupplierId) {
+		this.flourSupplierId = flourSupplierId;
+	}
+
+	public Long getFirstEggSupplierId() {
+		return firstEggSupplierId;
+	}
+
+	public void setFirstEggSupplierId(Long firstEggSupplierId) {
+		this.firstEggSupplierId = firstEggSupplierId;
+	}
+
+	public Long getSecondEggSupplierId() {
+		return secondEggSupplierId;
+	}
+
+	public void setSecondEggSupplierId(Long secondEggSupplierId) {
+		this.secondEggSupplierId = secondEggSupplierId;
 	}
 	
 	
