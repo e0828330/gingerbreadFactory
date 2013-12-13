@@ -27,7 +27,6 @@ public class GingerBread implements Serializable {
 
 	public enum State {
 		PRODUCED,
-		IN_OVEN,
 		BAKED,
 		CONTROLLED,
 		GARBAGE,
