@@ -297,10 +297,11 @@ public class JMSServerInstance implements Runnable {
 
 				} else if (s.equals("monitor")) {
 					System.out.print("\n");
-					System.out.println("GINGERBREAD_ID \t\t CHARGE_ID \t\t BAKER_ID \t\t STATE");
+					System.out.println("GINGERBREAD_ID \t\t CHARGE_ID \t\t BAKER_ID \t\t STATE \t\t QUAL_ID \t\t LOG_ID");
 					for (Entry<Long, GingerBread> gingerBread : this.gingerBreads.entrySet()) {
 						System.out.println(gingerBread.getKey() + "\t\t" + gingerBread.getValue().getChargeId() + "\t\t" + gingerBread.getValue().getBakerId() + "\t\t"
-								+ gingerBread.getValue().getState().toString());
+								+ gingerBread.getValue().getState().toString() + "\t\t" + gingerBread.getValue().getQaId()
+								+ "\t\t" + gingerBread.getValue().getLogisticsId());
 					}
 					System.out.print("\n");
 				} else if (s.equals("exit")) {
