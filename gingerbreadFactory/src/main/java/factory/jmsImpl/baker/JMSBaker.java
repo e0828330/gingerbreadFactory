@@ -8,7 +8,7 @@ public class JMSBaker {
 
 	public static void main(String[] args) {
 		try {
-			JMSBakerInstance baker = new JMSBakerInstance("jms.properties");
+			JMSBakerInstance baker = new JMSBakerInstance();
 			Thread bakerThread = new Thread(baker);
 			bakerThread.start();
 		} catch (IOException e) {

@@ -11,7 +11,7 @@ public class JMSQualityControl {
 
 	public static void main(String[] args) {
 		try {
-			JMSQualityControlInstance qualitycontrol = new JMSQualityControlInstance("jms.properties");
+			JMSQualityControlInstance qualitycontrol = new JMSQualityControlInstance();
 			Thread bakerThread = new Thread(qualitycontrol);	
 			bakerThread.start();
 		}

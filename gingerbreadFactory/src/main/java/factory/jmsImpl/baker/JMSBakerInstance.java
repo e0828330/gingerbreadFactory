@@ -33,6 +33,8 @@ import factory.utils.Utils;
 
 public class JMSBakerInstance implements Runnable {
 
+	private final String PROPERTIES_FILE = "jms.properties";
+	
 	private Context ctx;
 	private boolean isRunning = true;
 	private Logger logger = Logger.get(getClass());
@@ -71,10 +73,10 @@ public class JMSBakerInstance implements Runnable {
 	private Queue qualityQueue_queue;
 	private QueueSender qualityQueue_sender;
 
-	public JMSBakerInstance(String propertiesFile) throws IOException, NamingException {
+	public JMSBakerInstance() throws IOException, NamingException {
 		this.id = Utils.getID().longValue();
 		Properties properties = new Properties();
-		properties.load(this.getClass().getClassLoader().getResourceAsStream(propertiesFile));
+		properties.load(this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE));
 		this.ctx = new InitialContext(properties);
 		this.gingerBreadList = new ArrayList<GingerBreadTransactionObject>(5);
 		this.charge = new ArrayList<GingerBread>(10);

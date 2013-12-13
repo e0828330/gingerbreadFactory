@@ -11,7 +11,7 @@ public class JMSLogistics {
 
 	public static void main(String[] args) {
 		try {
-			JMSQualityLogisticsInstance qualitycontrol = new JMSQualityLogisticsInstance("jms.properties");
+			JMSQualityLogisticsInstance qualitycontrol = new JMSQualityLogisticsInstance();
 			Thread bakerThread = new Thread(qualitycontrol);	
 			bakerThread.start();
 		}

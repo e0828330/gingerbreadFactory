@@ -28,6 +28,8 @@ import factory.utils.Utils;
 
 public class JMSSupplierInstance implements Supplier {
 
+	private final String PROPERTIES_FILE = "jms.properties";
+	
 	private Long id;
 	private int amount;
 	private Type type;
@@ -45,9 +47,9 @@ public class JMSSupplierInstance implements Supplier {
 	// produced ingredients
 	private ArrayList<Ingredient> ingredients;
 
-	public JMSSupplierInstance(String propertiesFile) throws IOException, NamingException, JMSException {
+	public JMSSupplierInstance() throws IOException, NamingException, JMSException {
 		Properties properties = new Properties();
-		properties.load(this.getClass().getClassLoader().getResourceAsStream(propertiesFile));
+		properties.load(this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE));
 		this.ctx = new InitialContext(properties);
 
 		// init ingredient list

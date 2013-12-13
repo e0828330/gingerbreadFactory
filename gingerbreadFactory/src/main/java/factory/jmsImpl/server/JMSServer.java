@@ -10,7 +10,7 @@ public class JMSServer {
 
 	public static void main(String argv[]) {
 		try {
-			JMSServerInstance jmsServerInstance = new JMSServerInstance("jms.properties");
+			JMSServerInstance jmsServerInstance = new JMSServerInstance();
 			Thread thread = new Thread(jmsServerInstance);
 			thread.start();
 			

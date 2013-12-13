@@ -118,10 +118,12 @@ public class JMSServerInstance implements Runnable {
 	private JMSServerOvenQueueListener ovenQueue_listener;
 	private JMSServerMonitoringListener monitoring_listener;
 	private JMSServerCommandListener command_listener;
+	
+	private final String PROPERTIES_FILE = "jms.properties";
 
-	public JMSServerInstance(String propertiesFile) throws IOException, NamingException, JMSException {
+	public JMSServerInstance() throws IOException, NamingException, JMSException {
 		Properties properties = new Properties();
-		properties.load(this.getClass().getClassLoader().getResourceAsStream(propertiesFile));
+		properties.load(this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE));
 		this.ctx = new InitialContext(properties);
 
 		// set ingredient storage

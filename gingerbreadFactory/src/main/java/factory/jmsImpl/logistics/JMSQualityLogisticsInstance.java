@@ -44,13 +44,15 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	private Queue logisticsQueue_queue;
 
 	private final int MAX_PACKAGE_SIZE = 6;
+	
+	private final String PROPERTIES_FILE = "jms.properties";
 
 	private ArrayList<GingerBread> currentPackage = new ArrayList<GingerBread>(MAX_PACKAGE_SIZE);
 	private int counter = 0;
 
-	public JMSQualityLogisticsInstance(String propertiesFile) throws IOException, NamingException, JMSException {
+	public JMSQualityLogisticsInstance() throws IOException, NamingException, JMSException {
 		Properties properties = new Properties();
-		properties.load(this.getClass().getClassLoader().getResourceAsStream(propertiesFile));
+		properties.load(this.getClass().getClassLoader().getResourceAsStream(this.PROPERTIES_FILE));
 		this.ctx = new InitialContext(properties);
 
 		this.monitoringSender = new JMSMonitoringSender(this.ctx);

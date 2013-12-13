@@ -29,6 +29,8 @@ import factory.utils.JMSUtils.MessageType;
 
 public class JMSQualityControlInstance implements Runnable {
 
+	private final String PROPERTIES_FILE = "jms.properties";
+	
 	private Context ctx;
 	private boolean isRunning = true;
 	private Logger logger = Logger.get(getClass());
@@ -53,9 +55,9 @@ public class JMSQualityControlInstance implements Runnable {
 
 	private boolean needsCheck = true;
 
-	public JMSQualityControlInstance(String propertiesFile) throws IOException, NamingException, JMSException {
+	public JMSQualityControlInstance() throws IOException, NamingException, JMSException {
 		Properties properties = new Properties();
-		properties.load(this.getClass().getClassLoader().getResourceAsStream(propertiesFile));
+		properties.load(this.getClass().getClassLoader().getResourceAsStream(this.PROPERTIES_FILE));
 		this.ctx = new InitialContext(properties);
 
 		this.monitoringSender = new JMSMonitoringSender(this.ctx);
