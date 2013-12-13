@@ -109,6 +109,7 @@ public class JMSQualityControlInstance implements Runnable {
 							this.logger.info("This charge is just forwarded...", (Object[]) null);
 							for (GingerBread tested : testList) {
 								tested.setState(State.CONTROLLED);
+								tested.setQaId(this.id);
 							}
 							this.forwardCharge(testList, isGarbage);
 							needsCheck = !needsCheck;
@@ -125,12 +126,14 @@ public class JMSQualityControlInstance implements Runnable {
 							this.logger.info("Whole charge is garbage because of sucky tasting gingerbread.", (Object[]) null);
 							for (GingerBread tested : testList) {
 								tested.setState(State.GARBAGE);
+								tested.setQaId(this.id);
 								isGarbage = true;
 							}
 						} else {
 							this.logger.info("This charge is fine.", (Object[]) null);
 							for (GingerBread tested : testList) {
 								tested.setState(State.CONTROLLED);
+								tested.setQaId(this.id);
 							}
 						}
 						
