@@ -20,8 +20,8 @@ import org.mozartspaces.notifications.Operation;
 
 import factory.entities.GingerBread;
 import factory.entities.Ingredient;
-import factory.factory.App;
 import factory.interfaces.Supplier;
+import factory.spacesImpl.Server;
 import factory.spacesImpl.SupplierImpl;
 
 public class Main {
@@ -50,7 +50,7 @@ public class Main {
 		final Capi capi = new Capi(core);
 
 		try {
-			final ContainerReference ovenContainer = capi.lookupContainer("oven", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			final ContainerReference ovenContainer = capi.lookupContainer("oven", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 			NotificationManager notify = new NotificationManager(core);
 			notify.createNotification(ovenContainer, new NotificationListener() {
 				public void entryOperationFinished(Notification notify, Operation arg1, List<? extends Serializable> arg2) {
@@ -68,7 +68,7 @@ public class Main {
 				}
 			}, Operation.WRITE, Operation.DELETE, Operation.TAKE);
 
-			final ContainerReference gingerBreadContainer = capi.lookupContainer("gingerbreads", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			final ContainerReference gingerBreadContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 			NotificationManager notify2 = new NotificationManager(core);
 			notify2.createNotification(gingerBreadContainer, new NotificationListener() {
 				public void entryOperationFinished(Notification notify, Operation arg1, List<? extends Serializable> arg2) {

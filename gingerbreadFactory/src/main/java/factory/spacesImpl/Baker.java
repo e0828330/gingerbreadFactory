@@ -23,7 +23,6 @@ import org.mozartspaces.core.TransactionReference;
 import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
 import factory.entities.Ingredient;
-import factory.factory.App;
 import factory.utils.Utils;
 
 public class Baker {
@@ -63,7 +62,7 @@ public class Baker {
 		public void run() {
 			Capi capi = new Capi(core);
 			try {
-				ContainerReference container = capi.lookupContainer("ingredients", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, this.tx);
+				ContainerReference container = capi.lookupContainer("ingredients", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, this.tx);
 				resultEntries = capi.take(container, selector, timeout, this.tx);
 				sync.countDown();
 				
@@ -93,7 +92,7 @@ public class Baker {
 	private void getNextIngredientSet(Long timeout) {
 		Capi capi = new Capi(core);
 		try {
-			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
+			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
 			try {
 				CountDownLatch sync = new CountDownLatch(3);
 				
@@ -141,7 +140,7 @@ public class Baker {
 	private void processCharge(Long chargeId) throws MzsCoreException, URISyntaxException {
 		int size = getChargeSize();
 		Capi capi = new Capi(core);
-		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 		
 		ArrayList<GingerBread> currentCharge = new ArrayList<GingerBread>(size);
 		
@@ -165,9 +164,9 @@ public class Baker {
 		
 		boolean baked = false;	
 		
-		ContainerReference ovenContainer = capi.lookupContainer("oven", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+		ContainerReference ovenContainer = capi.lookupContainer("oven", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 		do {
-			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
+			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
 			for (GingerBread tmp : currentCharge)  {
 				capi.write(new Entry(tmp, KeyCoordinator.newCoordinationData(tmp.getId().toString())), ovenContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 			}
@@ -187,7 +186,7 @@ public class Baker {
 		}
 		while (baked == false);
 		
-		TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
+		TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
 		try {
 			ArrayList<GingerBread> items;
 			for (GingerBread tmp : currentCharge)  {
@@ -207,7 +206,7 @@ public class Baker {
 			capi.rollbackTransaction(tx);
 		}
 
-		ContainerReference chargeContainer = capi.lookupContainer("charges", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+		ContainerReference chargeContainer = capi.lookupContainer("charges", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 		capi.write(chargeContainer, new Entry(chargeId));
 		System.out.println("ADDING " + chargeId + " to charges container");
 	}

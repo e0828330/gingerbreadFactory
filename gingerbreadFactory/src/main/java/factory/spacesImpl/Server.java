@@ -1,4 +1,4 @@
-package factory.factory;
+package factory.spacesImpl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +15,7 @@ import org.mozartspaces.core.MzsConstants;
 import org.mozartspaces.core.MzsCore;
 import org.mozartspaces.core.MzsCoreException;
 
-public class App {
+public class Server {
 		
 	public static final String spaceURL = "xvsm://localhost:9876";
 	

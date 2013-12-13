@@ -19,7 +19,6 @@ import org.mozartspaces.notifications.Operation;
 
 import factory.entities.GingerBread;
 import factory.entities.Ingredient;
-import factory.factory.App;
 import factory.interfaces.EventListener;
 import factory.interfaces.Monitor;
 
@@ -37,9 +36,9 @@ public class SpacesMonitor implements Monitor {
 		core = DefaultMzsCore.newInstanceWithoutSpace();
 		capi = new Capi(core);
 		try {
-			ovenContainer = capi.lookupContainer("oven", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
-			gingerbreadContainer = capi.lookupContainer("gingerbreads", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
-			ingredientsContainer = capi.lookupContainer("ingredients", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			ovenContainer = capi.lookupContainer("oven", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			gingerbreadContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			ingredientsContainer = capi.lookupContainer("ingredients", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		} catch (URISyntaxException e) {

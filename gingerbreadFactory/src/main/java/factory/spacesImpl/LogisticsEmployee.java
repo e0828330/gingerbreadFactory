@@ -17,7 +17,6 @@ import org.mozartspaces.core.TransactionReference;
 
 import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
-import factory.factory.App;
 import factory.utils.Utils;
 
 public class LogisticsEmployee {
@@ -34,10 +33,10 @@ public class LogisticsEmployee {
 		Capi capi = new Capi(core);
 		while (true) {
 			try {
-				ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
-				ContainerReference qaPassedContainer = capi.lookupContainer("qaPassed", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+				ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+				ContainerReference qaPassedContainer = capi.lookupContainer("qaPassed", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 								
-				TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
+				TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
 				
 				// Get next 6
 				System.out.println("GET NEXT 6 ...");

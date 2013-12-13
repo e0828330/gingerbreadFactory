@@ -13,7 +13,6 @@ import org.mozartspaces.core.MzsCoreException;
 
 import factory.entities.Ingredient;
 import factory.entities.Ingredient.Type;
-import factory.factory.App;
 import factory.interfaces.Supplier;
 import factory.utils.Utils;
 
@@ -28,7 +27,7 @@ public class SupplierImpl implements Supplier {
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
 		Capi capi = new Capi(core);
 		try {
-			ContainerReference container = capi.lookupContainer("ingredients", new URI(App.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			ContainerReference container = capi.lookupContainer("ingredients", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 			for (int i = 0; i < amount; i++) {
 				Ingredient item =  new Ingredient(id, Utils.getID(), type);
 				capi.write(container, new Entry(item));
