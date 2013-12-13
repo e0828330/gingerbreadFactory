@@ -159,20 +159,18 @@ public class JMSMonitor implements Monitor, MessageListener {
 
 	@SuppressWarnings("unchecked")
 	public void onMessage(Message message) {
-		System.out.println(message);
 		try {
 			if (message instanceof ObjectMessage) {
 				ObjectMessage objectMessage = (ObjectMessage) message;
 				if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_GINGERBREAD_STATE_CHANGED)) {
 					ArrayList<GingerBread> result = (ArrayList<GingerBread>) objectMessage.getObject();
-					this.eventListener.onGingerBreadStateChange(result);
+					if (result != null)	this.eventListener.onGingerBreadStateChange(result);
 				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_INGREDIENTS)) {
 					ArrayList<Ingredient> result = (ArrayList<Ingredient>) objectMessage.getObject();
-					this.eventListener.onIngredientChanged(result);
+					if (result != null)	this.eventListener.onIngredientChanged(result);
 				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_OVENT_CHARGE)) {
 					ArrayList<GingerBread> result = (ArrayList<GingerBread>) objectMessage.getObject();
-					this.eventListener.onOvenChanged(result);
-					System.out.println("oven event");
+					if (result != null)	this.eventListener.onOvenChanged(result);
 				}
 			}
 		} catch (JMSException e) {

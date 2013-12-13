@@ -55,6 +55,8 @@ public class JMSQualityLogisticsInstance implements Runnable {
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(this.PROPERTIES_FILE));
 		this.ctx = new InitialContext(properties);
 
+		this.id = Utils.getID();
+		
 		this.monitoringSender = new JMSMonitoringSender(this.ctx);
 		
 		this.setup_logisticsQueue();

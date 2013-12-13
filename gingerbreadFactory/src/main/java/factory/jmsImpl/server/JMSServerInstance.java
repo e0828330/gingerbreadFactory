@@ -548,10 +548,22 @@ public class JMSServerInstance implements Runnable {
 				MessageProducer producer = this.ovenQueue_session.createProducer(replyObject.getDestination());
 				producer.send(responseMessage);
 				producer.close();
+				
+				// event for oven
 				Hashtable<String, String> properties = new Hashtable<String, String>(2);
 				properties.put("EVENT", Messages.EVENT_NEW_OVENT_CHARGE);
 				properties.put("TYPE", "ArrayList<GingerBread>");
 				this.sendEventToGUI(new ArrayList<GingerBread>(this.ovenList), properties);
+				
+				// event for gingerbreads
+				properties = new Hashtable<String, String>();
+				properties.put("TYPE", "ArrayList<GingerBread>");
+				properties.put("EVENT", Messages.EVENT_GINGERBREAD_STATE_CHANGED);
+				ArrayList<GingerBread> result = new ArrayList<GingerBread>();
+				for (Entry<Long, GingerBread> tmp : this.gingerBreads.entrySet()) {
+					result.add(tmp.getValue());
+				}
+				this.sendEventToGUI(result, properties);
 			}
 		} catch (JMSException e) {
 			e.printStackTrace();
@@ -590,8 +602,10 @@ public class JMSServerInstance implements Runnable {
 	}
 
 	public void sendEventToGUI(Object payLoad, Hashtable<String, String> properties) {
+		if (payLoad == null) {
+			return;
+		}
 		try {
-			System.out.println("SENDING OVEN EVENT PAYLOAD = " + payLoad);
 			JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, payLoad, properties, this.eventQueue_session, false, this.eventQueue_sender);
 		} catch (JMSException e) {
 			e.printStackTrace();

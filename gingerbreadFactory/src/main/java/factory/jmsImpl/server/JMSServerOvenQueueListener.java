@@ -2,6 +2,7 @@ package factory.jmsImpl.server;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Map.Entry;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -14,6 +15,7 @@ import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.ChargeReplyObject;
 import factory.entities.GingerBread;
+import factory.entities.Ingredient;
 import factory.utils.Messages;
 
 public class JMSServerOvenQueueListener implements MessageListener {
@@ -58,7 +60,13 @@ public class JMSServerOvenQueueListener implements MessageListener {
 					Hashtable<String, String> properties = new Hashtable<String, String>(2);
 					properties.put("TYPE", "ArrayList<Ingredient>");
 					properties.put("EVENT", Messages.EVENT_NEW_INGREDIENTS);
-					this.server.sendEventToGUI(this.server.get_total_ingredients_list(), properties);
+					
+					ArrayList<Ingredient> result = new ArrayList<Ingredient>();
+					for (Entry<Long, Ingredient> tmp : this.server.get_total_ingredients_list().entrySet()){
+						result.add(tmp.getValue());
+					}
+					
+					this.server.sendEventToGUI(result, properties);
 				}
 			}
 			message.acknowledge();

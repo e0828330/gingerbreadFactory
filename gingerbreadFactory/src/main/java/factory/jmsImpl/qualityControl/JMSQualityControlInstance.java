@@ -25,6 +25,7 @@ import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
 import factory.utils.JMSMonitoringSender;
 import factory.utils.JMSUtils;
+import factory.utils.Utils;
 import factory.utils.JMSUtils.MessageType;
 
 public class JMSQualityControlInstance implements Runnable {
@@ -62,6 +63,8 @@ public class JMSQualityControlInstance implements Runnable {
 
 		this.monitoringSender = new JMSMonitoringSender(this.ctx);
 
+		this.id = Utils.getID();
+		
 		this.setup_qualityControlQueue();
 
 		this.setup_logisticsQueue();
