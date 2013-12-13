@@ -30,7 +30,7 @@ public class JMSSupplierInstance implements Supplier {
 
 	private final String PROPERTIES_FILE = "jms.properties";
 	
-	private Long id;
+	private Long id = 0L;
 	private int amount;
 	private Type type;
 

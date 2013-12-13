@@ -159,6 +159,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 
 	@SuppressWarnings("unchecked")
 	public void onMessage(Message message) {
+		System.out.println(message);
 		try {
 			if (message instanceof ObjectMessage) {
 				ObjectMessage objectMessage = (ObjectMessage) message;
@@ -167,7 +168,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 					this.eventListener.onGingerBreadStateChange(result);
 				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_INGREDIENTS)) {
 					ArrayList<Ingredient> result = (ArrayList<Ingredient>) objectMessage.getObject();
-					this.eventListener.onIngredientChanged(result  == null ? new ArrayList<Ingredient>() : result);
+					this.eventListener.onIngredientChanged(result);
 				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_OVENT_CHARGE)) {
 					ArrayList<GingerBread> result = (ArrayList<GingerBread>) objectMessage.getObject();
 					this.eventListener.onOvenChanged(result);

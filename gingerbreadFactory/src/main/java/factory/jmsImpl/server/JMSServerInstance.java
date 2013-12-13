@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
@@ -102,6 +103,18 @@ public class JMSServerInstance implements Runnable {
 	private QueueSession eventQueue_session;
 	private Queue eventQueue_queue;
 	private QueueSender eventQueue_sender;
+	private MessageConsumer eventQueue_consumer;
+	
+	// Dummy consumer for qualitycontrol and logistics queue and event queue
+	private QueueConnection logisticsQueue_connection;
+	private QueueSession logisticsQueue_session;
+	private MessageConsumer logisticsQueue_consumer;
+	private Queue logisticsQueue_queue;
+	
+	private QueueConnection qualityQueue_connection;
+	private QueueSession qualityQueue_session;
+	private MessageConsumer qualityQueue_consumer;
+	private Queue qualityQueue_queue;	
 
 	private List<Ingredient> honey_list;
 	private List<Ingredient> flour_list;
@@ -172,6 +185,25 @@ public class JMSServerInstance implements Runnable {
 
 		// set event queue
 		this.setup_eventQueue();
+		
+		// set queues for quality control and logistics
+		this.setup_dummyQueueConsumer();
+	}
+	
+	private void setup_dummyQueueConsumer() throws NamingException, JMSException {
+		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		this.logisticsQueue_queue = (Queue) ctx.lookup("logisticsQueue");
+		this.logisticsQueue_connection = queueConnectionFactory.createQueueConnection();
+		this.logisticsQueue_session = this.logisticsQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
+		this.logisticsQueue_consumer = this.logisticsQueue_session.createConsumer(this.logisticsQueue_queue);
+		this.logisticsQueue_connection.start();
+		this.logger.info("Queue for quality-control startet.", (Object[]) null);
+		
+		this.qualityQueue_queue = (Queue) ctx.lookup("qualityControlQueue");
+		this.qualityQueue_connection = queueConnectionFactory.createQueueConnection();
+		this.qualityQueue_session = this.qualityQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
+		this.qualityQueue_consumer = this.qualityQueue_session.createConsumer(this.qualityQueue_queue);
+		this.qualityQueue_connection.start();
 	}
 
 	private void setup_eventQueue() throws NamingException, JMSException {
@@ -180,6 +212,7 @@ public class JMSServerInstance implements Runnable {
 		this.eventQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.eventQueue_session = this.eventQueue_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.eventQueue_sender = this.eventQueue_session.createSender(this.eventQueue_queue);
+		this.eventQueue_consumer = this.eventQueue_session.createConsumer(this.eventQueue_queue);
 		this.eventQueue_connection.start();
 	}
 
@@ -309,6 +342,7 @@ public class JMSServerInstance implements Runnable {
 		this.eventQueue_sender.close();
 		this.eventQueue_session.close();
 		this.eventQueue_connection.close();
+		this.eventQueue_consumer.close();
 
 		this.logger.info("Closing monitoring queue.", (Object[]) null);
 		this.monitoring_receiver.close();
@@ -319,6 +353,15 @@ public class JMSServerInstance implements Runnable {
 		this.command_receiver.close();
 		this.command_session.close();
 		this.command_connection.close();
+		
+		this.logger.info("Closing tmp queues.", (Object[]) null);
+		this.logisticsQueue_consumer.close();
+		this.logisticsQueue_session.close();
+		this.logisticsQueue_connection.close();
+		
+		this.qualityQueue_consumer.close();
+		this.qualityQueue_session.close();
+		this.qualityQueue_connection.close();
 
 		this.logger.info("ServerInstance shutting down.", (Object[]) null);
 	}

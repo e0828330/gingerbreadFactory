@@ -91,7 +91,9 @@ public class JMSQualityLogisticsInstance implements Runnable {
 						if (this.counter == MAX_PACKAGE_SIZE) {
 							this.logger.info("Send to server for monitoring.", (Object[]) null);
 							try {
-								this.monitoringSender.sendMonitoringMessage(gingerBread);
+								for (GingerBread tmp : this.currentPackage) {
+									this.monitoringSender.sendMonitoringMessage(tmp);
+								}
 							} catch (NamingException e) {
 								e.printStackTrace();
 							}

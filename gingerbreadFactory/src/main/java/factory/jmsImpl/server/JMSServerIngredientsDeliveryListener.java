@@ -1,7 +1,9 @@
 package factory.jmsImpl.server;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Hashtable;
+import java.util.Map.Entry;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -41,8 +43,11 @@ public class JMSServerIngredientsDeliveryListener implements MessageListener {
 					Hashtable<String, String> properties = new Hashtable<String, String>(2);
 					properties.put("EVENT", Messages.EVENT_NEW_INGREDIENTS);
 					properties.put("TYPE", "ArrayList<Ingredient>");
-					
-					ArrayList<Ingredient> result = new ArrayList<Ingredient>(this.server.get_total_ingredients_list().values());
+					properties.put("TIMESTAMP", (new Date()).toString());
+					ArrayList<Ingredient> result = new ArrayList<Ingredient>();
+					for (Entry<Long, Ingredient> tmp : this.server.get_total_ingredients_list().entrySet()) {
+						result.add(tmp.getValue());
+					}
 					this.server.sendEventToGUI(result, properties);
 				}
 
