@@ -14,7 +14,13 @@ public class DataThread implements Runnable {
 	}
 	
 	public void run() {
-		Monitor dataMonitor = new JMSMonitor();
+		Monitor dataMonitor = null;
+		if (GuiMain.mode.equals(GuiMain.Mode.SPACES)) {
+			dataMonitor = new SpacesMonitor();
+		}
+		else {
+			dataMonitor = new JMSMonitor();
+		}
 		listener.onGingerBreadStateChange(dataMonitor.getGingerBreads());
 		listener.onOvenChanged(dataMonitor.getOvenContent());
 		listener.onIngredientChanged(dataMonitor.getIngredients());
