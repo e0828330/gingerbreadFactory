@@ -156,7 +156,7 @@ public class Baker {
 			tmp.setHoneyId(honey.poll().getId());
 			tmp.setFirstEggSupplierId(eggs.peek().getSupplierId());
 			tmp.setFirstEggId(eggs.poll().getId());
-			tmp.setFirstEggSupplierId(eggs.peek().getSupplierId());
+			tmp.setSecondEggSupplierId(eggs.peek().getSupplierId());
 			tmp.setSecondEggId(eggs.poll().getId());
 			tmp.setState(GingerBread.State.PRODUCED);
 			capi.write(gingerbreadsContainer, new Entry(tmp));
