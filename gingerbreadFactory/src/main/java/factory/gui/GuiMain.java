@@ -42,7 +42,12 @@ public class GuiMain implements Application {
 	}
 	
 	public static void main(String[] args) {
-		mode = Mode.JMS;
+		if (args.length != 0 && args[0].equals("jms")) {
+			mode = Mode.JMS;
+		}
+		else {
+			mode = Mode.SPACES;
+		}
 	    DesktopApplicationContext.main(GuiMain.class, args);
 	}
 
