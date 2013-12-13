@@ -6,12 +6,13 @@ import javax.jms.JMSException;
 import javax.naming.NamingException;
 
 import factory.jmsImpl.baker.JMSBakerInstance;
+import factory.utils.Utils;
 
 public class JMSLogistics {
 
 	public static void main(String[] args) {
 		try {
-			JMSQualityLogisticsInstance qualitycontrol = new JMSQualityLogisticsInstance();
+			JMSQualityLogisticsInstance qualitycontrol = new JMSQualityLogisticsInstance(Utils.getStartupId(args));
 			Thread bakerThread = new Thread(qualitycontrol);	
 			bakerThread.start();
 		}

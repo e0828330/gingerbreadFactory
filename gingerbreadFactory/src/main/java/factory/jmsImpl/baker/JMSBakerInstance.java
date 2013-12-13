@@ -73,8 +73,8 @@ public class JMSBakerInstance implements Runnable {
 	private Queue qualityQueue_queue;
 	private QueueSender qualityQueue_sender;
 
-	public JMSBakerInstance() throws IOException, NamingException {
-		this.id = Utils.getID().longValue();
+	public JMSBakerInstance(Long id) throws IOException, NamingException {
+		this.id = id;
 		Properties properties = new Properties();
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE));
 		this.ctx = new InitialContext(properties);

@@ -56,14 +56,14 @@ public class JMSQualityControlInstance implements Runnable {
 
 	private boolean needsCheck = true;
 
-	public JMSQualityControlInstance() throws IOException, NamingException, JMSException {
+	public JMSQualityControlInstance(Long id) throws IOException, NamingException, JMSException {
 		Properties properties = new Properties();
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(this.PROPERTIES_FILE));
 		this.ctx = new InitialContext(properties);
 
 		this.monitoringSender = new JMSMonitoringSender(this.ctx);
 
-		this.id = Utils.getID();
+		this.id = id;
 		
 		this.setup_qualityControlQueue();
 

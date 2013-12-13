@@ -50,12 +50,11 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	private ArrayList<GingerBread> currentPackage = new ArrayList<GingerBread>(MAX_PACKAGE_SIZE);
 	private int counter = 0;
 
-	public JMSQualityLogisticsInstance() throws IOException, NamingException, JMSException {
+	public JMSQualityLogisticsInstance(Long id) throws IOException, NamingException, JMSException {
+		this.id = id;
 		Properties properties = new Properties();
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(this.PROPERTIES_FILE));
 		this.ctx = new InitialContext(properties);
-
-		this.id = Utils.getID();
 		
 		this.monitoringSender = new JMSMonitoringSender(this.ctx);
 		
