@@ -25,8 +25,9 @@ public class LogisticsEmployee {
 	private MzsCore core;
 	private Long id = 1L; // TODO: Set at startup
 	
-	public LogisticsEmployee(MzsCore core) {
+	public LogisticsEmployee(MzsCore core, Long id) {
 		this.core = core;
+		this.id = id;
 	}
 	
 	public void run() {
@@ -73,6 +74,6 @@ public class LogisticsEmployee {
 	public static void main(String[] args) {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
-		new LogisticsEmployee(core).run();
+		new LogisticsEmployee(core, Utils.getStartupId(args)).run();
 	}
 }
