@@ -22,6 +22,7 @@ import org.apache.qpid.transport.util.Logger;
 import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
 import factory.utils.JMSMonitoringSender;
+import factory.utils.Utils;
 
 public class JMSQualityLogisticsInstance implements Runnable {
 
@@ -30,7 +31,8 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	private Logger logger = Logger.get(getClass());
 
 	private Long id = 1L; // TODO: Set at startup
-	
+
+	private Long packageId = 0L;
 
 	// For monitoring
 	private JMSMonitoringSender monitoringSender;
@@ -65,6 +67,8 @@ public class JMSQualityLogisticsInstance implements Runnable {
 		this.logisticsQueue_consumer = this.logisticsQueue_session.createConsumer(this.logisticsQueue_queue);
 		this.logisticsQueue_connection.start();
 		this.logger.info("Queue for quality-control startet.", (Object[]) null);
+		
+		this.packageId = Utils.getID();
 	}
 
 	public void run() {
@@ -76,6 +80,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 					if (objectMessage.getObject() instanceof GingerBread) {
 						GingerBread gingerBread = (GingerBread) objectMessage.getObject();
 						gingerBread.setLogisticsId(this.id);
+						gingerBread.setPackageId(this.packageId);
 						gingerBread.setState(State.DONE);
 						this.currentPackage.add(gingerBread);
 						this.counter++;
@@ -90,6 +95,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 							}
 							this.currentPackage.clear();
 							this.counter = 0;
+							this.packageId = Utils.getID();
 						}
 					}
 				}

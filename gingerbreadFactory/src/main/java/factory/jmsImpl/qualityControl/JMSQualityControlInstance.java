@@ -128,8 +128,9 @@ public class JMSQualityControlInstance implements Runnable {
 								tested.setState(State.CONTROLLED);
 							}
 						}
-						// TODO: not remove, just set to EATEN
-						testList.remove(0); // remove the eaten one
+						
+						//testList.remove(0); // remove the eaten one
+						testList.get(0).setState(State.EATEN);
 						this.forwardCharge(testList, isGarbage);
 						// Toggle needs check state
 						needsCheck = !needsCheck;
