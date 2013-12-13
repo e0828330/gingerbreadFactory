@@ -12,6 +12,7 @@ import javax.jms.TextMessage;
 
 import org.apache.qpid.transport.util.Logger;
 
+import factory.entities.GingerBread;
 import factory.entities.Ingredient;
 import factory.utils.Messages;
 
@@ -40,7 +41,9 @@ public class JMSServerIngredientsDeliveryListener implements MessageListener {
 					Hashtable<String, String> properties = new Hashtable<String, String>(2);
 					properties.put("EVENT", Messages.EVENT_NEW_INGREDIENTS);
 					properties.put("TYPE", "ArrayList<Ingredient>");
-					this.server.sendEventToGUI(ingredients, properties);
+					
+					ArrayList<Ingredient> result = new ArrayList<Ingredient>(this.server.get_total_ingredients_list().values());
+					this.server.sendEventToGUI(result, properties);
 				}
 
 				TextMessage response = this.server.getIngredientsDelivery_session().createTextMessage();

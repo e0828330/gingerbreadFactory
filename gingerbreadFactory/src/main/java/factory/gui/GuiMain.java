@@ -42,7 +42,7 @@ public class GuiMain implements Application {
 	}
 	
 	public static void main(String[] args) {
-		mode = Mode.SPACES;
+		mode = Mode.JMS;
 	    DesktopApplicationContext.main(GuiMain.class, args);
 	}
 

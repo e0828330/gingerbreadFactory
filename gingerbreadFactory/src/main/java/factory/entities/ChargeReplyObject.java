@@ -24,7 +24,7 @@ public class ChargeReplyObject implements Serializable {
 	public ArrayList<GingerBread> getCharge() {
 		return charge;
 	}
-
+	
 	public void setCharge(ArrayList<GingerBread> charge) {
 		this.charge = charge;
 	}

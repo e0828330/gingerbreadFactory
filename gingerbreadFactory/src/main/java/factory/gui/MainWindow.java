@@ -22,6 +22,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import factory.entities.Ingredient;
 import factory.interfaces.Supplier;
+import factory.jmsImpl.supplier.JMSSupplierInstance;
 import factory.spacesImpl.SupplierImpl;
 
 public class MainWindow extends Window implements Bindable{
@@ -43,7 +44,7 @@ public class MainWindow extends Window implements Bindable{
 				TableView table = (TableView) namespace.get(_tableId);
 				try {
 					System.out.println(_tableId);
-					System.out.println(mapper.writeValueAsString(_data));
+				//	System.out.println(mapper.writeValueAsString(_data));
 					table.setTableData(mapper.writeValueAsString(_data));
 				} catch (JsonGenerationException e) {
 					// TODO Auto-generated catch block
@@ -81,6 +82,9 @@ public class MainWindow extends Window implements Bindable{
 				Supplier supplier = null;
 				if (GuiMain.mode.equals(GuiMain.Mode.SPACES)) {
 					supplier = new SupplierImpl();
+				}
+				else {
+					supplier = new JMSSupplierInstance();
 				}
 				supplier.setId(Long.parseLong(supplierId.getText()));
 				Ingredient.Type selectedType = null;

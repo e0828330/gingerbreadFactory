@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
@@ -57,12 +56,14 @@ public class JMSServerInstance implements Runnable {
 	// Stores all bakers which are waiting for new ingredients
 	private LinkedList<BakerWaitingObject> bakerWaitingList;
 
+	// Stores oven content
+	private List<GingerBread> ovenList;
+	
 	// Stores the current charges in the oven
 	ArrayList<ChargeReplyObject> nextOvenCharges;
 
 	// Oven
-	private AtomicBoolean ovenIsRunning;
-	private final int MAX_OVEN_CHARGE = 10;
+	private final int MAX_OVEN_SIZE = 10;
 
 	// monitoring queue
 	// Stores the states of the gingerbreads
@@ -133,6 +134,8 @@ public class JMSServerInstance implements Runnable {
 		this.total_ingredients_list = new ConcurrentHashMap<Long, Ingredient>(150);
 		this.setBakerWaitingList(new LinkedList<BakerWaitingObject>());
 
+		this.ovenList = Collections.synchronizedList(new ArrayList<GingerBread>(10));
+		
 		this.ovenWaitingList = Collections.synchronizedList(new ArrayList<ChargeReplyObject>());
 
 		this.delivered_ingredients = new ConcurrentHashMap<Long, ArrayList<GingerBreadTransactionObject>>(40);
@@ -146,8 +149,6 @@ public class JMSServerInstance implements Runnable {
 		this.count_gingerBread_honey = new AtomicInteger(0);
 		this.gingerBreadCounter = new AtomicInteger(0);
 
-		// Init oven
-		this.ovenIsRunning = new AtomicBoolean(false);
 
 		// Init all queues
 		this.initQueues();
@@ -259,11 +260,7 @@ public class JMSServerInstance implements Runnable {
 				if (s.equalsIgnoreCase("storage")) {
 					this.printStorage();
 				} else if (s.equalsIgnoreCase("oven_state")) {
-					if (this.ovenIsRunning.get() == true) {
-						System.out.println("Oven is running.");
-					} else {
-						System.out.println("Oven is ready.");
-					}
+						System.out.println("Oven :" + this.ovenList.size());
 
 				} else if (s.equals("monitor")) {
 					System.out.print("\n");
@@ -459,39 +456,40 @@ public class JMSServerInstance implements Runnable {
 
 	public synchronized void addToOven(ChargeReplyObject replyObject) {
 		this.ovenWaitingList.add(replyObject);
-		if (this.ovenIsRunning.get() == false) {
-			this.startOven();
-		}
+		this.startOven();
 	}
 
 	public synchronized void startOven() {
 		int currentSize = 0;
-		this.nextOvenCharges.clear();
-
+		//this.nextOvenCharges.clear();
+		ArrayList<ChargeReplyObject> _nextOvenCharges = new ArrayList<ChargeReplyObject>();
 		for (ChargeReplyObject charge : this.ovenWaitingList) {
 			int chargeSize = charge.getCharge().size();
-			if (currentSize + chargeSize <= this.MAX_OVEN_CHARGE) {
+			if (currentSize + chargeSize <= (this.MAX_OVEN_SIZE - this.ovenList.size())) {
 				currentSize += chargeSize;
-				this.nextOvenCharges.add(charge);
+				_nextOvenCharges.add(charge);
 			}
 		}
 
 		// Remove charges from waiting list
-		this.ovenWaitingList.removeAll(this.nextOvenCharges);
+		this.ovenWaitingList.removeAll(_nextOvenCharges);
 
 		// Start oven
-		if (this.ovenIsRunning.get() == false) {
-			this.ovenIsRunning.set(true);
-			Hashtable<String, String> properties = new Hashtable<String, String>(2);
-			properties.put("EVENT", Messages.EVENT_NEW_OVENT_CHARGE);
-			properties.put("TYPE", "ArrayList<GingerBread>");
-			this.sendEventToGUI(this.nextOvenCharges, properties);
-			Thread oven = new Thread(new Oven(this, this.nextOvenCharges));
-			oven.start();
+		Hashtable<String, String> properties = new Hashtable<String, String>(2);
+		properties.put("EVENT", Messages.EVENT_NEW_OVENT_CHARGE);
+		properties.put("TYPE", "ArrayList<GingerBread>");
+		ArrayList<GingerBread> result = new ArrayList<GingerBread>();
+		for (ChargeReplyObject cro : _nextOvenCharges) {
+			result.addAll(cro.getCharge());
 		}
+		this.ovenList.addAll(result);
+		this.sendEventToGUI(new ArrayList<GingerBread>(this.ovenList), properties);
+		Thread oven = new Thread(new Oven(this, _nextOvenCharges));
+		oven.start();
 	}
 
 	public synchronized void stopOven(ArrayList<ChargeReplyObject> charges) {
+		//
 		for (ChargeReplyObject charge : charges) {
 			this.logger.info("Oven finished charge with id = " + charge.getCharge().get(0).getChargeId(), (Object[]) null);
 		}
@@ -503,14 +501,18 @@ public class JMSServerInstance implements Runnable {
 				responseMessage.setJMSCorrelationID(replyObject.getId());
 				responseMessage.setStringProperty("TYPE", "ArrayList<GingerBread>");
 				responseMessage.setObject(replyObject.getCharge());
+				this.ovenList.removeAll(replyObject.getCharge());
 				MessageProducer producer = this.ovenQueue_session.createProducer(replyObject.getDestination());
 				producer.send(responseMessage);
 				producer.close();
+				Hashtable<String, String> properties = new Hashtable<String, String>(2);
+				properties.put("EVENT", Messages.EVENT_NEW_OVENT_CHARGE);
+				properties.put("TYPE", "ArrayList<GingerBread>");
+				this.sendEventToGUI(new ArrayList<GingerBread>(this.ovenList), properties);
 			}
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
-		this.ovenIsRunning.set(false);
 		if (this.ovenWaitingList.size() > 0) {
 			startOven();
 		}
@@ -546,6 +548,7 @@ public class JMSServerInstance implements Runnable {
 
 	public void sendEventToGUI(Object payLoad, Hashtable<String, String> properties) {
 		try {
+			System.out.println("SENDING OVEN EVENT PAYLOAD = " + payLoad);
 			JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, payLoad, properties, this.eventQueue_session, false, this.eventQueue_sender);
 		} catch (JMSException e) {
 			e.printStackTrace();

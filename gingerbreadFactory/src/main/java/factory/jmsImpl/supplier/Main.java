@@ -14,7 +14,7 @@ public class Main {
 		Thread supplier1;
 		Thread supplier2;
 		Thread supplier3;
-		try {
+
 			Supplier jmsSupplier1 = new JMSSupplierInstance();
 			jmsSupplier1.setId(1L);
 			jmsSupplier1.placeOrder(7, Ingredient.Type.HONEY);
@@ -34,16 +34,6 @@ public class Main {
 			jmsSupplier3.placeOrder(7, Ingredient.Type.FLOUR);
 			supplier3 = new Thread(jmsSupplier3);
 			supplier3.start();			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NamingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JMSException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
 	}
 

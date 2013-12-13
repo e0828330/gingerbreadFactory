@@ -2,6 +2,7 @@ package factory.gui;
 
 
 import factory.interfaces.Monitor;
+import factory.jmsImpl.monitor.JMSMonitor;
 import factory.spacesImpl.SpacesMonitor;
 
 public class DataThread implements Runnable {
@@ -13,7 +14,7 @@ public class DataThread implements Runnable {
 	}
 	
 	public void run() {
-		Monitor dataMonitor = new SpacesMonitor();
+		Monitor dataMonitor = new JMSMonitor();
 		listener.onGingerBreadStateChange(dataMonitor.getGingerBreads());
 		listener.onOvenChanged(dataMonitor.getOvenContent());
 		listener.onIngredientChanged(dataMonitor.getIngredients());

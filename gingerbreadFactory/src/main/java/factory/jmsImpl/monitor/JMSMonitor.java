@@ -103,6 +103,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 				}
 			}
 		} catch (JMSException e) {
+			System.err.println("GETGINGERBREADS");
 			e.printStackTrace();
 		}
 		return result;
@@ -120,6 +121,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 				}
 			}
 		} catch (JMSException e) {
+			System.err.println("GETINGREDEINTS");
 			e.printStackTrace();
 		}
 		return result;
@@ -149,6 +151,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 				}
 			}
 		} catch (JMSException e) {
+			System.err.println("GETOVENCONTENT");
 			e.printStackTrace();
 		}
 		return result;
@@ -164,10 +167,11 @@ public class JMSMonitor implements Monitor, MessageListener {
 					this.eventListener.onGingerBreadStateChange(result);
 				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_INGREDIENTS)) {
 					ArrayList<Ingredient> result = (ArrayList<Ingredient>) objectMessage.getObject();
-					this.eventListener.onIngredientChanged(result);
+					this.eventListener.onIngredientChanged(result  == null ? new ArrayList<Ingredient>() : result);
 				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_OVENT_CHARGE)) {
 					ArrayList<GingerBread> result = (ArrayList<GingerBread>) objectMessage.getObject();
 					this.eventListener.onOvenChanged(result);
+					System.out.println("oven event");
 				}
 			}
 		} catch (JMSException e) {

@@ -47,16 +47,21 @@ public class JMSSupplierInstance implements Supplier {
 	// produced ingredients
 	private ArrayList<Ingredient> ingredients;
 
-	public JMSSupplierInstance() throws IOException, NamingException, JMSException {
-		Properties properties = new Properties();
-		properties.load(this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE));
-		this.ctx = new InitialContext(properties);
-
-		// init ingredient list
-		this.ingredients = new ArrayList<Ingredient>(this.amount);
-
-		// Set queue connection for communication with server
-		this.setup_ingredientsQueue();
+	public JMSSupplierInstance() {
+		try {
+			Properties properties = new Properties();
+			properties.load(this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE));
+			this.ctx = new InitialContext(properties);
+	
+			// init ingredient list
+			this.ingredients = new ArrayList<Ingredient>(this.amount);
+	
+			// Set queue connection for communication with server
+			this.setup_ingredientsQueue();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void setup_ingredientsQueue() throws IOException, NamingException, JMSException {
@@ -77,18 +82,20 @@ public class JMSSupplierInstance implements Supplier {
 			// produce all ingredients
 			for (int i = 0; i < amount; i++) {
 				Ingredient item = new Ingredient(id, Utils.getID(), type);
+				Hashtable<String, String> properties = new Hashtable<String, String>();
+				properties.put("TYPE", "ArrayList<Ingredient>");
 				this.ingredients.add(item);
+				JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, 
+						ingredients, 
+						properties,
+						this.ingredientsDelivery_session, 
+						true, 
+						this.ingredientsDelivery_sender);
+				this.ingredients.clear();
 				Thread.sleep(Utils.getRandomWaitTime());
 			}
 			
-			Hashtable<String, String> properties = new Hashtable<String, String>();
-			properties.put("TYPE", "ArrayList<Ingredient>");
-			JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, 
-					ingredients, 
-					properties,
-					this.ingredientsDelivery_session, 
-					true, 
-					this.ingredientsDelivery_sender);
+			
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (JMSException e) {
