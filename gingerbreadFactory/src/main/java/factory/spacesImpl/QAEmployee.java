@@ -75,6 +75,9 @@ public class QAEmployee {
 				}
 				for (GingerBread tested : testList) {
 					tested.setQaId(id);
+					if (!eatedSkipped) {
+						tested.setState(State.EATEN);
+					}
 					capi.write(new Entry(tested), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 					// Ready for delivery
 					System.out.println(tested);

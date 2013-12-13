@@ -39,6 +39,7 @@ public class LogisticsEmployee {
 				TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(App.spaceURL));
 				
 				// Get next 6
+				System.out.println("GET NEXT 6 ...");
 				ArrayList<Long> ids = capi.take(qaPassedContainer, FifoCoordinator.newSelector(6), MzsConstants.RequestTimeout.INFINITE, tx);
 				Long packageId = Utils.getID();
 				for (Long gid : ids) {
