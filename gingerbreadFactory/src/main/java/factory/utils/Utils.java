@@ -34,4 +34,18 @@ public class Utils {
 	public static int getRandomWaitTime() {
 		return (int) (1000 + Math.random() * 1000);
 	}
+	
+	/**
+	 * Returns Long id passed during startup
+	 * 
+	 * @param args
+	 * @return
+	 */
+	public static Long getStartupId(String[] args) {
+		Long id = Utils.getID();
+		if (args.length > 0) {
+			id = Long.parseLong(args[0]);
+		}
+		return id;
+	}
 }

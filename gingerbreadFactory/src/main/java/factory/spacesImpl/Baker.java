@@ -30,14 +30,16 @@ public class Baker {
 
 	private MzsCore core;
 	private ExecutorService executor;
+	private Long id;
 	
 	private LinkedList<Ingredient> honey = new LinkedList<Ingredient>();
 	private LinkedList<Ingredient> eggs = new LinkedList<Ingredient>();
 	private LinkedList<Ingredient> flour = new LinkedList<Ingredient>();
 
-	public Baker(MzsCore core, ExecutorService executor) {
+	public Baker(MzsCore core, ExecutorService executor, Long id) {
 		this.core = core;
 		this.executor = executor;
+		this.id = id;
 	}
 
 	/**
@@ -146,7 +148,7 @@ public class Baker {
 		for (int i = 0; i < size; i++) {
 			GingerBread tmp = new GingerBread();
 			tmp.setId(Utils.getID());
-			tmp.setBakerId(0L); // TODO SET AT STARTUP
+			tmp.setBakerId(id);
 			tmp.setChargeId(chargeId);
 			tmp.setFlourId(flour.poll().getId());
 			tmp.setHoneyId(honey.poll().getId());
@@ -244,7 +246,7 @@ public class Baker {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
 		ExecutorService executor = Executors.newCachedThreadPool();
-		new Baker(core, executor).run();
+		new Baker(core, executor, Utils.getStartupId(args)).run();
 	}
 
 }
