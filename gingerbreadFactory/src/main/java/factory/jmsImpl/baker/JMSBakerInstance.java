@@ -205,10 +205,17 @@ public class JMSBakerInstance implements Runnable {
 						tmp.setId(Utils.getID());
 						tmp.setBakerId(this.id);
 						tmp.setChargeId(chargeId);
+						
 						tmp.setFlourId(obj.getFlour().getId());
 						tmp.setHoneyId(obj.getHoney().getId());
 						tmp.setFirstEggId(obj.getEgg1().getId());
 						tmp.setSecondEggId(obj.getEgg2().getId());
+						
+						tmp.setFirstEggSupplierId(obj.getEgg1().getSupplierId());
+						tmp.setSecondEggSupplierId(obj.getEgg2().getSupplierId());
+						tmp.setHoneySupplierId(obj.getHoney().getSupplierId());
+						tmp.setFlourSupplierId(obj.getFlour().getSupplierId());
+						
 						tmp.setState(GingerBread.State.PRODUCED);
 						this.charge.add(tmp);
 						Thread.sleep(Utils.getRandomWaitTime());
