@@ -13,6 +13,7 @@ import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.BakerWaitingObject;
 import factory.entities.GingerBreadTransactionObject;
+import factory.entities.Ingredient;
 import factory.utils.Messages;
 
 public class JMSServerBakerIngredientsQueueListener implements MessageListener {
@@ -43,7 +44,7 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 						response.setJMSCorrelationID(message.getJMSCorrelationID());
 						response.setObject(ingredients);
 						response.setStringProperty("TYPE", "ArrayList<GingerBreadTransactionObject>");
-
+						
 						if (bakerID != null) {
 							this.server.getDelivered_ingredients().put(bakerID, ingredients);
 						}
