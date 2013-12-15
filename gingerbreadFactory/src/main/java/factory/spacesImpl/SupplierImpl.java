@@ -41,6 +41,7 @@ public class SupplierImpl implements Supplier {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		core.shutdown(false);
 	}
 
 	public void setId(Long id) {
