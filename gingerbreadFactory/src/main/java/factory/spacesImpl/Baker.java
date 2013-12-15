@@ -168,7 +168,6 @@ public class Baker {
 	
 	private ArrayList<GingerBread> bakeCharge(ArrayList<GingerBread> currentCharge) throws MzsCoreException, URISyntaxException {
 		Capi capi = new Capi(core);
-		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 		ContainerReference ovenContainer = capi.lookupContainer("oven", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 
 		boolean baked = false;		
@@ -212,7 +211,7 @@ public class Baker {
 				items = capi.take(ovenContainer, KeyCoordinator.newSelector(tmp.getId().toString()), MzsConstants.RequestTimeout.INFINITE, tx);
 				current = items.get(0);
 				// Remove from list
-				capi.take(gingerbreadsContainer, LindaCoordinator.newSelector(current), MzsConstants.RequestTimeout.INFINITE, tx);;
+				capi.take(gingerbreadsContainer, LindaCoordinator.newSelector(current), MzsConstants.RequestTimeout.INFINITE, tx);
 				current.setState(State.BAKED);
 				capi.write(new Entry(current), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 			}
@@ -226,9 +225,53 @@ public class Baker {
 	}
 	
 	public void run() {
+		// Pick up unfinished tasks if nay
+		Capi capi = new Capi(core);
+		try {
+			ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			ContainerReference ovenContainer = capi.lookupContainer("oven", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			ArrayList<GingerBread> list;
 
-		// TODO: Pick up unfinished tasks
+			// Do we have something left in oven?
+			GingerBread tpl = new GingerBread();
+			tpl.setBakerId(id);
+			try {
+				list = capi.read(ovenContainer, LindaCoordinator.newSelector(tpl, MzsConstants.Selecting.COUNT_ALL), 1000, null);
+			}
+			catch (MzsCoreException e) {
+				list = new ArrayList<GingerBread>();
+			}
+			if (!list.isEmpty()) {
+				System.out.println("Picking up oven work");
+				getFromOven(list);
+			}
+			else {
+				// Do we have something produced that should be baked?
+				tpl.setState(State.PRODUCED);
+				try {
+					list = capi.read(gingerbreadsContainer, LindaCoordinator.newSelector(tpl, MzsConstants.Selecting.COUNT_ALL), 1000, null);
+				}
+				catch (MzsCoreException e) {
+					list = new ArrayList<GingerBread>();
+				}
+				if (!list.isEmpty()) {
+					System.out.println("Picking up produced gingerbreads");
+					ArrayList<GingerBread> charge = bakeCharge(list);
+					getFromOven(charge);
+				}
+			}
+			
+		} catch (MzsCoreException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 		
+		// Start working
+		doWork();
+	}
+	
+	private void doWork() {
 		while(true) {
 			/* Get at least enough for one */
 			getNextIngredientSet(MzsConstants.RequestTimeout.INFINITE);
@@ -253,7 +296,7 @@ public class Baker {
 			ArrayList<GingerBread> charge = processCharge(Utils.getID());
 			charge = bakeCharge(charge);
 			getFromOven(charge);
-			run(); // Restart loop
+			doWork(); // Restart loop
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		} catch (URISyntaxException e) {
