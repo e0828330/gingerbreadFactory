@@ -32,15 +32,17 @@ public class SupplierImpl implements Supplier {
 				Ingredient item =  new Ingredient(id, Utils.getID(), type);
 				capi.write(container, new Entry(item));
 				System.out.println("Unloaded:" + item);
-				Thread.sleep(Utils.getRandomWaitTime());
+				// XXX: DISABLED BECAUSE OF FORK BOMB BUG
+				// See: https://tuwel.tuwien.ac.at/mod/forum/discuss.php?d=47391
+				//Thread.sleep(Utils.getRandomWaitTime());
 			}
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
-		} catch (InterruptedException e) {
+		}/* catch (InterruptedException e) {
 			e.printStackTrace();
-		}
+		}*/
 		core.shutdown(false);
 	}
 
