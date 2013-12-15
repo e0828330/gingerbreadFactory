@@ -137,7 +137,14 @@ public class Baker {
 	}
 	
 
-	private ArrayList<GingerBread> processCharge(Long chargeId) throws MzsCoreException, URISyntaxException {
+	/**
+	 * Produces a new charge
+	 * @param chargeId
+	 * @return
+	 * @throws MzsCoreException
+	 * @throws URISyntaxException
+	 */
+	private ArrayList<GingerBread> produceCharge(Long chargeId) throws MzsCoreException, URISyntaxException {
 		int size = getChargeSize();
 		Capi capi = new Capi(core);
 		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
@@ -165,7 +172,14 @@ public class Baker {
 		return currentCharge;
 	}
 	
-	
+	/**
+	 * Bakes a charge in oven
+	 * 
+	 * @param currentCharge
+	 * @return
+	 * @throws MzsCoreException
+	 * @throws URISyntaxException
+	 */
 	private ArrayList<GingerBread> bakeCharge(ArrayList<GingerBread> currentCharge) throws MzsCoreException, URISyntaxException {
 		Capi capi = new Capi(core);
 		ContainerReference ovenContainer = capi.lookupContainer("oven", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
@@ -196,6 +210,13 @@ public class Baker {
 		return currentCharge;
 	}
 	
+	/**
+	 * Gets backed gingerbreads from oven
+	 * 
+	 * @param currentCharge
+	 * @throws MzsCoreException
+	 * @throws URISyntaxException
+	 */
 	private void getFromOven(ArrayList<GingerBread> currentCharge) throws MzsCoreException, URISyntaxException {
 		Capi capi = new Capi(core);
 		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
@@ -224,6 +245,46 @@ public class Baker {
 		}
 	}
 	
+	/**
+	 * Do the work (pick up ingredients, produce and bake)
+	 */
+	private void doWork() {
+		while (true) {
+			while(true) {
+				/* Get at least enough for one */
+				getNextIngredientSet(MzsConstants.RequestTimeout.INFINITE);
+	
+				/* Try up to five */
+				getNextIngredientSet(1000L);
+				if (getChargeSize() == 2) {
+					getNextIngredientSet(1000L);
+				}
+				if (getChargeSize() == 3) {
+					getNextIngredientSet(1000L);
+				}
+				if (getChargeSize() == 4) {
+					getNextIngredientSet(1000L);
+				}
+				
+				System.out.println("SIZE: " + getChargeSize());
+				break;
+			}
+			System.out.println("DONE");
+			try {
+				ArrayList<GingerBread> charge = produceCharge(Utils.getID());
+				charge = bakeCharge(charge);
+				getFromOven(charge);
+			} catch (MzsCoreException e) {
+				e.printStackTrace();
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * Entry point picks up crashes and starts the work
+	 */
 	public void run() {
 		// Pick up unfinished tasks if nay
 		Capi capi = new Capi(core);
@@ -269,39 +330,6 @@ public class Baker {
 		
 		// Start working
 		doWork();
-	}
-	
-	private void doWork() {
-		while(true) {
-			/* Get at least enough for one */
-			getNextIngredientSet(MzsConstants.RequestTimeout.INFINITE);
-
-			/* Try up to five */
-			getNextIngredientSet(1000L);
-			if (getChargeSize() == 2) {
-				getNextIngredientSet(1000L);
-			}
-			if (getChargeSize() == 3) {
-				getNextIngredientSet(1000L);
-			}
-			if (getChargeSize() == 4) {
-				getNextIngredientSet(1000L);
-			}
-			
-			System.out.println("SIZE: " + getChargeSize());
-			break;
-		}
-		System.out.println("DONE");
-		try {
-			ArrayList<GingerBread> charge = processCharge(Utils.getID());
-			charge = bakeCharge(charge);
-			getFromOven(charge);
-			doWork(); // Restart loop
-		} catch (MzsCoreException e) {
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException {
