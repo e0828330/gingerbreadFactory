@@ -43,17 +43,12 @@ public class MainWindow extends Window implements Bindable{
 			public void run() {
 				TableView table = (TableView) namespace.get(_tableId);
 				try {
-					System.out.println(_tableId);
-				//	System.out.println(mapper.writeValueAsString(_data));
 					table.setTableData(mapper.writeValueAsString(_data));
 				} catch (JsonGenerationException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (JsonMappingException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -101,22 +96,6 @@ public class MainWindow extends Window implements Bindable{
 				supplier.placeOrder(Integer.parseInt(amount.getText()), selectedType);
 				new Thread(supplier).start();
 				Alert.alert("Auftrag abgeschickt", MainWindow.this);
-			/*
-				ArrayList<Ingredient> tableData = new ArrayList<Ingredient>();
-				tableData.add(new Ingredient(20L, 10L, Ingredient.Type.HONEY));
-				tableData.add(new Ingredient(112L, 15L, Ingredient.Type.EGG));
-				ObjectMapper mapper = new ObjectMapper();
-				try {
-					System.out.println(mapper.writeValueAsString(tableData));
-					testTable.setTableData(mapper.writeValueAsString(tableData));
-				} catch (JsonGenerationException e) {
-					e.printStackTrace();
-				} catch (JsonMappingException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}*/
-				
 			}
 		});
 	}
