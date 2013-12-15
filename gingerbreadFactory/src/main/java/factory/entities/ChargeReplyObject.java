@@ -15,6 +15,8 @@ public class ChargeReplyObject implements Serializable {
 	
 	private String id;
 	
+	private Long bakerID;
+	
 	public ChargeReplyObject(ArrayList<GingerBread> charge, String id, Destination destination) {
 		this.setCharge(charge);
 		this.setDestination(destination);
@@ -43,6 +45,14 @@ public class ChargeReplyObject implements Serializable {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public Long getBakerID() {
+		return bakerID;
+	}
+
+	public void setBakerID(Long bakerID) {
+		this.bakerID = bakerID;
 	}
 	
 	

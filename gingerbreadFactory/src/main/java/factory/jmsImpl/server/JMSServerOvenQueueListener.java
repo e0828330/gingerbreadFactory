@@ -8,8 +8,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
-import javax.jms.TextMessage;
-import javax.print.attribute.HashAttributeSet;
 
 import org.apache.qpid.transport.util.Logger;
 
@@ -33,13 +31,8 @@ public class JMSServerOvenQueueListener implements MessageListener {
 			if (message instanceof ObjectMessage) {
 				ObjectMessage objMessage = (ObjectMessage) message;
 				if (objMessage.getStringProperty("TYPE").equals("ArrayList<GingerBread>")) {
-					System.out.println("Received charge for oven...");
 					@SuppressWarnings("unchecked")
 					ArrayList<GingerBread> charge = (ArrayList<GingerBread>) objMessage.getObject();
-
-					ChargeReplyObject replyObject = new ChargeReplyObject(charge, message.getJMSCorrelationID(), message.getJMSReplyTo());
-
-					this.server.addToOven(replyObject);
 				
 					for (GingerBread tmp : charge) {
 						this.server.get_total_ingredients_list().remove(tmp.getFirstEggId());
@@ -48,14 +41,22 @@ public class JMSServerOvenQueueListener implements MessageListener {
 						this.server.get_total_ingredients_list().remove(tmp.getFlourId());
 					}
 					
+					ChargeReplyObject replyObject = new ChargeReplyObject(charge, message.getJMSCorrelationID(), message.getJMSReplyTo());
+
+					
+					
 					if (message.getStringProperty("BAKER_ID") != null) {
 						Long bakerID = new Long(message.getStringProperty("BAKER_ID"));
+						replyObject.setBakerID(bakerID);
 						if (bakerID != null) {
 							if (this.server.getDelivered_ingredients().containsKey(bakerID)) {
 								this.server.getDelivered_ingredients().remove(bakerID);
 							}
 						}
 					}
+					
+					// send to oven
+					this.server.addToOven(replyObject);
 					
 					Hashtable<String, String> properties = new Hashtable<String, String>(2);
 					properties.put("TYPE", "ArrayList<Ingredient>");
