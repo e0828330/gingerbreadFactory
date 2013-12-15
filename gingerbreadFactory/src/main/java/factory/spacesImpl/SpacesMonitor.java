@@ -82,10 +82,8 @@ public class SpacesMonitor implements Monitor {
 		try {
 			setupNotifications();
 		} catch (MzsCoreException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
