@@ -137,7 +137,7 @@ public class Baker {
 	}
 	
 
-	private void processCharge(Long chargeId) throws MzsCoreException, URISyntaxException {
+	private ArrayList<GingerBread> processCharge(Long chargeId) throws MzsCoreException, URISyntaxException {
 		int size = getChargeSize();
 		Capi capi = new Capi(core);
 		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
@@ -162,9 +162,17 @@ public class Baker {
 			currentCharge.add(tmp);
 		}
 		
-		boolean baked = false;	
-		
+		return currentCharge;
+	}
+	
+	
+	private ArrayList<GingerBread> bakeCharge(ArrayList<GingerBread> currentCharge) throws MzsCoreException, URISyntaxException {
+		Capi capi = new Capi(core);
+		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 		ContainerReference ovenContainer = capi.lookupContainer("oven", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+
+		boolean baked = false;		
+		
 		do {
 			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
 			for (GingerBread tmp : currentCharge)  {
@@ -185,6 +193,15 @@ public class Baker {
 			baked = true;
 		}
 		while (baked == false);
+
+		return currentCharge;
+	}
+	
+	private void getFromOven(ArrayList<GingerBread> currentCharge) throws MzsCoreException, URISyntaxException {
+		Capi capi = new Capi(core);
+		ContainerReference gingerbreadsContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+		ContainerReference ovenContainer = capi.lookupContainer("oven", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+		ContainerReference chargeContainer = capi.lookupContainer("charges", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 		
 		TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
 		try {
@@ -199,16 +216,13 @@ public class Baker {
 				current.setState(State.BAKED);
 				capi.write(new Entry(current), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 			}
+			capi.write(chargeContainer, new Entry(currentCharge.get(0).getChargeId()));
 			capi.commitTransaction(tx);
 			currentCharge.clear();
 		}
 		catch (MzsCoreException e) {
 			capi.rollbackTransaction(tx);
 		}
-
-		ContainerReference chargeContainer = capi.lookupContainer("charges", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
-		capi.write(chargeContainer, new Entry(chargeId));
-		System.out.println("ADDING " + chargeId + " to charges container");
 	}
 	
 	public void run() {
@@ -236,7 +250,9 @@ public class Baker {
 		}
 		System.out.println("DONE");
 		try {
-			processCharge(Utils.getID());
+			ArrayList<GingerBread> charge = processCharge(Utils.getID());
+			charge = bakeCharge(charge);
+			getFromOven(charge);
 			run(); // Restart loop
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
