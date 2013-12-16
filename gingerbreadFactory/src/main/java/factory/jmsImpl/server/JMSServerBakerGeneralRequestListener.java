@@ -1,8 +1,5 @@
 package factory.jmsImpl.server;
 
-import java.util.ArrayList;
-import java.util.Map.Entry;
-
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -12,7 +9,6 @@ import javax.jms.TextMessage;
 
 import org.apache.qpid.transport.util.Logger;
 
-import factory.entities.GingerBread;
 import factory.utils.Messages;
 
 public class JMSServerBakerGeneralRequestListener implements MessageListener {

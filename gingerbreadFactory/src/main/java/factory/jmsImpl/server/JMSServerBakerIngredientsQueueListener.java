@@ -13,7 +13,6 @@ import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.BakerWaitingObject;
 import factory.entities.GingerBreadTransactionObject;
-import factory.entities.Ingredient;
 import factory.utils.Messages;
 
 public class JMSServerBakerIngredientsQueueListener implements MessageListener {
