@@ -10,6 +10,7 @@ import org.mozartspaces.core.Entry;
 import org.mozartspaces.core.MzsConstants;
 import org.mozartspaces.core.MzsCore;
 import org.mozartspaces.core.MzsCoreException;
+import org.mozartspaces.core.TransactionReference;
 
 import factory.entities.Ingredient;
 import factory.entities.Ingredient.Type;
@@ -29,8 +30,11 @@ public class SupplierImpl implements Supplier {
 		try {
 			ContainerReference container = capi.lookupContainer("ingredients", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 			for (int i = 0; i < amount; i++) {
+				// Using a transaction here makes no sense but fixes notify while baker is running
+				TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
 				Ingredient item =  new Ingredient(id, Utils.getID(), type);
-				capi.write(container, new Entry(item));
+				capi.write(new Entry(item), container, MzsConstants.RequestTimeout.INFINITE, tx);
+				capi.commitTransaction(tx);
 				System.out.println("Unloaded:" + item);
 				// XXX: DISABLED BECAUSE OF FORK BOMB BUG
 				// See: https://tuwel.tuwien.ac.at/mod/forum/discuss.php?d=47391
