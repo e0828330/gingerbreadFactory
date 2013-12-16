@@ -23,12 +23,13 @@ import factory.utils.Utils;
 public class QAEmployee {
 
 	private MzsCore core;
-	private float defectRate = 0.2f; // TODO: Set at startup
+	private float defectRate;
 	private Long id = 1L;
 	
-	public QAEmployee(MzsCore core, Long id) {
+	public QAEmployee(MzsCore core, Long id, float defectRate) {
 		this.core = core;
 		this.id = id;
+		this.defectRate = defectRate;
 	}
 
 	public void run() {
@@ -111,7 +112,7 @@ public class QAEmployee {
 	public static void main(String[] args) {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
-		new QAEmployee(core, Utils.getStartupId(args)).run();
+		new QAEmployee(core, Utils.getStartupId(args), Utils.getStartupDefectRate(args)).run();
 	}
 
 }
