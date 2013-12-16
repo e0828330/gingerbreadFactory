@@ -25,18 +25,17 @@ import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
 import factory.utils.JMSMonitoringSender;
 import factory.utils.JMSUtils;
-import factory.utils.Utils;
 import factory.utils.JMSUtils.MessageType;
 
 public class JMSQualityControlInstance implements Runnable {
 
 	private final String PROPERTIES_FILE = "jms.properties";
-	
+
 	private Context ctx;
 	private boolean isRunning = true;
 	private Logger logger = Logger.get(getClass());
 
-	private float defectRate = 0.4f; // TODO: Set at startup
+	private float defectRate = 0.4f;
 	private Long id = 1L; // TODO: Set at startup
 
 	// QualityControlQueue Baker -> QualityControl
@@ -56,7 +55,7 @@ public class JMSQualityControlInstance implements Runnable {
 
 	private boolean needsCheck = true;
 
-	public JMSQualityControlInstance(Long id) throws IOException, NamingException, JMSException {
+	public JMSQualityControlInstance(Long id, float defectRate) throws IOException, NamingException, JMSException {
 		Properties properties = new Properties();
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(this.PROPERTIES_FILE));
 		this.ctx = new InitialContext(properties);
@@ -64,7 +63,8 @@ public class JMSQualityControlInstance implements Runnable {
 		this.monitoringSender = new JMSMonitoringSender(this.ctx);
 
 		this.id = id;
-		
+		this.defectRate = defectRate;
+
 		this.setup_qualityControlQueue();
 
 		this.setup_logisticsQueue();
@@ -136,8 +136,8 @@ public class JMSQualityControlInstance implements Runnable {
 								tested.setQaId(this.id);
 							}
 						}
-						
-						//testList.remove(0); // remove the eaten one
+
+						// testList.remove(0); // remove the eaten one
 						testList.get(0).setState(State.EATEN);
 						this.forwardCharge(testList, isGarbage);
 						// Toggle needs check state

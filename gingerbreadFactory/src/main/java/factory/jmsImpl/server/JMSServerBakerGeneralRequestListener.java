@@ -40,7 +40,7 @@ public class JMSServerBakerGeneralRequestListener implements MessageListener {
 							producer.send(responseMessage);
 							producer.close();
 							return;
-						} else if (this.server.getBakerProducedGingerBread_tmpList().containsKey(bakerID)) { 
+						} else if (this.server.getBakerProducedGingerBread_tmpList().containsKey(bakerID)) {
 							ObjectMessage responseMessage = this.server.get_BakerRequestsession().createObjectMessage();
 							responseMessage.setStringProperty("TYPE", "ArrayList<GingerBread>");
 							responseMessage.setStringProperty("STATE", "PRODUCED");
@@ -51,8 +51,7 @@ public class JMSServerBakerGeneralRequestListener implements MessageListener {
 							producer.send(responseMessage);
 							producer.close();
 							return;
-						}
-						else if (this.server.getBakersChargeInOven().containsKey(bakerID)) {
+						} else if (this.server.getBakersChargeInOven().containsKey(bakerID)) {
 							ObjectMessage responseMessage = this.server.get_BakerRequestsession().createObjectMessage();
 							responseMessage.setStringProperty("STATE", "BAKED");
 							responseMessage.setStringProperty("TYPE", "ArrayList<GingerBread>");
