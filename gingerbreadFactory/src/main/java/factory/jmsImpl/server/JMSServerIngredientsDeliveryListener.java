@@ -1,7 +1,6 @@
 package factory.jmsImpl.server;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map.Entry;
 
@@ -14,7 +13,6 @@ import javax.jms.TextMessage;
 
 import org.apache.qpid.transport.util.Logger;
 
-import factory.entities.GingerBread;
 import factory.entities.Ingredient;
 import factory.utils.Messages;
 
