@@ -48,4 +48,17 @@ public class Utils {
 		}
 		return id;
 	}
+	
+	/**
+	 * Parses the defect rate from cmdline param
+	 * @param args
+	 * @return
+	 */
+	public static Float getStartupDefectRate(String[] args) {
+		Float defectRate = 0.2f;
+		if (args.length > 1) {
+			defectRate = Float.parseFloat(args[1]);
+		}
+		return defectRate;
+	}
 }
