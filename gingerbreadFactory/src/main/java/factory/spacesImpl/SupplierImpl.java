@@ -36,10 +36,7 @@ public class SupplierImpl implements Supplier {
 				capi.write(new Entry(item), container, MzsConstants.RequestTimeout.INFINITE, tx);
 				capi.commitTransaction(tx);
 				System.out.println("Unloaded:" + item);
-				// XXX: DISABLED BECAUSE OF FORK BOMB BUG
-				// See: https://tuwel.tuwien.ac.at/mod/forum/discuss.php?d=47391
-				//Thread.sleep(Utils.getRandomWaitTime());
-				Thread.sleep(500);
+				Thread.sleep(Utils.getRandomWaitTime());
 			}
 		} catch (MzsCoreException e) {
 			e.printStackTrace();

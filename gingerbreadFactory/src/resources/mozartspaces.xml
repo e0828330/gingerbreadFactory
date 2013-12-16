@@ -4,6 +4,7 @@
 		<transports>
 			<tcpsocket scheme="xvsm">
 				<receiverPort>9876</receiverPort>
+				<threads>32</threads>
 			</tcpsocket>
 		</transports>
 	</remoting>
