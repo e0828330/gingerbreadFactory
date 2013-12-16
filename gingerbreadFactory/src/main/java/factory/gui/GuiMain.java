@@ -30,7 +30,7 @@ public class GuiMain implements Application {
 	public void startup(Display dsp, Map<String, String> props)
 			throws Exception {
 		BXMLSerializer bxmlSerializer = new BXMLSerializer();
-		window = (MainWindow) bxmlSerializer.readObject(GuiMain.class, "Window.xml");
+		window = (MainWindow) bxmlSerializer.readObject(GuiMain.class, "/Window.xml");
 		window.setWidth(1000);
 		window.setHeight(720);
 		window.open(dsp);
