@@ -114,6 +114,7 @@ public class Baker {
 					flour.addAll(getFlour.getResultEntries());
 					honey.addAll(getHoney.getResultEntries());
 					eggs.addAll(getEggs.getResultEntries());
+					capi.commitTransaction(tx);
 					
 				}
 				
