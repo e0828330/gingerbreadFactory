@@ -50,6 +50,8 @@ public class JMSServerInstance implements Runnable {
 	
 	// Stores the bakerid -> oven relationship
 	private ConcurrentHashMap<Long, ArrayList<GingerBread>> bakersChargeInOven;
+	
+	private ConcurrentHashMap<Long, ArrayList<GingerBread>> bakerProducedGingerBread_tmpList;
 
 	// Stores the gingerbread-ID -> gingerbread
 	private ConcurrentHashMap<Long, GingerBread> gingerBreads;
@@ -155,6 +157,7 @@ public class JMSServerInstance implements Runnable {
 		this.flour_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
 		this.egg_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
 		this.total_ingredients_list = new ConcurrentHashMap<Long, Ingredient>(150);
+		this.bakerProducedGingerBread_tmpList = new ConcurrentHashMap<Long, ArrayList<GingerBread>>();
 		this.setBakerWaitingList(new LinkedList<BakerWaitingObject>());
 		this.bakersChargeInOven = new ConcurrentHashMap<Long, ArrayList<GingerBread>>();
 
@@ -659,6 +662,14 @@ public class JMSServerInstance implements Runnable {
 	
 	public QueueSession get_BakerRequestsession() {
 		return this.bakerRequest_session;
+	}
+
+	public ConcurrentHashMap<Long, ArrayList<GingerBread>> getBakerProducedGingerBread_tmpList() {
+		return bakerProducedGingerBread_tmpList;
+	}
+
+	public void setBakerProducedGingerBread_tmpList(ConcurrentHashMap<Long, ArrayList<GingerBread>> bakerProducedGingerBread_tmpList) {
+		this.bakerProducedGingerBread_tmpList = bakerProducedGingerBread_tmpList;
 	}
 
 }

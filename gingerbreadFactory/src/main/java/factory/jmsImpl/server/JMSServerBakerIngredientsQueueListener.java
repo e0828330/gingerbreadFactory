@@ -45,7 +45,9 @@ public class JMSServerBakerIngredientsQueueListener implements MessageListener {
 						response.setStringProperty("TYPE", "ArrayList<GingerBreadTransactionObject>");
 						
 						if (bakerID != null) {
-							this.server.getDelivered_ingredients().put(bakerID, ingredients);
+							if (this.server.getDelivered_ingredients().containsKey(bakerID) == false) {
+								this.server.getDelivered_ingredients().put(bakerID, ingredients);
+							}
 						}
 						
 						MessageProducer producer = this.server.getIngredientsDelivery_session().createProducer(message.getJMSReplyTo());

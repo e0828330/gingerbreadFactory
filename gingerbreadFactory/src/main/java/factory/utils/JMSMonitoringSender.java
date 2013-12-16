@@ -1,5 +1,9 @@
 package factory.utils;
 
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Map.Entry;
+
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
@@ -44,7 +48,19 @@ public class JMSMonitoringSender {
 		
 		public void sendMonitoringMessage(GingerBread gingerBread) throws JMSException, NamingException {
 			ObjectMessage message = monitoring_session.createObjectMessage();
+			message.setStringProperty("TYPE", "GingerBread");
 			message.setObject(gingerBread);
+			monitoring_sender.send(message);
+		}
+
+
+		public void sendMonitoringMessage(ArrayList<GingerBread> charge, Hashtable<String, String> properties) throws JMSException {
+			ObjectMessage message = monitoring_session.createObjectMessage();
+			message.setStringProperty("TYPE", "ArrayList<GingerBread>");
+			for (Entry<String, String> property : properties.entrySet()) {
+				message.setStringProperty(property.getKey(), property.getValue());
+			}
+			message.setObject(charge);
 			monitoring_sender.send(message);
 		}
 	

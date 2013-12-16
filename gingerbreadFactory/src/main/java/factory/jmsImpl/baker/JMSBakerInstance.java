@@ -256,19 +256,16 @@ public class JMSBakerInstance implements Runnable {
 						tmp.setState(GingerBread.State.PRODUCED);
 						this.charge.add(tmp);
 						Thread.sleep(Utils.getRandomWaitTime());
-
-						this.monitoringSender.sendMonitoringMessage(tmp);
 					}
+					Hashtable<String, String> properties1 = new Hashtable<String, String>();
+					properties1.put("BAKER_ID", String.valueOf(this.id));
+					this.monitoringSender.sendMonitoringMessage(this.charge, properties1);
 					this.producedCharges.put(chargeId, this.charge.size());
 					// acknowledge for receiving ingredients
 					message.acknowledge();
 
-					Hashtable<String, String> properties = new Hashtable<String, String>();
-					properties.put("BAKER_ID", String.valueOf(this.id));
-					properties.put("TYPE", "ArrayList<GingerBread>");
-					this.logger.info("Waiting for oven and blocking..", (Object[]) null);
-					Message responseMessage = JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, this.charge, properties, this.ovenQueue_session, true, this.ovenQueue_sender);
-					responseMessage.acknowledge();
+					// send to oven
+					Message responseMessage = this.sendToOven();
 
 					if (responseMessage instanceof ObjectMessage) {
 						ObjectMessage responseObjectMessage = (ObjectMessage) responseMessage;
@@ -276,7 +273,7 @@ public class JMSBakerInstance implements Runnable {
 							// acknowledge for receiving baked charge
 							@SuppressWarnings("unchecked")
 							ArrayList<GingerBread> bakedCharge = (ArrayList<GingerBread>) responseObjectMessage.getObject();
-							
+
 							// send to qualitycontrol
 							this.sendToQualitControl(bakedCharge);
 						}
@@ -284,30 +281,41 @@ public class JMSBakerInstance implements Runnable {
 				}
 				// received stored oven gingerbreads
 				else if (objMessage.getStringProperty("TYPE") != null && objMessage.getStringProperty("TYPE").equals("ArrayList<GingerBread>")) {
-					
-					@SuppressWarnings("unchecked")
-					ArrayList<GingerBread> bakedCharge = (ArrayList<GingerBread>) objMessage.getObject();
-					// send to qualitycontrol
-					this.sendToQualitControl(bakedCharge);
+					if (objMessage.getStringProperty("STATE") != null && objMessage.getStringProperty("STATE").equals("BAKED")) {
+						@SuppressWarnings("unchecked")
+						ArrayList<GingerBread> bakedCharge = (ArrayList<GingerBread>) objMessage.getObject();
+						// send to qualitycontrol
+						this.sendToQualitControl(bakedCharge);
+					} else if (objMessage.getStringProperty("STATE") != null && objMessage.getStringProperty("STATE").equals("PRODUCED")) {
+						// send to oven
+						Message responseMessage = this.sendToOven();
+						if (responseMessage instanceof ObjectMessage) {
+							ObjectMessage responseObjectMessage = (ObjectMessage) responseMessage;
+							if (responseObjectMessage.getStringProperty("TYPE") != null && responseObjectMessage.getStringProperty("TYPE").equals("ArrayList<GingerBread>")) {
+								// acknowledge for receiving baked charge
+								@SuppressWarnings("unchecked")
+								ArrayList<GingerBread> bakedCharge = (ArrayList<GingerBread>) responseObjectMessage.getObject();
+
+								// send to qualitycontrol
+								this.sendToQualitControl(bakedCharge);
+							}
+						}						
+					}
 				}
 
 			} catch (JMSException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			} catch (NamingException e) {
-				e.printStackTrace();
 			}
-		}
-		else if (message instanceof TextMessage) {
+		} else if (message instanceof TextMessage) {
 			try {
 				TextMessage textMessage = (TextMessage) message;
 				if (textMessage.getText() != null && textMessage.getText().equals(Messages.NO_STORED_DATA)) {
 					logger.info("No stored data.", (Object[]) null);
 				}
 				message.acknowledge();
-			}
-			catch (JMSException e) {
+			} catch (JMSException e) {
 				e.printStackTrace();
 			}
 		}
@@ -326,15 +334,27 @@ public class JMSBakerInstance implements Runnable {
 			// removed
 			properties = new Hashtable<String, String>();
 			properties.put("BAKER_ID", String.valueOf(this.id));
-			JMSUtils.sendMessage(MessageType.TEXTMESSAGE, Messages.SERVER_REMOVE_STORED_BAKED_GINGERBREADS, 
-					properties, this.bakerRequest_session, 
-					false,
-					this.bakerRequest_sender);
+			JMSUtils.sendMessage(MessageType.TEXTMESSAGE, Messages.SERVER_REMOVE_STORED_BAKED_GINGERBREADS, properties, this.bakerRequest_session, false, this.bakerRequest_sender);
 
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
 		this.reset();
+	}
+
+	private Message sendToOven() {
+		try {
+			Hashtable<String, String> properties = new Hashtable<String, String>();
+			properties.put("BAKER_ID", String.valueOf(this.id));
+			properties.put("TYPE", "ArrayList<GingerBread>");
+			this.logger.info("Waiting for oven and blocking..", (Object[]) null);
+			Message responseMessage = JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, this.charge, properties, this.ovenQueue_session, true, this.ovenQueue_sender);
+			responseMessage.acknowledge();
+			return responseMessage;
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	private void reset() {

@@ -47,10 +47,10 @@ public class JMSServerOvenQueueListener implements MessageListener {
 					
 					if (message.getStringProperty("BAKER_ID") != null) {
 						Long bakerID = new Long(message.getStringProperty("BAKER_ID"));
-						replyObject.setBakerID(bakerID);
 						if (bakerID != null) {
-							if (this.server.getDelivered_ingredients().containsKey(bakerID)) {
-								this.server.getDelivered_ingredients().remove(bakerID);
+							replyObject.setBakerID(bakerID);
+							if (this.server.getBakerProducedGingerBread_tmpList().containsKey(bakerID)) {
+								this.server.getBakerProducedGingerBread_tmpList().remove(bakerID);
 							}
 						}
 					}
