@@ -12,8 +12,8 @@ public class JMSQualityControl {
 	public static void main(String[] args) {
 		try {
 			JMSQualityControlInstance qualitycontrol = new JMSQualityControlInstance(Utils.getStartupId(args), Utils.getStartupDefectRate(args));
-			Thread bakerThread = new Thread(qualitycontrol);
-			bakerThread.start();
+			Thread qualityControl = new Thread(qualitycontrol);
+			qualityControl.start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (NamingException e) {

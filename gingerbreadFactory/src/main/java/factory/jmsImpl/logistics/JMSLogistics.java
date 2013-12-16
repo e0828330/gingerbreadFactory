@@ -13,8 +13,8 @@ public class JMSLogistics {
 	public static void main(String[] args) {
 		try {
 			JMSQualityLogisticsInstance qualitycontrol = new JMSQualityLogisticsInstance(Utils.getStartupId(args));
-			Thread bakerThread = new Thread(qualitycontrol);	
-			bakerThread.start();
+			Thread logisticsThread = new Thread(qualitycontrol);	
+			logisticsThread.start();
 		}
 		catch (IOException e) {
 			e.printStackTrace();
