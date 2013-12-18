@@ -11,7 +11,7 @@ public class Ingredient implements Serializable {
 	private Long supplierId;
 
 	public enum Type {
-		HONEY, FLOUR, EGG
+		HONEY, FLOUR, EGG, CHOCOLATE, NUT
 	};
 
 	private Type type;
