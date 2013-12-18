@@ -141,6 +141,8 @@
 										selected="true" />
 									<RadioButton buttonData="Eier" buttonGroup="$type" />
 									<RadioButton buttonData="Mehl" buttonGroup="$type" />
+									<RadioButton buttonData="Nüsse" buttonGroup="$type" />
+									<RadioButton buttonData="Schokolade" buttonGroup="$type" />
 								</BoxPane>
 							</Form.Section>
 							<Form.Section>

@@ -25,13 +25,10 @@ public class DataListener implements EventListener {
 		try {
 			window.updateTable("ovenTable", ovenContent);
 		} catch (JsonGenerationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -66,7 +63,6 @@ public class DataListener implements EventListener {
 	}
 
 	public void onIngredientChanged(List<Ingredient> list) {
-		// TODO Auto-generated method stub
 		HashMap<Ingredient.Type, IngredientCount> countMap = new HashMap<Ingredient.Type, DataListener.IngredientCount>();
 		for (Ingredient item : list) {
 			if (countMap.containsKey(item.getType())) {
@@ -80,6 +76,12 @@ public class DataListener implements EventListener {
 					tmp.setName("Mehl");
 				} else if (item.getType().equals(Ingredient.Type.EGG)) {
 					tmp.setName("Eier");
+				}
+				else if (item.getType().equals(Ingredient.Type.NUT)) {
+					tmp.setName("Nüsse");
+				}
+				else if (item.getType().equals(Ingredient.Type.CHOCOLATE)) {
+					tmp.setName("Schokolade");
 				}
 				countMap.put(item.getType(), tmp);
 			}
@@ -103,17 +105,26 @@ public class DataListener implements EventListener {
 			tmp.setAmount(0);
 			countMap.put(Ingredient.Type.EGG, tmp);
 		}
+		if (!countMap.containsKey(Ingredient.Type.NUT)) {
+			IngredientCount tmp = new IngredientCount();
+			tmp.setName("Nüsse");
+			tmp.setAmount(0);
+			countMap.put(Ingredient.Type.NUT, tmp);
+		}
+		if (!countMap.containsKey(Ingredient.Type.CHOCOLATE)) {
+			IngredientCount tmp = new IngredientCount();
+			tmp.setName("Schokolade");
+			tmp.setAmount(0);
+			countMap.put(Ingredient.Type.CHOCOLATE, tmp);
+		}
 
 		try {
 			window.updateTable("ingredientsTable", new ArrayList<IngredientCount>(countMap.values()));
 		} catch (JsonGenerationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -122,13 +133,10 @@ public class DataListener implements EventListener {
 		try {
 			window.updateTable("gingerBreadTable", list);
 		} catch (JsonGenerationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
