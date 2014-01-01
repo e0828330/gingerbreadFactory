@@ -3,6 +3,8 @@ package factory.spacesImpl;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +23,7 @@ import org.mozartspaces.core.MzsCoreException;
 import org.mozartspaces.core.TransactionReference;
 
 import factory.entities.GingerBread;
+import factory.entities.GingerBread.Flavor;
 import factory.entities.GingerBread.State;
 import factory.entities.Ingredient;
 import factory.utils.Utils;
@@ -137,6 +140,45 @@ public class Baker {
 		return flour.size();
 	}
 	
+	/**
+	 * Returns the next flavor to produce (if possible)
+	 * @return
+	 */
+	private Flavor getNextFlavor() {
+		ArrayList<Flavor> list = new ArrayList<Flavor>(3);
+		list.addAll(Arrays.asList(Flavor.values()));
+		Collections.shuffle(list);
+		return list.get(0);
+	}
+	
+	/**
+	 * Tries to get a special (nut or chocolate) ingredient
+	 * 
+	 * @param flavor
+	 * @return
+	 */
+	private Ingredient getSpecialIngredient(Flavor flavor) {
+		Capi capi = new Capi(core);
+		ArrayList<Ingredient> resultEntries = null;
+		try {
+			ContainerReference container = capi.lookupContainer("ingredients", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			switch(flavor) {
+			case CHOCOLATE:
+				resultEntries = capi.take(container, LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.CHOCOLATE), 1), 1000, null);
+				break;
+			case NUT:
+				resultEntries = capi.take(container, LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.NUT), 1), 1000, null);
+				break;
+			default:
+				resultEntries = null;
+			}
+		} catch (MzsCoreException e) {
+		} catch (URISyntaxException e) {
+		}
+
+		return resultEntries == null ? null: resultEntries.get(0);
+	}
+	
 
 	/**
 	 * Produces a new charge
@@ -164,8 +206,31 @@ public class Baker {
 			tmp.setFirstEggSupplierId(eggs.peek().getSupplierId());
 			tmp.setFirstEggId(eggs.poll().getId());
 			tmp.setSecondEggSupplierId(eggs.peek().getSupplierId());
-			tmp.setSecondEggId(eggs.poll().getId());
+			tmp.setSecondEggId(eggs.poll().getId());			
 			tmp.setState(GingerBread.State.PRODUCED);
+			
+			Flavor flavor = getNextFlavor();
+			Ingredient special = getSpecialIngredient(flavor);
+			if (special != null) {
+				switch(flavor) {
+				case NUT:
+					tmp.setFlavor(flavor);
+					tmp.setNutId(special.getId());
+					tmp.setNutSupplierId(special.getSupplierId());
+					break;
+				case CHOCOLATE:
+					tmp.setFlavor(flavor);
+					tmp.setChocolateId(special.getId());
+					tmp.setChocolateSupplierId(special.getSupplierId());
+					break;
+				default:
+					// Cant happen
+				}
+			}
+			else {
+				tmp.setFlavor(Flavor.NORMAL);
+			}
+			
 			capi.write(gingerbreadsContainer, new Entry(tmp));
 			currentCharge.add(tmp);
 		}

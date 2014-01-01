@@ -39,13 +39,13 @@ public class GingerBread implements Serializable {
 	/* Order if any */
 	private Long orderId;
 	
-	public enum Flavour {
+	public enum Flavor {
 		NORMAL,
 		CHOCOLATE,
 		NUT
 	}
 	
-	private Flavour flavour;
+	private Flavor flavor;
 	
 	public enum State {
 		PRODUCED,
@@ -210,12 +210,12 @@ public class GingerBread implements Serializable {
 		this.nutSupplierId = nutSupplierId;
 	}
 
-	public Flavour getFlavour() {
-		return flavour;
+	public Flavor getFlavor() {
+		return flavor;
 	}
 
-	public void setFlavour(Flavour flavour) {
-		this.flavour = flavour;
+	public void setFlavor(Flavor flavor) {
+		this.flavor = flavor;
 	}
 
 	public Long getOrderId() {

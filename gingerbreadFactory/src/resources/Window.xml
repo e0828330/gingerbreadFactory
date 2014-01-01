@@ -28,7 +28,7 @@
 							<columns>
 								<TableView.Column name="id" headerData="Id" />
 								<TableView.Column name="state" headerData="Status" />
-								<TableView.Column name="flavour" headerData="Geschmack" />
+								<TableView.Column name="flavor" headerData="Geschmack" />
 								
 								<TableView.Column name="chargeId" headerData="Chargen ID" />
 								<TableView.Column name="packageId" headerData="Verpackungs ID" />
