@@ -19,6 +19,9 @@ public class GingerBread implements Serializable {
 	private Long flourId;
 	private Long firstEggId;
 	private Long secondEggId;
+	private Long chocolateId;
+	private Long nutId;
+	
 
 	/* Involved employees */
 	private Long bakerId;
@@ -30,6 +33,16 @@ public class GingerBread implements Serializable {
 	private Long flourSupplierId;
 	private Long firstEggSupplierId;
 	private Long secondEggSupplierId;
+	private Long chocolateSupplierId;
+	private Long nutSupplierId;
+	
+	public enum Flavour {
+		NORMAL,
+		CHOCOLATE,
+		NUT
+	}
+	
+	private Flavour flavour;
 	
 	public enum State {
 		PRODUCED,
@@ -160,6 +173,46 @@ public class GingerBread implements Serializable {
 
 	public void setSecondEggSupplierId(Long secondEggSupplierId) {
 		this.secondEggSupplierId = secondEggSupplierId;
+	}
+
+	public Long getChocolateId() {
+		return chocolateId;
+	}
+
+	public void setChocolateId(Long chocolateId) {
+		this.chocolateId = chocolateId;
+	}
+
+	public Long getNutId() {
+		return nutId;
+	}
+
+	public void setNutId(Long nutId) {
+		this.nutId = nutId;
+	}
+
+	public Long getChocolateSupplierId() {
+		return chocolateSupplierId;
+	}
+
+	public void setChocolateSupplierId(Long chocolateSupplierId) {
+		this.chocolateSupplierId = chocolateSupplierId;
+	}
+
+	public Long getNutSupplierId() {
+		return nutSupplierId;
+	}
+
+	public void setNutSupplierId(Long nutSupplierId) {
+		this.nutSupplierId = nutSupplierId;
+	}
+
+	public Flavour getFlavour() {
+		return flavour;
+	}
+
+	public void setFlavour(Flavour flavour) {
+		this.flavour = flavour;
 	}
 	
 	
