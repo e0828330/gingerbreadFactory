@@ -27,6 +27,13 @@
 							styles="{includeTrailingVerticalGridLine:true}">
 							<columns>
 								<TableView.Column name="id" headerData="Id" />
+								<TableView.Column name="state" headerData="Status" />
+								<TableView.Column name="flavour" headerData="Geschmack" />
+								
+								<TableView.Column name="chargeId" headerData="Chargen ID" />
+								<TableView.Column name="packageId" headerData="Verpackungs ID" />
+								<TableView.Column name="orderId" headerData="Auftrags ID" />
+
 								<TableView.Column name="bakerId" headerData="Bäcker ID" />
 								<TableView.Column name="honeySupplierId" headerData="Honig Lieferant ID" />
 								<TableView.Column name="flourSupplierId" headerData="Mehl Lieferant ID" />
@@ -36,24 +43,20 @@
 								<TableView.Column name="nutSupplierId" headerData="Nuss Lieferant ID" />
 								<TableView.Column name="qaId" headerData="QA ID" />
 								<TableView.Column name="logisticsId" headerData="Logistik ID" />
-								<TableView.Column name="chargeId" headerData="Chargen ID" />
-								<TableView.Column name="packageId" headerData="Verpackungs ID" />
+								
 								<TableView.Column name="honeyId" headerData="Honig ID" />
 								<TableView.Column name="flourId" headerData="Mehl ID" />
 								<TableView.Column name="firstEggId" headerData="Ei ID" />
 								<TableView.Column name="secondEggId" headerData="Ei 2 ID" />
 								<TableView.Column name="chocolateId" headerData="Schoko ID" />
 								<TableView.Column name="nutId" headerData="Nuss ID" />
-								<TableView.Column name="state" headerData="Status" />
-								<TableView.Column name="flavour" headerData="Geschmack" />
+								
 							</columns>
 
 							<tableViewSortListeners>
 								function sortChanged(tableView) {
-								var
-								tableData = tableView.getTableData();
-								tableData.setComparator(new
-								org.apache.pivot.wtk.content.TableViewRowComparator(tableView));
+									var tableData = tableView.getTableData();
+									tableData.setComparator(new org.apache.pivot.wtk.content.TableViewRowComparator(tableView));
 								}
 							</tableViewSortListeners>
 
