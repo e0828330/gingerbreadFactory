@@ -89,6 +89,12 @@ public class MainWindow extends Window implements Bindable{
 				else if (type.getSelection().getButtonData().toString().equals("Eier")) {
 					selectedType = Ingredient.Type.EGG;
 				}
+				else if (type.getSelection().getButtonData().toString().equals("Nüsse")) {
+					selectedType = Ingredient.Type.NUT;
+				}
+				else if (type.getSelection().getButtonData().toString().equals("Schokolade")) {
+					selectedType = Ingredient.Type.CHOCOLATE;
+				}
 				else {
 					selectedType = Ingredient.Type.FLOUR;
 				}

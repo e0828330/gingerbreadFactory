@@ -76,11 +76,9 @@ public class DataListener implements EventListener {
 					tmp.setName("Mehl");
 				} else if (item.getType().equals(Ingredient.Type.EGG)) {
 					tmp.setName("Eier");
-				}
-				else if (item.getType().equals(Ingredient.Type.NUT)) {
+				} else if (item.getType().equals(Ingredient.Type.NUT)) {
 					tmp.setName("Nüsse");
-				}
-				else if (item.getType().equals(Ingredient.Type.CHOCOLATE)) {
+				} else if (item.getType().equals(Ingredient.Type.CHOCOLATE)) {
 					tmp.setName("Schokolade");
 				}
 				countMap.put(item.getType(), tmp);
