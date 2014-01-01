@@ -18,7 +18,6 @@ public class GuiMain implements Application {
 	public static Mode mode;
 	
 	public void resume() throws Exception {
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -37,7 +36,6 @@ public class GuiMain implements Application {
 	}
 
 	public void suspend() throws Exception {
-		// TODO Auto-generated method stub
 		
 	}
 	

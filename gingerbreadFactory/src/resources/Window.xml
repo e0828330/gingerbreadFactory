@@ -32,6 +32,8 @@
 								<TableView.Column name="flourSupplierId" headerData="Mehl Lieferant ID" />
 								<TableView.Column name="firstEggSupplierId" headerData="Ei Lieferant ID" />
 								<TableView.Column name="secondEggSupplierId" headerData="Ei2 Lieferant ID" />
+								<TableView.Column name="chocolateSupplierId" headerData="Schoko Lieferant ID" />
+								<TableView.Column name="nutSupplierId" headerData="Nuss Lieferant ID" />
 								<TableView.Column name="qaId" headerData="QA ID" />
 								<TableView.Column name="logisticsId" headerData="Logistik ID" />
 								<TableView.Column name="chargeId" headerData="Chargen ID" />
@@ -40,7 +42,10 @@
 								<TableView.Column name="flourId" headerData="Mehl ID" />
 								<TableView.Column name="firstEggId" headerData="Ei ID" />
 								<TableView.Column name="secondEggId" headerData="Ei 2 ID" />
+								<TableView.Column name="chocolateId" headerData="Schoko ID" />
+								<TableView.Column name="nutId" headerData="Nuss ID" />
 								<TableView.Column name="state" headerData="Status" />
+								<TableView.Column name="flavour" headerData="Geschmack" />
 							</columns>
 
 							<tableViewSortListeners>
