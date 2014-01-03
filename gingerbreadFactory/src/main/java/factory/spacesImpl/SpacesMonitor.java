@@ -91,7 +91,7 @@ public class SpacesMonitor implements Monitor {
 	public List<GingerBread> getGingerBreads() {
 		List<GingerBread> result = null;
 		try {
-			result = capi.read(gingerbreadContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, null);
+			result = capi.read(gingerbreadContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_MAX), MzsConstants.RequestTimeout.INFINITE, null);
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		}
@@ -101,7 +101,7 @@ public class SpacesMonitor implements Monitor {
 	public List<Ingredient> getIngredients() {
 		List<Ingredient> result = null;
 		try {
-			result = capi.read(ingredientsContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, null);
+			result = capi.read(ingredientsContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_MAX), MzsConstants.RequestTimeout.INFINITE, null);
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		}
@@ -111,7 +111,7 @@ public class SpacesMonitor implements Monitor {
 	public List<GingerBread> getOvenContent() {
 		List<GingerBread> result = null;
 		try {
-			result = capi.read(ovenContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, null);
+			result = capi.read(ovenContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_MAX), MzsConstants.RequestTimeout.INFINITE, null);
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		}
