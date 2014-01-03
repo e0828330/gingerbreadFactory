@@ -12,6 +12,7 @@ import org.apache.pivot.wtk.ApplicationContext;
 import org.apache.pivot.wtk.Button;
 import org.apache.pivot.wtk.ButtonGroup;
 import org.apache.pivot.wtk.ButtonPressListener;
+import org.apache.pivot.wtk.MessageType;
 import org.apache.pivot.wtk.PushButton;
 import org.apache.pivot.wtk.TableView;
 import org.apache.pivot.wtk.TextInput;
@@ -21,8 +22,11 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import factory.entities.Ingredient;
+import factory.entities.Order;
+import factory.interfaces.LogisticsOrder;
 import factory.interfaces.Supplier;
 import factory.jmsImpl.supplier.JMSSupplierInstance;
+import factory.spacesImpl.LogisticsOrderImpl;
 import factory.spacesImpl.SupplierImpl;
 
 public class MainWindow extends Window implements Bindable{
@@ -31,6 +35,12 @@ public class MainWindow extends Window implements Bindable{
 	private TextInput amount;
 	private ButtonGroup type;
 	private PushButton submitButton;
+	
+	private TextInput numPackages;
+	private TextInput numNormal;
+	private TextInput numNut;
+	private TextInput numChocolade;
+	private PushButton submitOrderButton;
 	
 	private Map<String, Object> namespace;
 	
@@ -63,6 +73,12 @@ public class MainWindow extends Window implements Bindable{
 		amount = (TextInput) namespace.get("amount");
 		type = (ButtonGroup) namespace.get("type");
 		submitButton = (PushButton) namespace.get("submitButton");
+		
+		numPackages = (TextInput) namespace.get("numPackages");
+		numNormal = (TextInput) namespace.get("numNormal");
+		numNut = (TextInput) namespace.get("numNut");
+		numChocolade = (TextInput) namespace.get("numChocolade");
+		submitOrderButton = (PushButton) namespace.get("submitOrderButton");
 		
 		DataThread dataThread = new DataThread(this);
 		new Thread(dataThread).start();
@@ -101,6 +117,60 @@ public class MainWindow extends Window implements Bindable{
 				
 				supplier.placeOrder(Integer.parseInt(amount.getText()), selectedType);
 				new Thread(supplier).start();
+				Alert.alert("Auftrag abgeschickt", MainWindow.this);
+			}
+		});
+		
+		submitOrderButton.getButtonPressListeners().add(new ButtonPressListener() {
+			public void buttonPressed(Button btn) {
+				System.out.println("CLICK");
+				
+				System.out.println("Packages: " + numPackages.getText());
+				System.out.println("Normal: " + numNormal.getText());
+				System.out.println("Nut: " + numNut.getText());
+				System.out.println("Chocolate: " + numChocolade.getText());
+
+				int nPackages = 0;
+				int nNormal = 0;
+				int nNut = 0;
+				int nChocolate = 0;
+				
+				try {
+					nPackages = Integer.parseInt(numPackages.getText());
+					nNormal = Integer.parseInt(numNormal.getText());
+					nNut = Integer.parseInt(numNut.getText());
+					nChocolate = Integer.parseInt(numChocolade.getText());
+				}
+				catch (NumberFormatException e) {
+					
+				}
+
+				if (nPackages <= 0) {
+					Alert.alert(MessageType.ERROR, "Bitte gültige Packungsanzahl angeben!", MainWindow.this);
+					return;
+				}
+				
+				if ((nNormal + nNut + nChocolate) != 6) {
+					Alert.alert(MessageType.ERROR, "Eine Packung muss 6 Lebkuchen enthalten!", MainWindow.this);
+					return;
+				}
+				
+				Order order = new Order();
+				order.setId(factory.utils.Utils.getID());
+				order.setPackages(nPackages);
+				order.setNumNormal(nNormal);
+				order.setNumNut(nNut);
+				order.setNumChocolate(nChocolate);
+				
+				LogisticsOrder logisticsOrder = null;
+				if (GuiMain.mode.equals(GuiMain.Mode.SPACES)) {
+					logisticsOrder = new LogisticsOrderImpl();
+				}
+				else {
+					// TODO: Martin
+				}
+				
+				logisticsOrder.placeOrder(order);
 				Alert.alert("Auftrag abgeschickt", MainWindow.this);
 			}
 		});
