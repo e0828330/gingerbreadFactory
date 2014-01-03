@@ -27,7 +27,8 @@ public class Server {
 		capi.createContainer("charges", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 		capi.createContainer("oven", new URI(spaceURL), 10, null, new KeyCoordinator(), new LindaCoordinator(false), new FifoCoordinator());
 		capi.createContainer("gingerbreads", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false), new FifoCoordinator());
-		capi.createContainer("qaPassed", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator(), new QueryCoordinator());
+		capi.createContainer("qaPassed", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
+		capi.createContainer("orders", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new QueryCoordinator());
 		
 		
 		System.out.println("Server running");

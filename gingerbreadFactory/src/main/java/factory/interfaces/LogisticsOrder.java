@@ -7,13 +7,6 @@ import factory.entities.Order;
  * 
  */
 public interface LogisticsOrder extends Runnable {
-	
-	/**
-	 * Sets the id of this Order
-	 * @param id
-	 */
-	public void setId(Long id);
-	
 
 	/**
 	 * Places a new order
