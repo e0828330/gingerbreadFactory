@@ -162,6 +162,70 @@
 				</Border>
 			</TablePane.Row>
 
+			<TablePane.Row height="-1">
+				<Label text="Auftragsstatus"  
+					styles="{font:'Arial bold 18', horizontalAlignment:'center'}" />
+				<Label text="Auftrag erstellen"  TablePane.columnSpan="2"
+					styles="{font:'Arial bold 18', horizontalAlignment:'center'}" />
+			</TablePane.Row>
+
+			<TablePane.Row height="1*">
+				<Border styles="{padding:2}" >
+					<ScrollPane horizontalScrollBarPolicy="fill_to_capacity">
+
+						<TableView bxml:id="orderTable"
+							styles="{includeTrailingVerticalGridLine:true}">
+							<columns>
+								<TableView.Column name="id" headerData="Id" />
+								<TableView.Column name="numDone" headerData="Offene Packungen" />
+								<TableView.Column name="numOpen" headerData="Erledigte Packungen" />
+							</columns>
+
+							<tableViewSortListeners>
+								function sortChanged(tableView) {
+								var
+								tableData = tableView.getTableData();
+								tableData.setComparator(new
+								org.apache.pivot.wtk.content.TableViewRowComparator(tableView));
+								}
+							</tableViewSortListeners>
+
+						</TableView>
+						<columnHeader>
+							<TableViewHeader tableView="$orderTable" sortMode="single_column" />
+						</columnHeader>
+					</ScrollPane>
+				</Border>
+				
+				<Border styles="{padding:2}" TablePane.columnSpan="2">
+					<BoxPane styles="{horizontalAlignment:'center'}" >
+						<Form>
+							<Form.Section heading="Auftrag">
+								<BoxPane Form.label="Anzahl der Packungen">
+									<TextInput bxml:id="numPackages" />
+								</BoxPane>
+							</Form.Section>
+							<Form.Section heading="Zusammensetzung">
+								<BoxPane Form.label="Anzahl der Normalen Lebkuchen">
+									<TextInput bxml:id="numNormal" />
+								</BoxPane>
+								<BoxPane Form.label="Anzahl der Nusslebkuchen">
+									<TextInput bxml:id="numNut" />
+								</BoxPane>
+								<BoxPane Form.label="Anzahl der Schokoladenlebkuchen">
+									<TextInput bxml:id="numChocolade" />
+								</BoxPane>
+							</Form.Section>
+							<Form.Section>
+								<PushButton bxml:id="submitOrderButton" buttonData="Auftrag abschicken"
+									styles="{minimumAspectRatio:3}" />
+							</Form.Section>
+						</Form>
+					</BoxPane>
+				</Border>
+				
+			</TablePane.Row>
+
 		</TablePane>
 	</Border>
 
