@@ -1,6 +1,6 @@
 package factory.interfaces;
 
-import factory.entities.GingerBread.Flavor;
+import factory.entities.Order;
 
 /**
  * Interface for LogisticsOrder thread used by GUI
@@ -14,14 +14,11 @@ public interface LogisticsOrder extends Runnable {
 	 */
 	public void setId(Long id);
 	
+
 	/**
-	 * Sets the amount of a specific flavor
-	 * For instance one can do
-	 * 	setAmount(NUT, 4);
-	 * 	setAmount(NORMAL, 2);
+	 * Places a new order
 	 * 
-	 * @param flavor
-	 * @param amount
+	 * @param order
 	 */
-	public void setAmount(Flavor flavor, int amount);
+	public void placeOrder(Order order);
 }
