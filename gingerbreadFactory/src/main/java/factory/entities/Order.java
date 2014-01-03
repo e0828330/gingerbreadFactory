@@ -16,6 +16,8 @@ public class Order implements Serializable {
 	private int numNormal;
 	private int numNut;
 	private int numChocolate;
+	
+	private Long logisticsId;
 
 	public Long getId() {
 		return id;
@@ -63,5 +65,13 @@ public class Order implements Serializable {
 
 	public void setNumChocolate(int numChocolate) {
 		this.numChocolate = numChocolate;
+	}
+
+	public Long getLogisticsId() {
+		return logisticsId;
+	}
+
+	public void setLogisticsId(Long logisticsId) {
+		this.logisticsId = logisticsId;
 	}
 }
