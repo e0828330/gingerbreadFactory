@@ -141,7 +141,9 @@
 								<BoxPane Form.label="Anzahl">
 									<TextInput bxml:id="amount" />
 								</BoxPane>
-								<BoxPane orientation="horizontal" styles="{padding:4}">
+							</Form.Section>
+							<Form.Section heading="Typ">
+								<BoxPane orientation="vertical" styles="{padding:4}">
 									<bxml:define>
 										<ButtonGroup bxml:id="type" />
 									</bxml:define>
