@@ -2,6 +2,7 @@ package factory.gui;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.pivot.beans.Bindable;
@@ -161,7 +162,8 @@ public class MainWindow extends Window implements Bindable{
 				order.setNumNormal(nNormal);
 				order.setNumNut(nNut);
 				order.setNumChocolate(nChocolate);
-				
+				order.setTimestamp(new Date().getTime());
+
 				LogisticsOrder logisticsOrder = null;
 				if (GuiMain.mode.equals(GuiMain.Mode.SPACES)) {
 					logisticsOrder = new LogisticsOrderImpl();

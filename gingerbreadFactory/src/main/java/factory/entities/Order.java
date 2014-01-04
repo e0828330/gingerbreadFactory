@@ -19,6 +19,8 @@ public class Order implements Serializable {
 	
 	private Long logisticsId;
 
+	private Long timestamp;
+	
 	public Long getId() {
 		return id;
 	}
@@ -73,5 +75,13 @@ public class Order implements Serializable {
 
 	public void setLogisticsId(Long logisticsId) {
 		this.logisticsId = logisticsId;
+	}
+
+	public Long getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(Long timestamp) {
+		this.timestamp = timestamp;
 	}
 }
