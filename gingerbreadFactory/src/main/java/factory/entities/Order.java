@@ -7,19 +7,28 @@ public class Order implements Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 5041482297972700115L;
+	private static final long serialVersionUID = 1L;
 
 	private Long id;
-	private int packages;
-	private int donePackages;
+	private Integer packages;
+	private Integer donePackages;
 	
-	private int numNormal;
-	private int numNut;
-	private int numChocolate;
+	private Integer numNormal;
+	private Integer numNut;
+	private Integer numChocolate;
 	
 	private Long logisticsId;
 
 	private Long timestamp;
+	
+	public enum State {
+		OPEN,
+		IN_PROGRESS,
+		DONE,
+		MOVED
+	}
+	
+	private State state;
 	
 	public Long getId() {
 		return id;
@@ -29,7 +38,7 @@ public class Order implements Serializable {
 		this.id = id;
 	}
 
-	public int getPackages() {
+	public Integer getPackages() {
 		return packages;
 	}
 
@@ -37,7 +46,7 @@ public class Order implements Serializable {
 		this.packages = packages;
 	}
 
-	public int getDonePackages() {
+	public Integer getDonePackages() {
 		return donePackages;
 	}
 
@@ -45,7 +54,7 @@ public class Order implements Serializable {
 		this.donePackages = donePackages;
 	}
 
-	public int getNumNormal() {
+	public Integer getNumNormal() {
 		return numNormal;
 	}
 
@@ -53,7 +62,7 @@ public class Order implements Serializable {
 		this.numNormal = numNormal;
 	}
 
-	public int getNumNut() {
+	public Integer getNumNut() {
 		return numNut;
 	}
 
@@ -61,7 +70,7 @@ public class Order implements Serializable {
 		this.numNut = numNut;
 	}
 
-	public int getNumChocolate() {
+	public Integer getNumChocolate() {
 		return numChocolate;
 	}
 
@@ -83,5 +92,13 @@ public class Order implements Serializable {
 
 	public void setTimestamp(Long timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public State getState() {
+		return state;
+	}
+
+	public void setState(State state) {
+		this.state = state;
 	}
 }

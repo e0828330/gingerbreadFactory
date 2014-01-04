@@ -24,6 +24,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import factory.entities.Ingredient;
 import factory.entities.Order;
+import factory.entities.Order.State;
 import factory.interfaces.LogisticsOrder;
 import factory.interfaces.Supplier;
 import factory.jmsImpl.supplier.JMSSupplierInstance;
@@ -163,6 +164,7 @@ public class MainWindow extends Window implements Bindable{
 				order.setNumNut(nNut);
 				order.setNumChocolate(nChocolate);
 				order.setTimestamp(new Date().getTime());
+				order.setState(State.OPEN);
 
 				LogisticsOrder logisticsOrder = null;
 				if (GuiMain.mode.equals(GuiMain.Mode.SPACES)) {
@@ -173,6 +175,7 @@ public class MainWindow extends Window implements Bindable{
 				}
 				
 				logisticsOrder.placeOrder(order);
+				new Thread(logisticsOrder).start();
 				Alert.alert("Auftrag abgeschickt", MainWindow.this);
 			}
 		});
