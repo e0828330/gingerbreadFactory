@@ -1,5 +1,7 @@
 package factory.jmsImpl.server;
 
+import java.util.Hashtable;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -9,7 +11,9 @@ import javax.jms.TextMessage;
 
 import org.apache.qpid.transport.util.Logger;
 
+import factory.utils.JMSUtils;
 import factory.utils.Messages;
+import factory.utils.JMSUtils.MessageType;
 
 public class JMSServerBakerGeneralRequestListener implements MessageListener {
 
@@ -31,17 +35,28 @@ public class JMSServerBakerGeneralRequestListener implements MessageListener {
 					Long bakerID = new Long(bid);
 					if (textMessage.getText() != null && textMessage.getText().equals(Messages.BAKER_GENERAL_REQUEST_MESSAGE)) {
 						if (this.server.getDelivered_ingredients().containsKey(bakerID)) {
-							ObjectMessage responseMessage = this.server.get_BakerRequestsession().createObjectMessage();
-							responseMessage.setObject(this.server.getDelivered_ingredients().get(bakerID));
-							responseMessage.setStringProperty("TYPE", "ArrayList<GingerBreadTransactionObject>");
+							//ObjectMessage responseMessage = this.server.get_BakerRequestsession().createObjectMessage();
+							//responseMessage.setObject(this.server.getDelivered_ingredients().get(bakerID));
+							//responseMessage.setStringProperty("TYPE", "ArrayList<GingerBreadTransactionObject>");
 							message.acknowledge();
-							MessageProducer producer = this.server.get_BakerRequestsession().createProducer(message.getJMSReplyTo());
-							responseMessage.setJMSCorrelationID(message.getJMSCorrelationID());
-							producer.send(responseMessage);
-							producer.close();
+							//MessageProducer producer = this.server.get_BakerRequestsession().createProducer(message.getJMSReplyTo());
+							//responseMessage.setJMSCorrelationID(message.getJMSCorrelationID());
+							//producer.send(responseMessage);
+							//producer.close();
+							
+							Hashtable<String, String> properties = new Hashtable<String, String>(1);
+							properties.put("TYPE", "ArrayList<GingerBreadTransactionObject>");
+							
+							JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
+									this.server.getDelivered_ingredients().get(bakerID), 
+									properties, 
+									this.server.get_BakerRequestsession(), 
+									message.getJMSCorrelationID(), 
+									message.getJMSReplyTo());
+							
 							return;
 						} else if (this.server.getBakerProducedGingerBread_tmpList().containsKey(bakerID)) {
-							ObjectMessage responseMessage = this.server.get_BakerRequestsession().createObjectMessage();
+							/*ObjectMessage responseMessage = this.server.get_BakerRequestsession().createObjectMessage();
 							responseMessage.setStringProperty("TYPE", "ArrayList<GingerBread>");
 							responseMessage.setStringProperty("STATE", "PRODUCED");
 							responseMessage.setObject(this.server.getBakerProducedGingerBread_tmpList().get(bakerID));
@@ -49,10 +64,21 @@ public class JMSServerBakerGeneralRequestListener implements MessageListener {
 							MessageProducer producer = this.server.get_BakerRequestsession().createProducer(message.getJMSReplyTo());
 							responseMessage.setJMSCorrelationID(message.getJMSCorrelationID());
 							producer.send(responseMessage);
-							producer.close();
+							producer.close();*/
+							message.acknowledge();
+							Hashtable<String, String> properties = new Hashtable<String, String>(2);
+							properties.put("TYPE", "ArrayList<GingerBread>");
+							properties.put("STATE", "PRODUCED");
+							JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
+									this.server.getBakerProducedGingerBread_tmpList().get(bakerID), 
+									properties, 
+									this.server.get_BakerRequestsession(), 
+									message.getJMSCorrelationID(), 
+									message.getJMSReplyTo());
+							
 							return;
 						} else if (this.server.getBakersChargeInOven().containsKey(bakerID)) {
-							ObjectMessage responseMessage = this.server.get_BakerRequestsession().createObjectMessage();
+							/*ObjectMessage responseMessage = this.server.get_BakerRequestsession().createObjectMessage();
 							responseMessage.setStringProperty("STATE", "BAKED");
 							responseMessage.setStringProperty("TYPE", "ArrayList<GingerBread>");
 							responseMessage.setObject(this.server.getBakersChargeInOven().get(bakerID));
@@ -60,15 +86,33 @@ public class JMSServerBakerGeneralRequestListener implements MessageListener {
 							MessageProducer producer = this.server.get_BakerRequestsession().createProducer(message.getJMSReplyTo());
 							responseMessage.setJMSCorrelationID(message.getJMSCorrelationID());
 							producer.send(responseMessage);
-							producer.close();
+							producer.close();*/
+							message.acknowledge();
+							Hashtable<String, String> properties = new Hashtable<String, String>(2);
+							properties.put("TYPE", "ArrayList<GingerBread>");
+							properties.put("STATE", "BAKED");
+							JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
+									this.server.getBakersChargeInOven().get(bakerID), 
+									properties, 
+									this.server.get_BakerRequestsession(), 
+									message.getJMSCorrelationID(), 
+									message.getJMSReplyTo());
 							return;
 						} else {
-							Message responseMessage = this.server.get_BakerRequestsession().createTextMessage(Messages.NO_STORED_DATA);
+							message.acknowledge();
+							/*Message responseMessage = this.server.get_BakerRequestsession().createTextMessage(Messages.NO_STORED_DATA);
 							message.acknowledge();
 							MessageProducer producer = this.server.get_BakerRequestsession().createProducer(message.getJMSReplyTo());
 							responseMessage.setJMSCorrelationID(message.getJMSCorrelationID());
 							producer.send(responseMessage);
-							producer.close();
+							producer.close();*/
+
+							JMSUtils.sendReponse(MessageType.TEXTMESSAGE, 
+									Messages.NO_STORED_DATA, 
+									null, 
+									this.server.get_BakerRequestsession(), 
+									message.getJMSCorrelationID(), 
+									message.getJMSReplyTo());
 						}
 					} else if (textMessage.getText() != null && textMessage.getText().equals(Messages.SERVER_REMOVE_STORED_BAKED_GINGERBREADS)) {
 						if (this.server.getBakersChargeInOven().containsKey(bakerID)) {

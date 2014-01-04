@@ -14,6 +14,8 @@ import javax.jms.TextMessage;
 import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.Ingredient;
+import factory.utils.JMSUtils;
+import factory.utils.JMSUtils.MessageType;
 import factory.utils.Messages;
 
 public class JMSServerIngredientsDeliveryListener implements MessageListener {
@@ -47,13 +49,12 @@ public class JMSServerIngredientsDeliveryListener implements MessageListener {
 					}
 					this.server.sendEventToGUI(result, properties);
 				}
-
-				TextMessage response = this.server.getIngredientsDelivery_session().createTextMessage();
-				response.setJMSCorrelationID(message.getJMSCorrelationID());
-				response.setText("Thanks!");
-				MessageProducer producer = this.server.getIngredientsDelivery_session().createProducer(message.getJMSReplyTo());
-				producer.send(response);
-				producer.close();
+				JMSUtils.sendReponse(MessageType.TEXTMESSAGE, 
+						"Thanks!", 
+						null, 
+						this.server.getIngredientsDelivery_session(), 
+						message.getJMSCorrelationID(), 
+						message.getJMSReplyTo());
 			}
 		} catch (JMSException e) {
 			e.printStackTrace();

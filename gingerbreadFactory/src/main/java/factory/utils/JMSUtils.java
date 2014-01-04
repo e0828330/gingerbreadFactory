@@ -9,23 +9,45 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
-import javax.jms.Queue;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
-import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.naming.Context;
-import javax.naming.NamingException;
-
-import factory.entities.GingerBread;
 
 public class JMSUtils {
 
 	public enum MessageType {
 		OBJECTMESSAGE, TEXTMESSAGE
+	}
+	
+	public static void sendReponse(MessageType messageType, Object payLoad, Hashtable<String, String> stringProperties, QueueSession session, String correlationID, Destination destination) throws JMSException {
+		if (messageType == MessageType.TEXTMESSAGE) {
+			TextMessage response = session.createTextMessage();
+			response.setJMSCorrelationID(correlationID);
+			response.setText((String) payLoad);
+			if (stringProperties != null) {
+				for (Entry<String, String> entry : stringProperties.entrySet()) {
+					response.setStringProperty(entry.getKey(), entry.getValue());
+				}
+			}
+			MessageProducer producer = session.createProducer(destination);
+			producer.send(response);
+			producer.close();
+		}
+		else if (messageType == MessageType.OBJECTMESSAGE) {
+			ObjectMessage response = session.createObjectMessage();
+			response.setJMSCorrelationID(correlationID);
+			response.setObject((Serializable) payLoad);
+			if (stringProperties != null) {
+				for (Entry<String, String> entry : stringProperties.entrySet()) {
+					response.setStringProperty(entry.getKey(), entry.getValue());
+				}
+			}
+			MessageProducer producer = session.createProducer(destination);
+			producer.send(response);
+			producer.close();			
+		}
 	}
 
 	public static Message sendMessage(MessageType messageType, Object payLoad, Hashtable<String, String> stringProperties, QueueSession session, boolean hasReplyQueue, QueueSender sender)

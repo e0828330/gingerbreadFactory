@@ -584,14 +584,23 @@ public class JMSServerInstance implements Runnable {
 		// Tell baker that his charges is ready
 		try {
 			for (ChargeReplyObject replyObject : charges) {
-				ObjectMessage responseMessage = this.ovenQueue_session.createObjectMessage();
-				responseMessage.setJMSCorrelationID(replyObject.getId());
-				responseMessage.setStringProperty("TYPE", "ArrayList<GingerBread>");
-				responseMessage.setObject(replyObject.getCharge());
+				//ObjectMessage responseMessage = this.ovenQueue_session.createObjectMessage();
+				//responseMessage.setJMSCorrelationID(replyObject.getId());
+				//responseMessage.setStringProperty("TYPE", "ArrayList<GingerBread>");
+				//responseMessage.setObject(replyObject.getCharge());
 				this.ovenList.removeAll(replyObject.getCharge());
-				MessageProducer producer = this.ovenQueue_session.createProducer(replyObject.getDestination());
-				producer.send(responseMessage);
-				producer.close();
+				//MessageProducer producer = this.ovenQueue_session.createProducer(replyObject.getDestination());
+				//producer.send(responseMessage);
+				//producer.close();
+				Hashtable<String, String> properties1 = new Hashtable<String, String>(1);
+				properties1.put("TYPE", "ArrayList<GingerBread>");
+				JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
+						replyObject.getCharge(), 
+						properties1, 
+						this.ovenQueue_session, 
+						replyObject.getId(), 
+						replyObject.getDestination());
+				
 				
 				// event for oven
 				Hashtable<String, String> properties = new Hashtable<String, String>(2);
