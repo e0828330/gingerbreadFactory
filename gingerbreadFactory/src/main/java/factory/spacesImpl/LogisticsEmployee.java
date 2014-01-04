@@ -90,7 +90,6 @@ public class LogisticsEmployee {
 				// Do we have old (in progress) orders
 				Order oldOrder = new Order();
 				oldOrder.setState(Order.State.IN_PROGRESS);
-				oldOrder.setLogisticsId(id);
 				orders = capi.take(orderContainer, LindaCoordinator.newSelector(oldOrder, MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, tx);
 				orderQueue.addAll(orders);
 				
@@ -152,7 +151,6 @@ public class LogisticsEmployee {
 						else {
 							tmpOrder.setState(Order.State.IN_PROGRESS);
 						}
-						tmpOrder.setLogisticsId(id);
 						orderId = tmpOrder.getId();
 						break;
 					}

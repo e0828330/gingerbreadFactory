@@ -16,8 +16,6 @@ public class Order implements Serializable {
 	private Integer numNormal;
 	private Integer numNut;
 	private Integer numChocolate;
-	
-	private Long logisticsId;
 
 	private Long timestamp;
 	
@@ -76,14 +74,6 @@ public class Order implements Serializable {
 
 	public void setNumChocolate(int numChocolate) {
 		this.numChocolate = numChocolate;
-	}
-
-	public Long getLogisticsId() {
-		return logisticsId;
-	}
-
-	public void setLogisticsId(Long logisticsId) {
-		this.logisticsId = logisticsId;
 	}
 
 	public Long getTimestamp() {
