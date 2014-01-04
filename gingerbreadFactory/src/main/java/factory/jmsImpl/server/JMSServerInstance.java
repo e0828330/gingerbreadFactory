@@ -130,11 +130,16 @@ public class JMSServerInstance implements Runnable {
 	private List<Ingredient> honey_list;
 	private List<Ingredient> flour_list;
 	private List<Ingredient> egg_list;
+	private List<Ingredient> nut_list;
+	private List<Ingredient> chocolate_list;
+	
 	private ConcurrentHashMap<Long, Ingredient> total_ingredients_list;
 
 	private AtomicInteger count_gingerBread_eggs;
 	private AtomicInteger count_gingerBread_honey;
 	private AtomicInteger count_gingerBread_flour;
+	private AtomicInteger count_gingerBread_nuts;
+	private AtomicInteger count_gingerBread_chocolate;
 
 	private AtomicInteger gingerBreadCounter;
 
@@ -156,6 +161,9 @@ public class JMSServerInstance implements Runnable {
 		this.honey_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
 		this.flour_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
 		this.egg_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
+		this.nut_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
+		this.chocolate_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
+		
 		this.total_ingredients_list = new ConcurrentHashMap<Long, Ingredient>(150);
 		this.bakerProducedGingerBread_tmpList = new ConcurrentHashMap<Long, ArrayList<GingerBread>>();
 		this.setBakerWaitingList(new LinkedList<BakerWaitingObject>());
@@ -174,8 +182,9 @@ public class JMSServerInstance implements Runnable {
 		this.count_gingerBread_eggs = new AtomicInteger(0);
 		this.count_gingerBread_flour = new AtomicInteger(0);
 		this.count_gingerBread_honey = new AtomicInteger(0);
+		this.count_gingerBread_chocolate = new AtomicInteger(0);
+		this.count_gingerBread_nuts = new AtomicInteger(0);
 		this.gingerBreadCounter = new AtomicInteger(0);
-
 
 		// Init all queues
 		this.initQueues();
@@ -419,6 +428,14 @@ public class JMSServerInstance implements Runnable {
 			this.logger.info("Added egg to list.", (Object[]) null);
 			this.egg_list.add(ingredient);
 			this.count_gingerBread_eggs.incrementAndGet();
+		} else if (ingredient.getType() == Ingredient.Type.CHOCOLATE) {
+				this.logger.info("Added chocolate to list.", (Object[]) null);
+				this.chocolate_list.add(ingredient);
+				this.count_gingerBread_chocolate.incrementAndGet();
+		} else if (ingredient.getType() == Ingredient.Type.NUT) {
+			this.logger.info("Added nut to list.", (Object[]) null);
+			this.nut_list.add(ingredient);
+			this.count_gingerBread_nuts.incrementAndGet();
 		}
 		// Publish new ingredient
 		this.publishIngredients(ingredient);
@@ -440,14 +457,22 @@ public class JMSServerInstance implements Runnable {
 				ArrayList<GingerBreadTransactionObject> ingredients = this.getGingerBreadIngredients(5);
 
 				BakerWaitingObject baker = bakerWaitingList.pop();
-
+				/*
 				ObjectMessage response = this.bakerIngredients_session.createObjectMessage();
 				response.setJMSCorrelationID(baker.getId());
 				response.setObject(ingredients);
 				response.setStringProperty("TYPE", "ArrayList<GingerBreadTransactionObject>");
 				MessageProducer producer = this.bakerIngredients_session.createProducer(baker.getDestination());
 				producer.send(response);
-				producer.close();
+				producer.close();*/
+				Hashtable<String, String> properties = new Hashtable<String, String>(1);
+				properties.put("TYPE", "ArrayList<GingerBreadTransactionObject>");
+				JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
+						ingredients, 
+						properties, 
+						this.bakerIngredients_session, 
+						baker.getId(), 
+						baker.getDestination());
 			} catch (JMSException e) {
 				e.printStackTrace();
 			}
