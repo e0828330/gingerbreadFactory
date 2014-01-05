@@ -19,6 +19,7 @@ import org.mozartspaces.notifications.Operation;
 
 import factory.entities.GingerBread;
 import factory.entities.Ingredient;
+import factory.entities.Order;
 import factory.interfaces.EventListener;
 import factory.interfaces.Monitor;
 
@@ -31,6 +32,7 @@ public class SpacesMonitor implements Monitor {
 	private ContainerReference ovenContainer;
 	private ContainerReference gingerbreadContainer;
 	private ContainerReference ingredientsContainer;
+	private ContainerReference ordersContainer;
 	
 	public SpacesMonitor() {
 		core = DefaultMzsCore.newInstanceWithoutSpace();
@@ -39,6 +41,7 @@ public class SpacesMonitor implements Monitor {
 			ovenContainer = capi.lookupContainer("oven", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 			gingerbreadContainer = capi.lookupContainer("gingerbreads", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 			ingredientsContainer = capi.lookupContainer("ingredients", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			ordersContainer = capi.lookupContainer("orders", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		} catch (URISyntaxException e) {
@@ -75,6 +78,15 @@ public class SpacesMonitor implements Monitor {
 				}
 			}
 		}, Operation.WRITE, Operation.DELETE, Operation.TAKE);
+		
+		notify.createNotification(ordersContainer, new NotificationListener() {
+			public void entryOperationFinished(Notification notify, Operation arg1, List<? extends Serializable> arg2) {
+				System.out.println("ORDERS CHANGED");
+				if (SpacesMonitor.this.listener != null) {
+					SpacesMonitor.this.listener.onOrderChanged(getOrders());
+				}
+			}
+		}, Operation.WRITE);
 	}
 	
 	public void setListener(EventListener listener) {
@@ -112,6 +124,17 @@ public class SpacesMonitor implements Monitor {
 		List<GingerBread> result = null;
 		try {
 			result = capi.read(ovenContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_MAX), MzsConstants.RequestTimeout.INFINITE, null);
+		} catch (MzsCoreException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+
+	public List<Order> getOrders() {
+		List<Order> result = null;
+		try {
+			result = capi.read(ordersContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_MAX), MzsConstants.RequestTimeout.INFINITE, null);
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		}

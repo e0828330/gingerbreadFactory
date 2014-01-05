@@ -179,8 +179,9 @@
 							styles="{includeTrailingVerticalGridLine:true}">
 							<columns>
 								<TableView.Column name="id" headerData="Id" />
-								<TableView.Column name="numDone" headerData="Offene Packungen" />
-								<TableView.Column name="numOpen" headerData="Erledigte Packungen" />
+								<TableView.Column name="packages" headerData="Bestellte Packungen" />
+								<TableView.Column name="donePackages" headerData="Erledigte Packungen" />
+								<TableView.Column name="state" headerData="Status" />
 							</columns>
 
 							<tableViewSortListeners>
