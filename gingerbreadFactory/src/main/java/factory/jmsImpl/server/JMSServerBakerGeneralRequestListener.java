@@ -26,7 +26,6 @@ public class JMSServerBakerGeneralRequestListener implements MessageListener {
 	}
 
 	public void onMessage(Message message) {
-		System.out.println(message);
 		try {
 			if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;

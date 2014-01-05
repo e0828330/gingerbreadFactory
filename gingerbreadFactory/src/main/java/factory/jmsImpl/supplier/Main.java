@@ -33,7 +33,19 @@ public class Main {
 			jmsSupplier3.setId(3L);
 			jmsSupplier3.placeOrder(7, Ingredient.Type.FLOUR);
 			supplier3 = new Thread(jmsSupplier3);
-			supplier3.start();			
+			supplier3.start();	
+			
+			Supplier jmsSupplier4 = new JMSSupplierInstance();
+			jmsSupplier4.setId(4L);
+			jmsSupplier4.placeOrder(2, Ingredient.Type.NUT);
+			supplier3 = new Thread(jmsSupplier4);
+			supplier3.start();	
+			
+			Supplier jmsSupplier5 = new JMSSupplierInstance();
+			jmsSupplier5.setId(5L);
+			jmsSupplier5.placeOrder(3, Ingredient.Type.CHOCOLATE);
+			supplier3 = new Thread(jmsSupplier5);
+			supplier3.start();	
 		
 	}
 

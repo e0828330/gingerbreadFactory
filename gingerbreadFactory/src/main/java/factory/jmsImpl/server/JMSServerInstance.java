@@ -38,6 +38,7 @@ import factory.entities.Ingredient;
 import factory.utils.JMSUtils;
 import factory.utils.JMSUtils.MessageType;
 import factory.utils.Messages;
+import factory.utils.Utils;
 
 public class JMSServerInstance implements Runnable {
 
@@ -491,20 +492,68 @@ public class JMSServerInstance implements Runnable {
 		return this.ovenQueue_session;
 	}
 
+	/**
+	 * Returns the ingredients for 0-max gingerbreads
+	 * @param max
+	 * @return
+	 */
 	public synchronized ArrayList<GingerBreadTransactionObject> getGingerBreadIngredients(int max) {
 		int i = 0;
 		ArrayList<GingerBreadTransactionObject> tmpList = new ArrayList<GingerBreadTransactionObject>(max);
 		int limit = this.gingerBreadCounter.get();
 		try {
 			for (; i < limit; i++) {
-				if (i >= max)
+				if (i >= max) {
 					break;
+				}
 				Ingredient egg1 = this.egg_list.remove(0);
 				Ingredient egg2 = this.egg_list.remove(0);
 				Ingredient flour = this.flour_list.remove(0);
 				Ingredient honey = this.honey_list.remove(0);
+				
+				// Flavor?
+				ArrayList<GingerBread.Flavor> flavors = new ArrayList<GingerBread.Flavor>(3);
+				flavors.add(GingerBread.Flavor.NORMAL);
 
-				tmpList.add(new GingerBreadTransactionObject(egg1, egg2, flour, honey));
+				if (this.count_gingerBread_chocolate.get() > 0) {
+					flavors.add(GingerBread.Flavor.CHOCOLATE);
+				}
+				if (this.count_gingerBread_nuts.get() > 0) {
+					flavors.add(GingerBread.Flavor.NUT);
+				}
+				Collections.shuffle(flavors);
+				GingerBread.Flavor flavorType = flavors.get(0);
+				
+				switch (flavorType) {
+					case NORMAL:
+						// Normal
+						this.logger.info("This gingerbread will be a normal one.", (Object[]) null);
+						tmpList.add(new GingerBreadTransactionObject(egg1, egg2, flour, honey));
+						break;
+					case CHOCOLATE:
+						// Chocolate
+						this.logger.info("This gingerbread will be falvored with chocolate.", (Object[]) null);
+						Ingredient chocolate = this.chocolate_list.remove(0);
+						tmpList.add(new GingerBreadTransactionObject(egg1, egg2, flour, honey, null, chocolate));
+						this.total_ingredients_list.remove(chocolate.getId());
+						this.count_gingerBread_chocolate.decrementAndGet();
+						break;
+					case NUT:
+						// Nut
+						this.logger.info("This gingerbread will be falvored with nuts.", (Object[]) null);
+						Ingredient nut = this.nut_list.remove(0);
+						tmpList.add(new GingerBreadTransactionObject(egg1, egg2, flour, honey, nut, null));
+						this.total_ingredients_list.remove(nut.getId());
+						this.count_gingerBread_nuts.decrementAndGet();
+						break;
+					default:
+						// should not happen, take default normal:
+						tmpList.add(new GingerBreadTransactionObject(egg1, egg2, flour, honey));
+				}
+				
+				
+				
+				//tmpList.add(new GingerBreadTransactionObject(egg1, egg2, flour, honey));
 
 				this.gingerBreadCounter.decrementAndGet();
 
@@ -543,13 +592,14 @@ public class JMSServerInstance implements Runnable {
 	}
 
 	private void debugMessageStoredIngredients() {
-		this.logger.info("\novercharged eggs = " + this.count_gingerBread_eggs + "\n" + "overcharged flour = " + this.count_gingerBread_flour + "\n" + "overcharged honey = "
-				+ this.count_gingerBread_honey + "\n" + "gingerbreads possible = " + this.gingerBreadCounter.get() + "\n", (Object[]) null);
+		this.logger.info("\novercharged eggs = " + this.count_gingerBread_eggs.get() + "\n" + "overcharged flour = " + this.count_gingerBread_flour.get() + "\n" + "overcharged honey = "
+				+ this.count_gingerBread_honey.get() + "\n" + "gingerbreads possible = " + this.gingerBreadCounter.get() + "\n"
+				+ "overcharged chocolate = " + this.count_gingerBread_chocolate.get() + "\n overcharged nuts = " + this.count_gingerBread_nuts.get() + "\n", (Object[]) null);
 	}
 
 	private void printStorage() {
 		System.out.println("\neggs = " + this.egg_list.size() + "\n" + "flour = " + this.flour_list.size() + "\n" + "honey = " + this.honey_list.size() + "\n" + "gingerbreads possible = "
-				+ this.gingerBreadCounter.get() + "\n");
+				+ this.gingerBreadCounter.get() + "\nchocolate = " + this.chocolate_list.size() + "\nnuts=" + this.nut_list.size());
 		System.out.println("-----------------------------------------------");
 		for (Entry<Long, ArrayList<GingerBread>> tmp: this.bakersChargeInOven.entrySet()) {
 			System.out.println("Charge for baker with id = " + tmp.getKey() + " is in oven. Number of gingerbreads =  " + tmp.getValue().size());
