@@ -6,6 +6,8 @@ import org.apache.pivot.wtk.Application;
 import org.apache.pivot.wtk.DesktopApplicationContext;
 import org.apache.pivot.wtk.Display;
 
+import factory.spacesImpl.SpaceUtils;
+
 public class GuiMain implements Application {
 
 	private MainWindow window = null;
@@ -45,6 +47,7 @@ public class GuiMain implements Application {
 		}
 		else {
 			mode = Mode.SPACES;
+			SpaceUtils.parseFactoryID(args, args.length - 1);
 		}
 	    DesktopApplicationContext.main(GuiMain.class, args);
 	}

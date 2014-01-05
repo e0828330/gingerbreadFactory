@@ -401,6 +401,7 @@ public class Baker {
 	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
+		SpaceUtils.parseFactoryID(args, 1);
 		ExecutorService executor = Executors.newCachedThreadPool();
 		new Baker(core, executor, Utils.getStartupId(args)).run();
 	}

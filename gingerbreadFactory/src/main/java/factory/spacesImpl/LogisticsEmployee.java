@@ -271,6 +271,7 @@ public class LogisticsEmployee {
 	
 	public static void main(String[] args) {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
+		SpaceUtils.parseFactoryID(args, 1);
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
 		new LogisticsEmployee(core, Utils.getStartupId(args)).run();
 	}
