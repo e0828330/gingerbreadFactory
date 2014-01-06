@@ -4,6 +4,7 @@ import java.util.List;
 
 import factory.entities.GingerBread;
 import factory.entities.Ingredient;
+import factory.entities.Order;
 
 public interface Monitor {
 	/**
@@ -36,4 +37,10 @@ public interface Monitor {
 	 * @return
 	 */
 	public List<GingerBread> getOvenContent();
+
+	/**
+	 * Returns a list of the orders
+	 * @return
+	 */
+	public List<Order> getOrders();
 }

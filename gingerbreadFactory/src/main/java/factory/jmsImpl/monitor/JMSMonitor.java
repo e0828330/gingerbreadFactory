@@ -24,6 +24,7 @@ import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.GingerBread;
 import factory.entities.Ingredient;
+import factory.entities.Order;
 import factory.interfaces.EventListener;
 import factory.interfaces.Monitor;
 import factory.utils.JMSUtils;
@@ -176,6 +177,12 @@ public class JMSMonitor implements Monitor, MessageListener {
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public List<Order> getOrders() {
+		// TODO Auto-generated method stub
+		// TODO: Martin
+		return null;
 	}
 
 }

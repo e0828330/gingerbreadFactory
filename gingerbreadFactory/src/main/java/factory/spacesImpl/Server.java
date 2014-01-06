@@ -14,13 +14,18 @@ import org.mozartspaces.core.DefaultMzsCore;
 import org.mozartspaces.core.MzsConstants;
 import org.mozartspaces.core.MzsCore;
 import org.mozartspaces.core.MzsCoreException;
+import org.mozartspaces.core.config.TcpSocketConfiguration;
 
 public class Server {
 		
-	public static final String spaceURL = "xvsm://localhost:9876";
+	public static String spaceURL = "xvsm://localhost:9876";
 	
 	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException, IOException {
 		MzsCore core = DefaultMzsCore.newInstance();
+		
+		Server.spaceURL = core.getConfig().getSpaceUri().toString();
+		TcpSocketConfiguration tcpConfig = (TcpSocketConfiguration) core.getConfig().getTransportConfigurations().get("xvsm");
+		
 		Capi capi = new Capi(core);
 		capi.createContainer("ingredients", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false), new FifoCoordinator());
 		capi.createContainer("charges", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
@@ -31,6 +36,8 @@ public class Server {
 		
 		
 		System.out.println("Server running");
+		System.out.println("=====================================");
+		System.out.println("Factory ID: " + tcpConfig.getReceiverPort());
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 

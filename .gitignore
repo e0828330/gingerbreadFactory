@@ -1,2 +1,4 @@
 gingerbreadFactory/target/
 derby.log
+logs
+log.txt

@@ -4,6 +4,7 @@ import java.util.List;
 
 import factory.entities.GingerBread;
 import factory.entities.Ingredient;
+import factory.entities.Order;
 
 public interface EventListener {
 
@@ -25,4 +26,11 @@ public interface EventListener {
 	 */
 	public void onGingerBreadStateChange(List<GingerBread> list);
 
+	/**
+	 * Called when the state of orders changes, gives a list of current orders
+	 * 
+	 * @param list
+	 */
+	public void onOrderChanged(List<Order> list);
+	
 }

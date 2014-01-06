@@ -1,6 +1,6 @@
 ===== Kompilieren =====
 cd gingerbreadFactory
-mvn assembly\:assembly package
+mvn package
 
 ===== JMS ONLY - Broker Starten =====
 sh qpid-broker-0.24/bin/qpid-server

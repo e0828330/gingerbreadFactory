@@ -11,6 +11,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 
 import factory.entities.GingerBread;
 import factory.entities.Ingredient;
+import factory.entities.Order;
 import factory.interfaces.EventListener;
 
 public class DataListener implements EventListener {
@@ -138,6 +139,18 @@ public class DataListener implements EventListener {
 			e.printStackTrace();
 		}
 
+	}
+
+	public void onOrderChanged(List<Order> list) {
+		try {
+			window.updateTable("orderTable", list);
+		} catch (JsonGenerationException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

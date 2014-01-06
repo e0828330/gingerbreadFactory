@@ -29,34 +29,44 @@
 								<TableView.Column name="id" headerData="Id" />
 								<TableView.Column name="state" headerData="Status" />
 								<TableView.Column name="flavor" headerData="Geschmack" />
-								
+
 								<TableView.Column name="chargeId" headerData="Chargen ID" />
 								<TableView.Column name="packageId" headerData="Verpackungs ID" />
 								<TableView.Column name="orderId" headerData="Auftrags ID" />
 
 								<TableView.Column name="bakerId" headerData="Bäcker ID" />
-								<TableView.Column name="honeySupplierId" headerData="Honig Lieferant ID" />
-								<TableView.Column name="flourSupplierId" headerData="Mehl Lieferant ID" />
-								<TableView.Column name="firstEggSupplierId" headerData="Ei Lieferant ID" />
-								<TableView.Column name="secondEggSupplierId" headerData="Ei2 Lieferant ID" />
-								<TableView.Column name="chocolateSupplierId" headerData="Schoko Lieferant ID" />
-								<TableView.Column name="nutSupplierId" headerData="Nuss Lieferant ID" />
+								<TableView.Column name="honeySupplierId"
+									headerData="Honig Lieferant ID" />
+								<TableView.Column name="flourSupplierId"
+									headerData="Mehl Lieferant ID" />
+								<TableView.Column name="firstEggSupplierId"
+									headerData="Ei Lieferant ID" />
+								<TableView.Column name="secondEggSupplierId"
+									headerData="Ei2 Lieferant ID" />
+								<TableView.Column name="chocolateSupplierId"
+									headerData="Schoko Lieferant ID" />
+								<TableView.Column name="nutSupplierId"
+									headerData="Nuss Lieferant ID" />
 								<TableView.Column name="qaId" headerData="QA ID" />
-								<TableView.Column name="logisticsId" headerData="Logistik ID" />
-								
+								<TableView.Column name="logisticsId"
+									headerData="Logistik ID" />
+
 								<TableView.Column name="honeyId" headerData="Honig ID" />
 								<TableView.Column name="flourId" headerData="Mehl ID" />
 								<TableView.Column name="firstEggId" headerData="Ei ID" />
-								<TableView.Column name="secondEggId" headerData="Ei 2 ID" />
-								<TableView.Column name="chocolateId" headerData="Schoko ID" />
+								<TableView.Column name="secondEggId"
+									headerData="Ei 2 ID" />
+								<TableView.Column name="chocolateId"
+									headerData="Schoko ID" />
 								<TableView.Column name="nutId" headerData="Nuss ID" />
-								
+
 							</columns>
 
 							<tableViewSortListeners>
 								function sortChanged(tableView) {
-									var tableData = tableView.getTableData();
-									tableData.setComparator(new org.apache.pivot.wtk.content.TableViewRowComparator(tableView));
+								var tableData = tableView.getTableData();
+								tableData.setComparator(new
+								org.apache.pivot.wtk.content.TableViewRowComparator(tableView));
 								}
 							</tableViewSortListeners>
 
@@ -70,15 +80,48 @@
 			</TablePane.Row>
 
 			<TablePane.Row height="-1">
+				<Label text="Zutaten Bestellen"
+					styles="{font:'Arial bold 18', horizontalAlignment:'center'}" />
 				<Label text="Ofen"
 					styles="{font:'Arial bold 18', horizontalAlignment:'center'}" />
 				<Label text="Zutaten"
 					styles="{font:'Arial bold 18', horizontalAlignment:'center'}" />
-				<Label text="Zutaten Bestellen"
-					styles="{font:'Arial bold 18', horizontalAlignment:'center'}" />
 			</TablePane.Row>
 
 			<TablePane.Row height="1*">
+
+				<Border styles="{padding:2}">
+					<BoxPane styles="{horizontalAlignment:'center'}">
+						<Form>
+							<Form.Section heading="Bestellung">
+								<BoxPane Form.label="Lieferant Id">
+									<TextInput bxml:id="supplierId" />
+								</BoxPane>
+								<BoxPane Form.label="Anzahl">
+									<TextInput bxml:id="amount" />
+								</BoxPane>
+							</Form.Section>
+							<Form.Section heading="Typ">
+								<BoxPane orientation="vertical" styles="{padding:4}">
+									<bxml:define>
+										<ButtonGroup bxml:id="type" />
+									</bxml:define>
+									<RadioButton buttonData="Honig" buttonGroup="$type"
+										selected="true" />
+									<RadioButton buttonData="Eier" buttonGroup="$type" />
+									<RadioButton buttonData="Mehl" buttonGroup="$type" />
+									<RadioButton buttonData="Nüsse" buttonGroup="$type" />
+									<RadioButton buttonData="Schokolade" buttonGroup="$type" />
+								</BoxPane>
+							</Form.Section>
+							<Form.Section>
+								<PushButton bxml:id="submitButton" buttonData="Bestellung abschicken"
+									styles="{minimumAspectRatio:3}" />
+							</Form.Section>
+						</Form>
+					</BoxPane>
+				</Border>
+
 				<Border styles="{padding:2}">
 					<ScrollPane horizontalScrollBarPolicy="fill_to_capacity">
 
@@ -126,81 +169,24 @@
 
 						</TableView>
 						<columnHeader>
-							<TableViewHeader tableView="$ingredientsTable" sortMode="single_column" />
+							<TableViewHeader tableView="$ingredientsTable"
+								sortMode="single_column" />
 						</columnHeader>
 					</ScrollPane>
-				</Border>
-
-				<Border styles="{padding:2}">
-					<BoxPane styles="{horizontalAlignment:'center'}">
-						<Form>
-							<Form.Section heading="Bestellung">
-								<BoxPane Form.label="Lieferant Id">
-									<TextInput bxml:id="supplierId" />
-								</BoxPane>
-								<BoxPane Form.label="Anzahl">
-									<TextInput bxml:id="amount" />
-								</BoxPane>
-							</Form.Section>
-							<Form.Section heading="Typ">
-								<BoxPane orientation="vertical" styles="{padding:4}">
-									<bxml:define>
-										<ButtonGroup bxml:id="type" />
-									</bxml:define>
-									<RadioButton buttonData="Honig" buttonGroup="$type"
-										selected="true" />
-									<RadioButton buttonData="Eier" buttonGroup="$type" />
-									<RadioButton buttonData="Mehl" buttonGroup="$type" />
-									<RadioButton buttonData="Nüsse" buttonGroup="$type" />
-									<RadioButton buttonData="Schokolade" buttonGroup="$type" />
-								</BoxPane>
-							</Form.Section>
-							<Form.Section>
-								<PushButton bxml:id="submitButton" buttonData="Bestellung abschicken"
-									styles="{minimumAspectRatio:3}" />
-							</Form.Section>
-						</Form>
-					</BoxPane>
 				</Border>
 			</TablePane.Row>
 
 			<TablePane.Row height="-1">
-				<Label text="Auftragsstatus"  
+				<Label text="Auftrag erstellen"
 					styles="{font:'Arial bold 18', horizontalAlignment:'center'}" />
-				<Label text="Auftrag erstellen"  TablePane.columnSpan="2"
+				<Label text="Auftragsstatus" TablePane.columnSpan="2"
 					styles="{font:'Arial bold 18', horizontalAlignment:'center'}" />
 			</TablePane.Row>
 
 			<TablePane.Row height="1*">
-				<Border styles="{padding:2}" >
-					<ScrollPane horizontalScrollBarPolicy="fill_to_capacity">
 
-						<TableView bxml:id="orderTable"
-							styles="{includeTrailingVerticalGridLine:true}">
-							<columns>
-								<TableView.Column name="id" headerData="Id" />
-								<TableView.Column name="numDone" headerData="Offene Packungen" />
-								<TableView.Column name="numOpen" headerData="Erledigte Packungen" />
-							</columns>
-
-							<tableViewSortListeners>
-								function sortChanged(tableView) {
-								var
-								tableData = tableView.getTableData();
-								tableData.setComparator(new
-								org.apache.pivot.wtk.content.TableViewRowComparator(tableView));
-								}
-							</tableViewSortListeners>
-
-						</TableView>
-						<columnHeader>
-							<TableViewHeader tableView="$orderTable" sortMode="single_column" />
-						</columnHeader>
-					</ScrollPane>
-				</Border>
-				
-				<Border styles="{padding:2}" TablePane.columnSpan="2">
-					<BoxPane styles="{horizontalAlignment:'center'}" >
+				<Border styles="{padding:2}">
+					<BoxPane styles="{horizontalAlignment:'center'}">
 						<Form>
 							<Form.Section heading="Auftrag">
 								<BoxPane Form.label="Anzahl der Packungen">
@@ -225,7 +211,39 @@
 						</Form>
 					</BoxPane>
 				</Border>
-				
+
+				<Border styles="{padding:2}" TablePane.columnSpan="2">
+					<ScrollPane horizontalScrollBarPolicy="fill_to_capacity">
+
+						<TableView bxml:id="orderTable"
+							styles="{includeTrailingVerticalGridLine:true}">
+							<columns>
+								<TableView.Column name="id" headerData="Id" />
+								<TableView.Column name="packages" headerData="Bestellte Packungen" />
+								<TableView.Column name="donePackages"
+									headerData="Erledigte Packungen" />
+								<TableView.Column name="state" headerData="Status" />
+							</columns>
+
+							<tableViewSortListeners>
+								function sortChanged(tableView) {
+								var
+								tableData = tableView.getTableData();
+								tableData.setComparator(new
+								org.apache.pivot.wtk.content.TableViewRowComparator(tableView));
+								}
+							</tableViewSortListeners>
+
+						</TableView>
+						<columnHeader>
+							<TableViewHeader tableView="$orderTable"
+								sortMode="single_column" />
+						</columnHeader>
+					</ScrollPane>
+				</Border>
+
+
+
 			</TablePane.Row>
 
 		</TablePane>

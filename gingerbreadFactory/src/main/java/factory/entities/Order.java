@@ -16,10 +16,10 @@ public class Order implements Serializable {
 	private Integer numNormal;
 	private Integer numNut;
 	private Integer numChocolate;
-	
-	private Long logisticsId;
 
 	private Long timestamp;
+
+	private Integer factoryId;
 	
 	public enum State {
 		OPEN,
@@ -78,14 +78,6 @@ public class Order implements Serializable {
 		this.numChocolate = numChocolate;
 	}
 
-	public Long getLogisticsId() {
-		return logisticsId;
-	}
-
-	public void setLogisticsId(Long logisticsId) {
-		this.logisticsId = logisticsId;
-	}
-
 	public Long getTimestamp() {
 		return timestamp;
 	}
@@ -100,5 +92,13 @@ public class Order implements Serializable {
 
 	public void setState(State state) {
 		this.state = state;
+	}
+
+	public Integer getFactoryId() {
+		return factoryId;
+	}
+
+	public void setFactoryId(Integer factoryId) {
+		this.factoryId = factoryId;
 	}
 }
