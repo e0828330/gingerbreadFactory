@@ -21,4 +21,14 @@ public class Messages {
 	public static final String NO_STORED_DATA = "NO_STORED_DATA";
 
 	public static final String SERVER_REMOVE_STORED_BAKED_GINGERBREADS = "SERVER_REMOVE_STORED_BAKED_GINGERBREADS";
+
+	public static final Object NEW_CONTROLLED_GINGERBREAD = "NEW_CONTROLLED_GINGERBREAD";
+
+	public static final Object PACKAGE_2_2_2 = "PACKAGE_2_2_2";
+	
+	public static final Object PACKAGE_3_3 = "PACKAGE_3_3";
+	
+	public static final Object PACKAGE_6 = "PACKAGE_6";
+	
+	public static final Object PACKAGE_ORDER = "PACKAGE_ORDER";
 }

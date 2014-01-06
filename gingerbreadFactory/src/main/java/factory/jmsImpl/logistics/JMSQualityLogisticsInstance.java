@@ -2,6 +2,7 @@ package factory.jmsImpl.logistics;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Properties;
 
 import javax.jms.JMSException;
@@ -11,8 +12,11 @@ import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
+import javax.jms.QueueReceiver;
+import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -21,7 +25,11 @@ import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
+import factory.jmsImpl.server.JMSServerPackagingListener;
 import factory.utils.JMSMonitoringSender;
+import factory.utils.JMSUtils;
+import factory.utils.JMSUtils.MessageType;
+import factory.utils.Messages;
 import factory.utils.Utils;
 
 public class JMSQualityLogisticsInstance implements Runnable {
@@ -42,6 +50,12 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	private QueueSession logisticsQueue_session;
 	private MessageConsumer logisticsQueue_consumer;
 	private Queue logisticsQueue_queue;
+	
+	// Queue for packaging requests to server
+	private QueueConnection packagingQueue_connection;
+	private QueueSession packagingQueue_session;
+	private Queue packagingQueue_queue;
+	private QueueSender packagingQueue_sender;	
 
 	private final int MAX_PACKAGE_SIZE = 6;
 	
@@ -59,6 +73,8 @@ public class JMSQualityLogisticsInstance implements Runnable {
 		this.monitoringSender = new JMSMonitoringSender(this.ctx);
 		
 		this.setup_logisticsQueue();
+		
+		this.setup_packagingQueue();
 	}
 
 	private void setup_logisticsQueue() throws NamingException, JMSException {
@@ -73,12 +89,21 @@ public class JMSQualityLogisticsInstance implements Runnable {
 		
 		this.packageId = Utils.getID();
 	}
+	
+	private void setup_packagingQueue() throws NamingException, JMSException {
+		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		this.packagingQueue_queue = (Queue) this.ctx.lookup("packagingQueue");
+		this.packagingQueue_connection = queueConnectionFactory.createQueueConnection();
+		this.packagingQueue_session = this.packagingQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
+		this.packagingQueue_sender = this.packagingQueue_session.createSender(this.packagingQueue_queue);
+		this.packagingQueue_connection.start();
+	}		
 
 	public void run() {
 		try {
 			while (isRunning) {
 				Message message = this.logisticsQueue_consumer.receive();
-				if (message instanceof ObjectMessage) {
+				/*if (message instanceof ObjectMessage) {
 					ObjectMessage objectMessage = (ObjectMessage) message;
 					if (objectMessage.getObject() instanceof GingerBread) {
 						GingerBread gingerBread = (GingerBread) objectMessage.getObject();
@@ -103,8 +128,25 @@ public class JMSQualityLogisticsInstance implements Runnable {
 							this.packageId = Utils.getID();
 						}
 					}
-				}
+				}*/
 				message.acknowledge();
+				System.out.println(message);
+				if (message instanceof TextMessage) {
+					TextMessage textMessage = (TextMessage) message;
+					if (textMessage.getText() != null && textMessage.getText().equals(Messages.NEW_CONTROLLED_GINGERBREAD)) {
+						this.logger.info("Request now at server side", (Object[]) null);
+						Hashtable<String, String> properties = new Hashtable<String, String>(1);
+						properties.put("LOGISTICS_ID", String.valueOf((this.id)));
+						Message response = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, 
+								Messages.PACKAGE_2_2_2, 
+								properties, 
+								this.packagingQueue_session, 
+								true, 
+								this.packagingQueue_sender);
+						response.acknowledge();
+						System.out.println(response);
+					}
+				}
 			}
 		} catch (JMSException e) {
 			e.printStackTrace();
@@ -123,6 +165,11 @@ public class JMSQualityLogisticsInstance implements Runnable {
 		this.logisticsQueue_consumer.close();
 		this.logisticsQueue_session.close();
 		this.logisticsQueue_connection.close();
+		
+		this.logger.info("Closing packaging queue.", (Object[]) null);
+		this.packagingQueue_sender.close();
+		this.packagingQueue_session.close();
+		this.packagingQueue_connection.close();			
 	}
 
 	public void shutDown() {

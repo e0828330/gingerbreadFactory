@@ -26,6 +26,7 @@ import factory.entities.GingerBread.State;
 import factory.utils.JMSMonitoringSender;
 import factory.utils.JMSUtils;
 import factory.utils.JMSUtils.MessageType;
+import factory.utils.Messages;
 
 public class JMSQualityControlInstance implements Runnable {
 
@@ -95,6 +96,8 @@ public class JMSQualityControlInstance implements Runnable {
 	public void run() {
 		try {
 			while (isRunning) {
+				// REMOVE AFTER DEBUGGING
+				this.forwardCharge(new ArrayList<GingerBread>(), false);
 				Message message = this.qualityQueue_consumer.receive();
 				this.logger.info("Received message...", (Object[]) null);
 				boolean isGarbage = false;
@@ -183,10 +186,10 @@ public class JMSQualityControlInstance implements Runnable {
 			}
 			// forward to logistic
 			if (isGarbage == false) {
-				this.logger.info("Send charge to logistic", (Object[]) null);
-				for (GingerBread gingerBread : charge) {
-					JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, gingerBread, null, this.logisticsQueue_session, false, this.logisticsQueue_sender);
-				}
+				this.logger.info("Send info to logistic", (Object[]) null);
+				//for (GingerBread gingerBread : charge) {
+					JMSUtils.sendMessage(MessageType.TEXTMESSAGE, Messages.NEW_CONTROLLED_GINGERBREAD, null, this.logisticsQueue_session, false, this.logisticsQueue_sender);
+				//}
 			}
 		} catch (JMSException e) {
 			e.printStackTrace();

@@ -103,6 +103,12 @@ public class JMSServerInstance implements Runnable {
 	private QueueSession bakerRequest_session;
 	private Queue bakerRequest_queue;
 	private QueueReceiver bakerRequest_receiver;
+	
+	// Queue for packaging requests of logistic
+	private QueueConnection packagingQueue_connection;
+	private QueueSession packagingQueue_session;
+	private Queue packagingQueue_queue;
+	private QueueReceiver packagingQueue_receiver;
 
 	// oven queue
 	private QueueConnection ovenQueue_connection;
@@ -150,6 +156,7 @@ public class JMSServerInstance implements Runnable {
 	private JMSServerMonitoringListener monitoring_listener;
 	private JMSServerCommandListener command_listener;
 	private JMSServerBakerGeneralRequestListener bakerGeneralRequest_listener;
+	private JMSServerPackagingListener packagingQueue_listener;
 	
 	private final String PROPERTIES_FILE = "jms.properties";
 
@@ -213,6 +220,9 @@ public class JMSServerInstance implements Runnable {
 		// set event queue
 		this.setup_eventQueue();
 		
+		// set packaging queue
+		this.setup_packagingQueue();
+		
 		// set queues for quality control and logistics
 		this.setup_dummyQueueConsumer();
 	}
@@ -243,6 +253,18 @@ public class JMSServerInstance implements Runnable {
 		this.bakerRequest_receiver.setMessageListener(this.bakerGeneralRequest_listener);
 		this.bakerRequest_connection.start();
 	}
+	
+	
+	private void setup_packagingQueue() throws NamingException, JMSException {
+		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		this.packagingQueue_queue = (Queue) this.ctx.lookup("packagingQueue");
+		this.packagingQueue_connection = queueConnectionFactory.createQueueConnection();
+		this.packagingQueue_listener = new JMSServerPackagingListener(this);
+		this.packagingQueue_session = this.packagingQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
+		this.packagingQueue_receiver = this.packagingQueue_session.createReceiver(this.packagingQueue_queue);
+		this.packagingQueue_receiver.setMessageListener(this.packagingQueue_listener);
+		this.packagingQueue_connection.start();
+	}	
 
 	private void setup_eventQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
@@ -392,6 +414,12 @@ public class JMSServerInstance implements Runnable {
 		this.command_receiver.close();
 		this.command_session.close();
 		this.command_connection.close();
+		
+
+		this.logger.info("Closing packaging queue.", (Object[]) null);
+		this.packagingQueue_receiver.close();
+		this.packagingQueue_session.close();
+		this.packagingQueue_connection.close();		
 		
 		this.logger.info("Closing tmp queues.", (Object[]) null);
 		this.logisticsQueue_consumer.close();
@@ -721,6 +749,11 @@ public class JMSServerInstance implements Runnable {
 		return this.command_session;
 	}
 
+	public QueueSession get_PackagingQueueSession() {
+		return this.packagingQueue_session;
+	}
+
+	
 	public ArrayList<ChargeReplyObject> get_nextOvenCharges() {
 		return this.nextOvenCharges;
 	}
