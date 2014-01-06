@@ -247,11 +247,30 @@ public class JMSBakerInstance implements Runnable {
 						tmp.setHoneyId(obj.getHoney().getId());
 						tmp.setFirstEggId(obj.getEgg1().getId());
 						tmp.setSecondEggId(obj.getEgg2().getId());
-
+						
 						tmp.setFirstEggSupplierId(obj.getEgg1().getSupplierId());
 						tmp.setSecondEggSupplierId(obj.getEgg2().getSupplierId());
 						tmp.setHoneySupplierId(obj.getHoney().getSupplierId());
 						tmp.setFlourSupplierId(obj.getFlour().getSupplierId());
+						
+						// Flavor
+						if (obj.getChocolate() != null) {
+							tmp.setChocolateId(obj.getChocolate().getId());
+							tmp.setChocolateSupplierId(obj.getChocolate().getSupplierId());
+							tmp.setFlavor(GingerBread.Flavor.CHOCOLATE);
+							this.logger.info("Producing chocolate gingerbread...", (Object[]) null);
+							
+						}
+						else if (obj.getNut() != null) {
+							tmp.setNutId(obj.getNut().getId());
+							tmp.setNutSupplierId(obj.getNut().getSupplierId());
+							tmp.setFlavor(GingerBread.Flavor.NUT);
+							this.logger.info("Producing nut gingerbread...", (Object[]) null);
+						}
+						else {
+							tmp.setFlavor(GingerBread.Flavor.NORMAL);
+							this.logger.info("Producing normal gingerbread...", (Object[]) null);
+						}
 
 						tmp.setState(GingerBread.State.PRODUCED);
 						this.charge.add(tmp);

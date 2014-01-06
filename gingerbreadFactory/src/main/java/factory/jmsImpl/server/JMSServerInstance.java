@@ -551,10 +551,6 @@ public class JMSServerInstance implements Runnable {
 						tmpList.add(new GingerBreadTransactionObject(egg1, egg2, flour, honey));
 				}
 				
-				
-				
-				//tmpList.add(new GingerBreadTransactionObject(egg1, egg2, flour, honey));
-
 				this.gingerBreadCounter.decrementAndGet();
 
 				this.total_ingredients_list.remove(egg1.getId());
