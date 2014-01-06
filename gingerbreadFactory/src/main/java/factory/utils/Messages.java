@@ -22,13 +22,13 @@ public class Messages {
 
 	public static final String SERVER_REMOVE_STORED_BAKED_GINGERBREADS = "SERVER_REMOVE_STORED_BAKED_GINGERBREADS";
 
-	public static final Object NEW_CONTROLLED_GINGERBREAD = "NEW_CONTROLLED_GINGERBREAD";
-
-	public static final Object PACKAGE_2_2_2 = "PACKAGE_2_2_2";
+	public static final String NEW_CONTROLLED_GINGERBREAD = "NEW_CONTROLLED_GINGERBREAD";
 	
-	public static final Object PACKAGE_3_3 = "PACKAGE_3_3";
+	public static final String PACKAGE_ORDER = "PACKAGE_ORDER";
 	
-	public static final Object PACKAGE_6 = "PACKAGE_6";
+	public static final String FLAVOR_NORMAL = "FLAVOR_NORMAL";
 	
-	public static final Object PACKAGE_ORDER = "PACKAGE_ORDER";
+	public static final String FLAVOR_NUT = "FLAVOR_NUT";
+	
+	public static final String FLAVOR_CHOCOLATE = "FLAVOR_CHOCOLATE";
 }

@@ -137,14 +137,27 @@ public class JMSQualityLogisticsInstance implements Runnable {
 						this.logger.info("Request now at server side", (Object[]) null);
 						Hashtable<String, String> properties = new Hashtable<String, String>(1);
 						properties.put("LOGISTICS_ID", String.valueOf((this.id)));
+						properties.put(Messages.FLAVOR_NORMAL, "2");
+						properties.put(Messages.FLAVOR_CHOCOLATE, "1");
+						properties.put(Messages.FLAVOR_NUT, "3");
 						Message response = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, 
-								Messages.PACKAGE_2_2_2, 
+								Messages.PACKAGE_ORDER, 
 								properties, 
 								this.packagingQueue_session, 
 								true, 
 								this.packagingQueue_sender);
 						response.acknowledge();
-						System.out.println(response);
+						
+						// No data at the moment available
+						if (response instanceof TextMessage) {
+							TextMessage respTextMessage = (TextMessage) response;
+							if (respTextMessage.getText() != null && respTextMessage.getText().equals(Messages.NO_STORED_DATA)) {
+								continue;
+							}
+						}
+						
+						// Received something for packaging
+						
 					}
 				}
 			}
