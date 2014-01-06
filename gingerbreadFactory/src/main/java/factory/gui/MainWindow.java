@@ -29,6 +29,7 @@ import factory.interfaces.LogisticsOrder;
 import factory.interfaces.Supplier;
 import factory.jmsImpl.supplier.JMSSupplierInstance;
 import factory.spacesImpl.LogisticsOrderImpl;
+import factory.spacesImpl.SpaceUtils;
 import factory.spacesImpl.SupplierImpl;
 
 public class MainWindow extends Window implements Bindable{
@@ -169,6 +170,7 @@ public class MainWindow extends Window implements Bindable{
 				LogisticsOrder logisticsOrder = null;
 				if (GuiMain.mode.equals(GuiMain.Mode.SPACES)) {
 					logisticsOrder = new LogisticsOrderImpl();
+					order.setFactoryId(SpaceUtils.getFactoryId());
 				}
 				else {
 					// TODO: Martin

@@ -1,6 +1,9 @@
 package factory.spacesImpl;
 
 public class SpaceUtils {
+	
+	private static int factoryId;
+	
 	/**
 	 * Parses the factory id from the cmd line arguments and sets the space url to point to it
 	 * 
@@ -12,7 +15,7 @@ public class SpaceUtils {
 			System.err.println("Please supply a factory id!");
 			System.exit(1);
 		}
-		int factoryId = 0;
+		factoryId = 0;
 		try {
 			factoryId = Integer.parseInt(args[idx]);
 		}
@@ -22,5 +25,13 @@ public class SpaceUtils {
 		}
 		
 		Server.spaceURL = "xvsm://localhost:" + factoryId;
+	}
+
+	public static int getFactoryId() {
+		return factoryId;
+	}
+
+	public static void setFactoryId(int factoryId) {
+		SpaceUtils.factoryId = factoryId;
 	}
 }

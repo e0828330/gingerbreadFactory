@@ -18,6 +18,8 @@ public class Order implements Serializable {
 	private Integer numChocolate;
 
 	private Long timestamp;
+
+	private Integer factoryId;
 	
 	public enum State {
 		OPEN,
@@ -90,5 +92,13 @@ public class Order implements Serializable {
 
 	public void setState(State state) {
 		this.state = state;
+	}
+
+	public Integer getFactoryId() {
+		return factoryId;
+	}
+
+	public void setFactoryId(Integer factoryId) {
+		this.factoryId = factoryId;
 	}
 }

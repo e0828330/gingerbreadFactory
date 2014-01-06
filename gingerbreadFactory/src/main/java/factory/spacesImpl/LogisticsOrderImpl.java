@@ -10,7 +10,6 @@ import org.mozartspaces.core.Entry;
 import org.mozartspaces.core.MzsConstants;
 import org.mozartspaces.core.MzsCore;
 import org.mozartspaces.core.MzsCoreException;
-import org.mozartspaces.core.TransactionReference;
 
 import factory.entities.Order;
 import factory.interfaces.LogisticsOrder;
@@ -24,10 +23,8 @@ public class LogisticsOrderImpl implements LogisticsOrder {
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
 		Capi capi = new Capi(core);
 		try {
-			ContainerReference container = capi.lookupContainer("orders", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
-			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
-			capi.write(new Entry(order), container, MzsConstants.RequestTimeout.INFINITE, tx);
-			capi.commitTransaction(tx);
+			ContainerReference container = capi.lookupContainer("ordersLB", new URI(LoadBalancer.loadBalancerURL), MzsConstants.RequestTimeout.INFINITE, null);
+			capi.write(new Entry(order), container, MzsConstants.RequestTimeout.INFINITE, null);
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
 		} catch (URISyntaxException e) {
