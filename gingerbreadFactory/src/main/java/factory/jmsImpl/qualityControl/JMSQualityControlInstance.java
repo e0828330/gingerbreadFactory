@@ -97,7 +97,7 @@ public class JMSQualityControlInstance implements Runnable {
 		try {
 			while (isRunning) {
 				// REMOVE AFTER DEBUGGING
-				this.forwardCharge(new ArrayList<GingerBread>(), false);
+				//this.forwardCharge(new ArrayList<GingerBread>(), false);
 				Message message = this.qualityQueue_consumer.receive();
 				this.logger.info("Received message...", (Object[]) null);
 				boolean isGarbage = false;

@@ -1,14 +1,17 @@
 package factory.jmsImpl.server;
 
+import java.util.ArrayList;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
 import org.apache.qpid.transport.util.Logger;
 
+import factory.entities.GingerBread;
 import factory.utils.JMSUtils;
-import factory.utils.Messages;
 import factory.utils.JMSUtils.MessageType;
+import factory.utils.Messages;
 
 public class JMSServerPackagingListener implements MessageListener {
 
@@ -41,27 +44,40 @@ public class JMSServerPackagingListener implements MessageListener {
 				}
 				
 				this.logger.info("Request for " + nr_normal + "x Normal, " + nr_nut + "x Nuts and " + nr_chocolate + "x Chocolate.", (Object[]) null);
+				
+				//TODO: get gingerbreads for order
+				ArrayList<GingerBread> list = this.server.getPackage(nr_normal, nr_chocolate, nr_nut);
+				if (list.size() == 0) {
+					this.sendNoDataMessage(message);
+				}
+				else {
+				
 				JMSUtils.sendReponse(MessageType.TEXTMESSAGE, 
-						"MHHKAY", 
+						"OK everything is here.", 
 						null, 
 						this.server.get_PackagingQueueSession(), 
 						message.getJMSCorrelationID(),
-						message.getJMSReplyTo());					
+						message.getJMSReplyTo());			
+				}
 				
 				
 			}
 			else {
-				JMSUtils.sendReponse(MessageType.TEXTMESSAGE, 
-						Messages.NO_STORED_DATA, 
-						null, 
-						this.server.get_PackagingQueueSession(), 
-						message.getJMSCorrelationID(),
-						message.getJMSReplyTo());	
+				this.sendNoDataMessage(message);
 			}
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
 
+	}
+	
+	private void sendNoDataMessage(Message message) throws JMSException {
+		JMSUtils.sendReponse(MessageType.TEXTMESSAGE, 
+				Messages.NO_STORED_DATA, 
+				null, 
+				this.server.get_PackagingQueueSession(), 
+				message.getJMSCorrelationID(),
+				message.getJMSReplyTo());	
 	}
 
 }

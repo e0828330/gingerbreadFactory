@@ -101,8 +101,9 @@ public class JMSQualityLogisticsInstance implements Runnable {
 
 	public void run() {
 		try {
+			this.requestForPackage(2, 3, 1);
 			while (isRunning) {
-				Message message = this.logisticsQueue_consumer.receive();
+				
 				/*if (message instanceof ObjectMessage) {
 					ObjectMessage objectMessage = (ObjectMessage) message;
 					if (objectMessage.getObject() instanceof GingerBread) {
@@ -129,29 +130,21 @@ public class JMSQualityLogisticsInstance implements Runnable {
 						}
 					}
 				}*/
+				
+				
+				Message message = this.logisticsQueue_consumer.receive();
 				message.acknowledge();
-				System.out.println(message);
+
 				if (message instanceof TextMessage) {
 					TextMessage textMessage = (TextMessage) message;
 					if (textMessage.getText() != null && textMessage.getText().equals(Messages.NEW_CONTROLLED_GINGERBREAD)) {
-						this.logger.info("Request now at server side", (Object[]) null);
-						Hashtable<String, String> properties = new Hashtable<String, String>(1);
-						properties.put("LOGISTICS_ID", String.valueOf((this.id)));
-						properties.put(Messages.FLAVOR_NORMAL, "2");
-						properties.put(Messages.FLAVOR_CHOCOLATE, "1");
-						properties.put(Messages.FLAVOR_NUT, "3");
-						Message response = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, 
-								Messages.PACKAGE_ORDER, 
-								properties, 
-								this.packagingQueue_session, 
-								true, 
-								this.packagingQueue_sender);
-						response.acknowledge();
 						
+						Message response = this.requestForPackage(7, 3, 1);
 						// No data at the moment available
 						if (response instanceof TextMessage) {
 							TextMessage respTextMessage = (TextMessage) response;
 							if (respTextMessage.getText() != null && respTextMessage.getText().equals(Messages.NO_STORED_DATA)) {
+								this.logger.info("No stored data for requested package", (Object[]) null);
 								continue;
 							}
 						}
@@ -170,6 +163,24 @@ public class JMSQualityLogisticsInstance implements Runnable {
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private Message requestForPackage(int normal, int chocolate, int nut) throws JMSException {
+		this.logger.info("Request now at server side", (Object[]) null);
+		Hashtable<String, String> properties = new Hashtable<String, String>(1);
+		properties.put("LOGISTICS_ID", String.valueOf((this.id)));
+		properties.put(Messages.FLAVOR_NORMAL, String.valueOf(normal));
+		properties.put(Messages.FLAVOR_CHOCOLATE,  String.valueOf(chocolate));
+		properties.put(Messages.FLAVOR_NUT,  String.valueOf(nut));
+		Message response = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, 
+				Messages.PACKAGE_ORDER, 
+				properties, 
+				this.packagingQueue_session, 
+				true, 
+				this.packagingQueue_sender);
+		response.acknowledge();
+		System.out.println(response);
+		return response;
 	}
 
 	private void close() throws JMSException {

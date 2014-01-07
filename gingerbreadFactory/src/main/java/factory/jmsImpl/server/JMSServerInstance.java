@@ -59,6 +59,9 @@ public class JMSServerInstance implements Runnable {
 
 	// Stores the waiting charges for the oven
 	private List<ChargeReplyObject> ovenWaitingList;
+	
+	// Stores the controlled gingerbreads for packaging
+	private ConcurrentHashMap<GingerBread.Flavor, LinkedList<GingerBread>> controlledGingerBreadList;
 
 	// Stores all bakers which are waiting for new ingredients
 	private LinkedList<BakerWaitingObject> bakerWaitingList;
@@ -186,6 +189,11 @@ public class JMSServerInstance implements Runnable {
 		this.nextOvenCharges = new ArrayList<ChargeReplyObject>(10);
 
 		this.setGingerBreads(new ConcurrentHashMap<Long, GingerBread>(100));
+		
+		this.controlledGingerBreadList = new ConcurrentHashMap<GingerBread.Flavor, LinkedList<GingerBread>>(64);
+		this.controlledGingerBreadList.put(GingerBread.Flavor.NORMAL, new LinkedList<GingerBread>());
+		this.controlledGingerBreadList.put(GingerBread.Flavor.NUT, new LinkedList<GingerBread>());
+		this.controlledGingerBreadList.put(GingerBread.Flavor.CHOCOLATE, new LinkedList<GingerBread>());
 
 		this.count_gingerBread_eggs = new AtomicInteger(0);
 		this.count_gingerBread_flour = new AtomicInteger(0);
@@ -345,6 +353,7 @@ public class JMSServerInstance implements Runnable {
 		System.out.println("Type 'oven_state' to see the state of the oven");
 		System.out.println("Type 'monitor' to see the state of gingerbreads");
 		System.out.println("Type 'exit' to to shut down the server");
+		System.out.println("Type 'controlled' to see the list of controlled gingerbreads");
 		System.out.println("======================================\n");
 		while (isRunning) {
 			try {
@@ -364,7 +373,10 @@ public class JMSServerInstance implements Runnable {
 								+ "\t\t" + gingerBread.getValue().getLogisticsId());
 					}
 					System.out.print("\n");
-				} else if (s.equals("exit")) {
+				} else if (s.equals("controlled")) {
+					this.debugControlled();
+				}
+				else if (s.equals("exit")) {
 					break;
 				}
 			} catch (IOException e) {
@@ -783,6 +795,75 @@ public class JMSServerInstance implements Runnable {
 
 	public void setBakerProducedGingerBread_tmpList(ConcurrentHashMap<Long, ArrayList<GingerBread>> bakerProducedGingerBread_tmpList) {
 		this.bakerProducedGingerBread_tmpList = bakerProducedGingerBread_tmpList;
+	}
+
+	public ConcurrentHashMap<GingerBread.Flavor, LinkedList<GingerBread>> getControlledGingerBreadList() {
+		return controlledGingerBreadList;
+	}
+	
+	public synchronized ArrayList<GingerBread> getPackage(int normal, int chocolate, int nut) {
+		ArrayList<GingerBread> tmp = new ArrayList<GingerBread>(6);
+		LinkedList<GingerBread> tmp_normal = this.controlledGingerBreadList.get(GingerBread.Flavor.NORMAL);
+		LinkedList<GingerBread> tmp_chocolate = this.controlledGingerBreadList.get(GingerBread.Flavor.CHOCOLATE);
+		LinkedList<GingerBread> tmp_nut = this.controlledGingerBreadList.get(GingerBread.Flavor.NUT);
+		
+		// not enough
+		if (tmp_normal.size() < normal || tmp_chocolate.size() < chocolate || tmp_nut.size() < nut) {
+			return tmp;
+		}
+		
+		// return gingerbreads for package
+		try {
+			for (int i = 0; i < normal; i++) {
+				tmp.add(tmp_normal.pop());
+			}
+			for (int i = 0; i < chocolate; i++) {
+				tmp.add(tmp_chocolate.pop());
+			}
+			for (int i = 0; i < nut; i++) {
+				tmp.add(tmp_nut.pop());
+			}
+		} catch (Exception e) {
+			// if however, an error occurs, take a rollback and return an empty list
+			for (GingerBread g : tmp) {
+				if (g.getFlavor() == GingerBread.Flavor.NORMAL) {
+					this.controlledGingerBreadList.get(GingerBread.Flavor.NORMAL).add(g);
+				}
+				else if (g.getFlavor() == GingerBread.Flavor.CHOCOLATE) {
+					this.controlledGingerBreadList.get(GingerBread.Flavor.CHOCOLATE).add(g);
+				}
+				else if (g.getFlavor() == GingerBread.Flavor.NUT) {
+					this.controlledGingerBreadList.get(GingerBread.Flavor.NUT).add(g);
+				}
+			}
+			tmp.clear();
+		}
+		
+		// if the size of the list is not equal to the requested size, take rollback and return empty list
+		if (tmp.size() != (normal + chocolate + nut)) {
+			for (GingerBread g : tmp) {
+				if (g.getFlavor() == GingerBread.Flavor.NORMAL) {
+					this.controlledGingerBreadList.get(GingerBread.Flavor.NORMAL).add(g);
+				}
+				else if (g.getFlavor() == GingerBread.Flavor.CHOCOLATE) {
+					this.controlledGingerBreadList.get(GingerBread.Flavor.CHOCOLATE).add(g);
+				}
+				else if (g.getFlavor() == GingerBread.Flavor.NUT) {
+					this.controlledGingerBreadList.get(GingerBread.Flavor.NUT).add(g);
+				}
+			}
+			tmp.clear();
+		}
+		
+		return tmp;
+	}
+	
+	private void debugControlled() {
+		// print for debug:
+		this.logger.info("Normal controlled: " + this.controlledGingerBreadList.get(GingerBread.Flavor.NORMAL).size() +
+		 ", Chocolate controlled: " + this.controlledGingerBreadList.get(GingerBread.Flavor.CHOCOLATE).size() + 
+		 ", Nut controlled: " + this.controlledGingerBreadList.get(GingerBread.Flavor.NUT).size() + "\n");
+	
 	}
 
 }
