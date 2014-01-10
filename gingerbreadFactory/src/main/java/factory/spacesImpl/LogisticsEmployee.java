@@ -52,8 +52,6 @@ public class LogisticsEmployee {
 	public void run() {
 		Capi capi = new Capi(core);
 		
-		// TODO: Pickup old work
-		
 		ContainerReference gingerbreadsContainer = null;
 		ContainerReference qaPassedContainer = null;
 		ContainerReference orderContainer = null;
@@ -70,10 +68,13 @@ public class LogisticsEmployee {
 		}
 
 		while (true) {
+			boolean needsWait = true;
 			try {
 				// Wait for next event
-				capi.take(qaPassedContainer, FifoCoordinator.newSelector(1), MzsConstants.RequestTimeout.INFINITE, null);
-				System.out.println("GOT EVENT");
+				if (needsWait) {
+					capi.take(qaPassedContainer, FifoCoordinator.newSelector(1), MzsConstants.RequestTimeout.INFINITE, null);
+					System.out.println("GOT EVENT");
+				}
 				
 				TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
 				
@@ -224,6 +225,7 @@ public class LogisticsEmployee {
 					// Out of stock lets wait
 					else {
 						System.out.println("NOT IN STOCK WAIT...");
+						needsWait = true;
 						capi.rollbackTransaction(tx);
 						continue;
 					}
@@ -251,6 +253,10 @@ public class LogisticsEmployee {
 				// Write back orders
 				for (Order current : orderQueue) {
 					capi.write(new Entry(current), orderContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+				}
+				
+				if (unused.size() >= 6) {
+					needsWait = false;
 				}
 				
 				try {
