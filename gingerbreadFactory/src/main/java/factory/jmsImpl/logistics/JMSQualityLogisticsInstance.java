@@ -121,52 +121,37 @@ public class JMSQualityLogisticsInstance implements Runnable {
 		this.packagingQueue_connection.start();
 	}		
 
+	@SuppressWarnings("unchecked")
 	public void run() {
 		try {
 			
-			// TestOrders harcoded
-			
-			Order order1 = new Order();
-			order1.setId(Utils.getID());
-			order1.setNumChocolate(2);
-			order1.setNumNut(3);
-			order1.setNumNormal(1);
-			order1.setPackages(5); // Ich will 5 packate mit jeweils 2 schoko und 3 nuss und 1 normales
-			order1.setTimestamp((new Date()).getTime());
-			order1.setState(Order.State.OPEN);
-			
-			Order order2 = new Order();
-			order2.setId(Utils.getID());
-			order2.setNumChocolate(1);
-			order2.setNumNut(1);
-			order2.setNumNormal(4);
-			order2.setPackages(2); // Ich will 5 packate mit jeweils 2 schoko und 3 nuss und 1 normales
-			order2.setTimestamp((new Date()).getTime());
-			order2.setState(Order.State.OPEN);
-			
-			this.orderList.add(order1);
-			this.orderList.add(order2);
+
 			
 			Message response;
 			ArrayList<GingerBread> responsePackage = new ArrayList<GingerBread>();
-			boolean startup = true;
+			//boolean startup = true;
 			
 			while (isRunning) {
-				
-				if (!startup) {
-					// if nothing is here for packing wait for receive
-					Message message = this.logisticsQueue_consumer.receive();
-					message.acknowledge();
-	
-					if (message instanceof TextMessage) {
-						TextMessage textMessage = (TextMessage) message;
-						if (textMessage.getText() != null && textMessage.getText().equals(Messages.NEW_CONTROLLED_GINGERBREAD) == false) {
-							continue;							
+			
+				Hashtable<String, String> properties = new Hashtable<String, String>(1);
+				properties.put("REQTYPE", "GET_ORDERS");
+				properties.put("LOGISTICS_ID", String.valueOf(this.id));
+				response = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, 
+						Messages.GET_ORDERS, 
+						properties, 
+						this.packagingQueue_session, 
+						true, 
+						this.packagingQueue_sender);
+				if (response instanceof ObjectMessage) {
+					ObjectMessage objMessage = (ObjectMessage) response;
+					if (objMessage.getStringProperty("TYPE") != null && objMessage.getStringProperty("TYPE").equals("LinkedList<Order>")) {
+						for (Order order : (LinkedList<Order>) objMessage.getObject()) {
+							this.orderList.add(order);
 						}
 					}
 				}
-				startup = false;
 				
+				this.logger.info("There are " + this.orderList.size() + " orders.", (Object[]) null);
 				
 				LinkedList<GingerBread> packages = new LinkedList<GingerBread>();
 				
@@ -180,11 +165,14 @@ public class JMSQualityLogisticsInstance implements Runnable {
 							this.buildPackage(responsePackage, packages, order);
 							if (order.getDonePackages() == null) {
 								order.setDonePackages(1);
+								this.logger.info("Package " + order.getDonePackages() + " of " + order.getPackages() + " packed.", (Object[]) null);
 							}
 							else {
 								order.setDonePackages(order.getDonePackages() + 1);
+								this.logger.info("Package " + order.getDonePackages() + " of " + order.getPackages() + " packed.", (Object[]) null);
 							}
 							if (order.getDonePackages().equals(order.getPackages())) {
+								this.logger.info("Finished order with id=" + order.getId(), (Object[]) null);
 								order.setState(Order.State.DONE);
 							}
 						}
@@ -194,26 +182,49 @@ public class JMSQualityLogisticsInstance implements Runnable {
 				if (fallback) {
 					// fallback
 					if ((responsePackage = this.checkResponse(this.requestForPackage(2, 2, 2))) != null) {
+						this.logger.info("Package with 2x normal, 2x chocolate, 2x nut.", (Object[]) null);
 						this.buildPackage(responsePackage, packages, null);
 					}
 					else if ((responsePackage = this.checkResponse(this.requestForPackage(3, 3, 0))) != null) {
+						this.logger.info("Package with 3x normal, 3x chocolate.", (Object[]) null);
 						this.buildPackage(responsePackage, packages, null);
 					}
 					else if ((responsePackage = this.checkResponse(this.requestForPackage(0, 3, 3))) != null) {
+						this.logger.info("Package with 3x chocolate, 3x nut.", (Object[]) null);
 						this.buildPackage(responsePackage, packages, null);
 					}
 					else if ((responsePackage = this.checkResponse(this.requestForPackage(3, 0, 3))) != null) {
+						this.logger.info("Package with 3x normal, 3x nut.", (Object[]) null);
 						this.buildPackage(responsePackage, packages, null);
 					}
 					else if ((responsePackage = this.checkResponse(this.requestForPackage(6, 0, 0))) != null) {
+						this.logger.info("Package with 6x normal.", (Object[]) null);
 						this.buildPackage(responsePackage, packages, null);
 					}
 					else if ((responsePackage = this.checkResponse(this.requestForPackage(0, 6, 0))) != null) {
+						this.logger.info("Package with 6x chocolate.", (Object[]) null);
 						this.buildPackage(responsePackage, packages, null);
 					}
 					else if ((responsePackage = this.checkResponse(this.requestForPackage(0, 0, 6))) != null) {
+						this.logger.info("Package with 6x nut.", (Object[]) null);
 						this.buildPackage(responsePackage, packages, null);
 					}
+				}
+				
+				if (packages.size() == 0) {
+					Message message = this.logisticsQueue_consumer.receive();
+					message.acknowledge();
+	
+					if (message instanceof TextMessage) {
+						TextMessage textMessage = (TextMessage) message;
+						if (textMessage.getText() != null && textMessage.getText().equals(Messages.NEW_CONTROLLED_GINGERBREAD) == false) {
+							continue;							
+						}
+					}
+				}
+				else {
+					// TODO send to server and gui
+					this.logger.info("Packages build.", (Object[]) null);
 				}
 				
 			}
@@ -240,25 +251,28 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	}
 	
 	private ArrayList<GingerBread> checkResponse(Message message) throws JMSException {
-		if (message instanceof TextMessage || (message.getStringProperty("TYPE") != null) || message.getStringProperty("TYPE").equals("ArrayList<GingerBread>") == false) {
+		if (message instanceof TextMessage || (message.getStringProperty("TYPE") == null) || message.getStringProperty("TYPE").equals("ArrayList<GingerBread>") == false) {
 			return null;
 		}
 		if (message instanceof ObjectMessage) {
 			ObjectMessage objMessage = (ObjectMessage) message;
 			@SuppressWarnings("unchecked")
-			ArrayList<GingerBread> response = (ArrayList<GingerBread>) objMessage.getObject();
-			if (response == null || response.size() == 0) {
+			ArrayList<GingerBread> responseList = (ArrayList<GingerBread>) objMessage.getObject();
+			this.logger.info("Received package with " + responseList.size() + " gingerbreads.", (Object[]) null);
+			//System.out.println("RESPONSE ======>" + responseList.size());
+			if (responseList == null || responseList.size() == 0) {
 				return null;
 			}
-			return response;
+			return responseList;
 		}
 		return null;
 	}
 
 	private Message requestForPackage(int normal, int chocolate, int nut) throws JMSException {
 		this.logger.info("Request now at server side", (Object[]) null);
-		Hashtable<String, String> properties = new Hashtable<String, String>(1);
+		Hashtable<String, String> properties = new Hashtable<String, String>(6);
 		properties.put("LOGISTICS_ID", String.valueOf((this.id)));
+		properties.put("REQTYPE", "GET_PACKAGE");
 		properties.put(Messages.FLAVOR_NORMAL, String.valueOf(normal));
 		properties.put(Messages.FLAVOR_CHOCOLATE,  String.valueOf(chocolate));
 		properties.put(Messages.FLAVOR_NUT,  String.valueOf(nut));

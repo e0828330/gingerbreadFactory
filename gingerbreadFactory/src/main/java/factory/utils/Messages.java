@@ -31,4 +31,6 @@ public class Messages {
 	public static final String FLAVOR_NUT = "FLAVOR_NUT";
 	
 	public static final String FLAVOR_CHOCOLATE = "FLAVOR_CHOCOLATE";
+
+	public static final String GET_ORDERS = "GET_ORDERS";
 }

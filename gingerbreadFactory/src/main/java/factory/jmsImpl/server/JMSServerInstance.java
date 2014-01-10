@@ -5,12 +5,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
@@ -35,6 +37,7 @@ import factory.entities.ChargeReplyObject;
 import factory.entities.GingerBread;
 import factory.entities.GingerBreadTransactionObject;
 import factory.entities.Ingredient;
+import factory.entities.Order;
 import factory.utils.JMSUtils;
 import factory.utils.JMSUtils.MessageType;
 import factory.utils.Messages;
@@ -70,7 +73,10 @@ public class JMSServerInstance implements Runnable {
 	private List<GingerBread> ovenList;
 	
 	// Stores the current charges in the oven
-	ArrayList<ChargeReplyObject> nextOvenCharges;
+	private ArrayList<ChargeReplyObject> nextOvenCharges;
+	
+	// Stores all orders
+	private ConcurrentLinkedQueue<Order> orders;
 
 	// Oven
 	private final int MAX_OVEN_SIZE = 10;
@@ -202,6 +208,31 @@ public class JMSServerInstance implements Runnable {
 		this.count_gingerBread_nuts = new AtomicInteger(0);
 		this.gingerBreadCounter = new AtomicInteger(0);
 
+		
+		this.orders = new ConcurrentLinkedQueue<Order>();
+		// TestOrders harcoded
+		
+		Order order1 = new Order();
+		order1.setId(Utils.getID());
+		order1.setNumChocolate(2);
+		order1.setNumNut(3);
+		order1.setNumNormal(1);
+		order1.setPackages(5); // Ich will 5 packate mit jeweils 2 schoko und 3 nuss und 1 normales
+		order1.setTimestamp((new Date()).getTime());
+		order1.setState(Order.State.OPEN);
+		
+		Order order2 = new Order();
+		order2.setId(Utils.getID());
+		order2.setNumChocolate(1);
+		order2.setNumNut(1);
+		order2.setNumNormal(4);
+		order2.setPackages(2); // Ich will 5 packate mit jeweils 2 schoko und 3 nuss und 1 normales
+		order2.setTimestamp((new Date()).getTime());
+		order2.setState(Order.State.OPEN);
+		
+		this.orders.add(order1);
+		this.orders.add(order2);
+		
 		// Init all queues
 		this.initQueues();
 	}
@@ -865,5 +896,10 @@ public class JMSServerInstance implements Runnable {
 		 ", Nut controlled: " + this.controlledGingerBreadList.get(GingerBread.Flavor.NUT).size() + "\n");
 	
 	}
+
+	public ConcurrentLinkedQueue<Order> getOrders() {
+		return orders;
+	}
+
 
 }
