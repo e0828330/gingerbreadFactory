@@ -1,6 +1,7 @@
 package factory.jmsImpl.server;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -51,13 +52,14 @@ public class JMSServerPackagingListener implements MessageListener {
 					this.sendNoDataMessage(message);
 				}
 				else {
-				
-				JMSUtils.sendReponse(MessageType.TEXTMESSAGE, 
-						"OK everything is here.", 
-						null, 
-						this.server.get_PackagingQueueSession(), 
-						message.getJMSCorrelationID(),
-						message.getJMSReplyTo());			
+					Hashtable<String, String> properties = new Hashtable<String, String>(2);
+					properties.put("TYPE", "ArrayList<GingerBread>");
+					JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
+							list, 
+							properties, 
+							this.server.get_PackagingQueueSession(), 
+							message.getJMSCorrelationID(),
+							message.getJMSReplyTo());			
 				}
 				
 				
