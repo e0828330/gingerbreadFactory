@@ -10,7 +10,9 @@ import org.mozartspaces.capi3.FifoCoordinator;
 import org.mozartspaces.capi3.KeyCoordinator;
 import org.mozartspaces.capi3.LindaCoordinator;
 import org.mozartspaces.core.Capi;
+import org.mozartspaces.core.ContainerReference;
 import org.mozartspaces.core.DefaultMzsCore;
+import org.mozartspaces.core.Entry;
 import org.mozartspaces.core.MzsConstants;
 import org.mozartspaces.core.MzsCore;
 import org.mozartspaces.core.MzsCoreException;
@@ -40,7 +42,20 @@ public class Server {
 		System.out.println("Factory ID: " + tcpConfig.getReceiverPort());
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		br.readLine();
 
+		/* Benchmark stuff */
+		ContainerReference start = capi.createContainer("benchmarkStart", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
+		ContainerReference stop = capi.createContainer("benchmarkStop", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
+		
+		System.out.println("Sending start signal ...");
+		capi.write(start, new Entry(new String("START")));
+		Thread.sleep(20000);
+		System.out.println("Sending stop signal!");
+		capi.write(stop, new Entry(new String("STOP")));
+
+		// TODO: Count gingerbreads packages
+		
 		System.out.println("Type quit or exit to quit.");
 		
 		String input;

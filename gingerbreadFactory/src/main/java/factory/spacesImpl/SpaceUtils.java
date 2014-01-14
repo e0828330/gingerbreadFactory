@@ -1,5 +1,15 @@
 package factory.spacesImpl;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import org.mozartspaces.capi3.FifoCoordinator;
+import org.mozartspaces.core.Capi;
+import org.mozartspaces.core.ContainerReference;
+import org.mozartspaces.core.MzsConstants;
+import org.mozartspaces.core.MzsCore;
+import org.mozartspaces.core.MzsCoreException;
+
 public class SpaceUtils {
 	
 	private static int factoryId;
@@ -33,5 +43,46 @@ public class SpaceUtils {
 
 	public static void setFactoryId(int factoryId) {
 		SpaceUtils.factoryId = factoryId;
+	}
+
+	private static class BenchmarkStopThread implements Runnable {
+
+		private MzsCore core;
+		
+		public BenchmarkStopThread(MzsCore core) {
+			this.core = core;
+		}
+		
+		public void run() {
+			Capi capi = new Capi(core);
+			try {
+				ContainerReference start = capi.lookupContainer("benchmarkStop", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+				capi.read(start, FifoCoordinator.newSelector(), MzsConstants.RequestTimeout.INFINITE, null);
+				System.out.println("Benchmark ended!");
+				System.exit(0);
+			} catch (MzsCoreException e) {
+				e.printStackTrace();
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * Used to setup benchmark for workers, kill on stop and wait for start
+	 * @param core
+	 */
+	public static void setupBenchmark(MzsCore core) {
+		Capi capi = new Capi(core);
+		try {
+			new Thread(new BenchmarkStopThread(core)).start();
+			System.out.println("Waiting for start signal ...");
+			ContainerReference start = capi.lookupContainer("benchmarkStart", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
+			capi.read(start, FifoCoordinator.newSelector(), MzsConstants.RequestTimeout.INFINITE, null); 
+		} catch (MzsCoreException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 	}
 }

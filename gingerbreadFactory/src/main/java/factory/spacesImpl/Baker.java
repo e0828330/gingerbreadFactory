@@ -403,6 +403,7 @@ public class Baker {
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
 		SpaceUtils.parseFactoryID(args, 1);
 		ExecutorService executor = Executors.newCachedThreadPool();
+		SpaceUtils.setupBenchmark(core); // Only for benchmark
 		new Baker(core, executor, Utils.getStartupId(args)).run();
 	}
 
