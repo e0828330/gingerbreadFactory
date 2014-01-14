@@ -73,6 +73,9 @@ public class SpaceUtils {
 	 * @param core
 	 */
 	public static void setupBenchmark(MzsCore core) {
+		if (!Server.BENCHMARK) {
+			return;
+		}
 		Capi capi = new Capi(core);
 		try {
 			new Thread(new BenchmarkStopThread(core)).start();

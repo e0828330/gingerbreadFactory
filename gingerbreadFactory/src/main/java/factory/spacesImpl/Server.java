@@ -21,6 +21,7 @@ import org.mozartspaces.core.config.TcpSocketConfiguration;
 public class Server {
 		
 	public static String spaceURL = "xvsm://localhost:9876";
+	public static final boolean BENCHMARK = true;
 	
 	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException, IOException {
 		MzsCore core = DefaultMzsCore.newInstance();
@@ -42,20 +43,23 @@ public class Server {
 		System.out.println("Factory ID: " + tcpConfig.getReceiverPort());
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		br.readLine();
 
 		/* Benchmark stuff */
-		ContainerReference start = capi.createContainer("benchmarkStart", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
-		ContainerReference stop = capi.createContainer("benchmarkStop", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
-		
-		System.out.println("Sending start signal ...");
-		capi.write(start, new Entry(new String("START")));
-		Thread.sleep(20000);
-		System.out.println("Sending stop signal!");
-		capi.write(stop, new Entry(new String("STOP")));
-
-		// TODO: Count gingerbreads packages
-		
+		if (Server.BENCHMARK) {
+			ContainerReference start = capi.createContainer("benchmarkStart", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
+			ContainerReference stop = capi.createContainer("benchmarkStop", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
+			
+			// TODO: Fill in Benchmark ingredients
+			br.readLine();
+			
+			System.out.println("Sending start signal ...");
+			capi.write(start, new Entry(new String("START")));
+			Thread.sleep(20000);
+			System.out.println("Sending stop signal!");
+			capi.write(stop, new Entry(new String("STOP")));
+			
+			// TODO: Count gingerbreads packages
+		}
 		System.out.println("Type quit or exit to quit.");
 		
 		String input;

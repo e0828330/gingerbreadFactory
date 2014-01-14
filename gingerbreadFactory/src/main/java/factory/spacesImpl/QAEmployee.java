@@ -113,6 +113,7 @@ public class QAEmployee {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
 		SpaceUtils.parseFactoryID(args, 2);
+		SpaceUtils.setupBenchmark(core); // Only for benchmark
 		new QAEmployee(core, Utils.getStartupId(args), Utils.getStartupDefectRate(args)).run();
 	}
 

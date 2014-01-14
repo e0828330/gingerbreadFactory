@@ -279,6 +279,7 @@ public class LogisticsEmployee {
 		System.setProperty("mozartspaces.configurationFile", "mozartspaces-client.xml");
 		SpaceUtils.parseFactoryID(args, 1);
 		MzsCore core = DefaultMzsCore.newInstanceWithoutSpace();
+		SpaceUtils.setupBenchmark(core); // Only for benchmark
 		new LogisticsEmployee(core, Utils.getStartupId(args)).run();
 	}
 }
