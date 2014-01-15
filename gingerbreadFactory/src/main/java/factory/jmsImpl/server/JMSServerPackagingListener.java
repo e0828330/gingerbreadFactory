@@ -3,14 +3,18 @@ package factory.jmsImpl.server;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.ObjectMessage;
 
 import org.apache.qpid.transport.util.Logger;
 
 import factory.entities.GingerBread;
+import factory.entities.LogisticsEntity;
 import factory.entities.Order;
 import factory.utils.JMSUtils;
 import factory.utils.JMSUtils.MessageType;
@@ -71,17 +75,63 @@ public class JMSServerPackagingListener implements MessageListener {
 			else if (message.getStringProperty("LOGISTICS_ID") != null && message.getStringProperty("REQTYPE") != null 
 					&& message.getStringProperty("REQTYPE").equals("GET_ORDERS")) {
 				Long logisticsID = Long.valueOf(message.getStringProperty("LOGISTICS_ID"));
-				LinkedList<Order> tmp = new LinkedList<Order>(this.server.getOrders());
-				this.logger.info("Get request to send all orders to logistics with id = " + logisticsID + " and size = " + tmp.size(), (Object[]) null);
-				Hashtable<String, String> properties = new Hashtable<String, String>();
-				properties.put("TYPE", "LinkedList<Order>");
+				// if not locked
 				
-				JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
-						tmp, 
-						properties, 
-						this.server.get_PackagingQueueSession(), 
-						message.getJMSCorrelationID(),
-						message.getJMSReplyTo());
+				if (this.server.getPackageOrderesBlocked().get() == false) {
+					this.server.getPackageOrderesBlocked().set(true);
+					LinkedList<Order> tmp = new LinkedList<Order>(this.server.getOrders());
+					this.logger.info("Get request to send all orders to logistics with id = " + logisticsID + " and size = " + tmp.size(), (Object[]) null);
+					Hashtable<String, String> properties = new Hashtable<String, String>();
+					properties.put("TYPE", "LinkedList<Order>");
+					
+					JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
+							tmp, 
+							properties, 
+							this.server.get_PackagingQueueSession(), 
+							message.getJMSCorrelationID(),
+							message.getJMSReplyTo());
+				}
+				else {
+					LogisticsEntity lEntity = new LogisticsEntity();
+					lEntity.setDestination(message.getJMSReplyTo());
+					lEntity.setCorrelationID(message.getJMSCorrelationID());
+					lEntity.setID(logisticsID);
+					this.logger.info("Enqueue logistic with id = " + logisticsID, (Object[]) null);
+					this.server.getLogisticsWaitingList().add(lEntity);
+					
+				}
+			}
+			else if (message.getStringProperty("TYPE") != null && message.getStringProperty("TYPE").equals("ArrayList<Order>")){
+				if (message instanceof ObjectMessage) {
+					ObjectMessage objMessage = (ObjectMessage) message;
+					ArrayList<Order> orderList = (ArrayList<Order>) objMessage.getObject();
+					ConcurrentLinkedQueue<Order> tmp = new ConcurrentLinkedQueue<Order>();
+					for (Order o : orderList) {
+						tmp.add(o);
+					}
+					this.server.setOrders(tmp);
+					this.logger.info("Overwrite order list with current orders...", (Object[]) null);
+					
+					// next in queue
+					if (this.server.getLogisticsWaitingList().size() == 0) {
+						this.logger.info("Unlock package-order-blocked value.", (Object[]) null);
+						this.server.setPackageOrderesBlocked(false);
+					}
+					else {
+						this.logger.info("Pop next logistic from waiting list...", (Object[]) null);
+						LinkedList<Order> tmpList = new LinkedList<Order>(this.server.getOrders());
+						LogisticsEntity entity = this.server.getLogisticsWaitingList().remove();
+						this.logger.info("Get request to send all orders to logistics with id = " + entity.getID() + " and size = " + tmpList.size(), (Object[]) null);
+						Hashtable<String, String> properties = new Hashtable<String, String>();
+						properties.put("TYPE", "LinkedList<Order>");
+						JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
+								tmpList, 
+								properties, 
+								this.server.get_PackagingQueueSession(), 
+								entity.getCorrelationID(),
+								entity.getDestination());
+					}
+				}
 			}
 			else {
 				this.sendNoDataMessage(message);

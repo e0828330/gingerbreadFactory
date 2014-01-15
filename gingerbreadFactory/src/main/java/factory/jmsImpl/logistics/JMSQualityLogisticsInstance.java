@@ -136,6 +136,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 				Hashtable<String, String> properties = new Hashtable<String, String>(1);
 				properties.put("REQTYPE", "GET_ORDERS");
 				properties.put("LOGISTICS_ID", String.valueOf(this.id));
+				this.logger.info("Waiting for order-list and blocking...", (Object[]) null);
 				response = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, 
 						Messages.GET_ORDERS, 
 						properties, 
@@ -145,6 +146,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 				if (response instanceof ObjectMessage) {
 					ObjectMessage objMessage = (ObjectMessage) response;
 					if (objMessage.getStringProperty("TYPE") != null && objMessage.getStringProperty("TYPE").equals("LinkedList<Order>")) {
+						this.orderList.clear();
 						for (Order order : (LinkedList<Order>) objMessage.getObject()) {
 							this.orderList.add(order);
 						}
@@ -158,19 +160,26 @@ public class JMSQualityLogisticsInstance implements Runnable {
 				// orders
 				boolean fallback = true;
 				for (Order order : this.orderList) {
-					for (int i = 0; i < order.getPackages().intValue(); i++) {
+					// TODO: quickfix, handle at server done packages:
+					if (order.getState() == Order.State.DONE) {
+						continue;
+					}
+					if (order.getDonePackages() == null) {
+						order.setDonePackages(0);
+					}
+					for (int i = order.getDonePackages().intValue(); i < order.getPackages().intValue(); i++) {
 						if ((responsePackage = this.checkResponse(this.requestForPackage(order.getNumNormal().intValue(), order.getNumChocolate().intValue(), order.getNumNut().intValue()))) != null) {
 							fallback = false;
 							order.setState(Order.State.IN_PROGRESS);
 							this.buildPackage(responsePackage, packages, order);
-							if (order.getDonePackages() == null) {
+							/*if (order.getDonePackages() == null) {
 								order.setDonePackages(1);
 								this.logger.info("Package " + order.getDonePackages() + " of " + order.getPackages() + " packed.", (Object[]) null);
 							}
-							else {
+							else {*/
 								order.setDonePackages(order.getDonePackages() + 1);
 								this.logger.info("Package " + order.getDonePackages() + " of " + order.getPackages() + " packed.", (Object[]) null);
-							}
+							//}
 							if (order.getDonePackages().equals(order.getPackages())) {
 								this.logger.info("Finished order with id=" + order.getId(), (Object[]) null);
 								order.setState(Order.State.DONE);
@@ -211,7 +220,30 @@ public class JMSQualityLogisticsInstance implements Runnable {
 					}
 				}
 				
+				
+				// Send order back to server
+				
+				// send order back to server:
+				this.logger.info("Send orderlist back to server...", (Object[]) null);
+				properties = new Hashtable<String, String>(2);
+				properties.put("TYPE", "ArrayList<Order>");
+				ArrayList<Order> orderArrayList = new ArrayList<Order>(this.orderList.size());
+				for (Order o : this.orderList) {
+					orderArrayList.add(o);
+				}
+				JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, 
+						orderArrayList, 
+						properties, 
+						this.packagingQueue_session, 
+						false, 
+						this.packagingQueue_sender);
+				
+				
+				// if no packages were build, because there are no offers or to less
+				// ingredients ,just wait for new controlled gingerbreads and on receive
+				// continue with whole procedure
 				if (packages.size() == 0) {
+					this.logger.info("Nothing to do... Waiting for new controlled gingerbreads and blocking...", (Object[]) null);
 					Message message = this.logisticsQueue_consumer.receive();
 					message.acknowledge();
 	
@@ -223,12 +255,18 @@ public class JMSQualityLogisticsInstance implements Runnable {
 					}
 				}
 				else {
-					// TODO send to server and gui
+					// send to server and gui
 					this.logger.info("Packages build.", (Object[]) null);
-				}
+					
+					for (GingerBread b : packages) {
+						this.monitoringSender.sendMonitoringMessage(b);
+					}
+				}	
 				
 			}
 		} catch (JMSException e) {
+			e.printStackTrace();
+		} catch (NamingException e) {
 			e.printStackTrace();
 		}
 

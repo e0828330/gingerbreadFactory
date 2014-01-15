@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
@@ -37,6 +38,7 @@ import factory.entities.ChargeReplyObject;
 import factory.entities.GingerBread;
 import factory.entities.GingerBreadTransactionObject;
 import factory.entities.Ingredient;
+import factory.entities.LogisticsEntity;
 import factory.entities.Order;
 import factory.utils.JMSUtils;
 import factory.utils.JMSUtils.MessageType;
@@ -62,6 +64,12 @@ public class JMSServerInstance implements Runnable {
 
 	// Stores the waiting charges for the oven
 	private List<ChargeReplyObject> ovenWaitingList;
+	
+	// is set to true, if a logistic receives the list of orders
+	private AtomicBoolean packageOrderesBlocked;
+	
+	// stores the logistic waiting list
+	private ConcurrentLinkedQueue<LogisticsEntity> logisticsWaitingList;
 	
 	// Stores the controlled gingerbreads for packaging
 	private ConcurrentHashMap<GingerBread.Flavor, LinkedList<GingerBread>> controlledGingerBreadList;
@@ -196,6 +204,8 @@ public class JMSServerInstance implements Runnable {
 
 		this.setGingerBreads(new ConcurrentHashMap<Long, GingerBread>(100));
 		
+		this.setLogisticsWaitingList(new ConcurrentLinkedQueue<LogisticsEntity>());
+		
 		this.controlledGingerBreadList = new ConcurrentHashMap<GingerBread.Flavor, LinkedList<GingerBread>>(64);
 		this.controlledGingerBreadList.put(GingerBread.Flavor.NORMAL, new LinkedList<GingerBread>());
 		this.controlledGingerBreadList.put(GingerBread.Flavor.NUT, new LinkedList<GingerBread>());
@@ -207,6 +217,8 @@ public class JMSServerInstance implements Runnable {
 		this.count_gingerBread_chocolate = new AtomicInteger(0);
 		this.count_gingerBread_nuts = new AtomicInteger(0);
 		this.gingerBreadCounter = new AtomicInteger(0);
+		
+		this.packageOrderesBlocked = new AtomicBoolean(false);
 
 		
 		this.orders = new ConcurrentLinkedQueue<Order>();
@@ -217,7 +229,7 @@ public class JMSServerInstance implements Runnable {
 		order1.setNumChocolate(2);
 		order1.setNumNut(3);
 		order1.setNumNormal(1);
-		order1.setPackages(5); // Ich will 5 packate mit jeweils 2 schoko und 3 nuss und 1 normales
+		order1.setPackages(5); // Ich will 5 packete mit jeweils 2 schoko und 3 nuss und 1 normales
 		order1.setTimestamp((new Date()).getTime());
 		order1.setState(Order.State.OPEN);
 		
@@ -226,7 +238,7 @@ public class JMSServerInstance implements Runnable {
 		order2.setNumChocolate(1);
 		order2.setNumNut(1);
 		order2.setNumNormal(4);
-		order2.setPackages(2); // Ich will 5 packate mit jeweils 2 schoko und 3 nuss und 1 normales
+		order2.setPackages(2); // Ich will 5 packete mit jeweils 2 schoko und 3 nuss und 1 normales
 		order2.setTimestamp((new Date()).getTime());
 		order2.setState(Order.State.OPEN);
 		
@@ -899,6 +911,26 @@ public class JMSServerInstance implements Runnable {
 
 	public ConcurrentLinkedQueue<Order> getOrders() {
 		return orders;
+	}
+	
+	public void setOrders(ConcurrentLinkedQueue<Order> list) {
+		this.orders = list;
+	}
+
+	public AtomicBoolean getPackageOrderesBlocked() {
+		return packageOrderesBlocked;
+	}
+
+	public void setPackageOrderesBlocked(boolean value) {
+		this.packageOrderesBlocked.set(value);
+	}
+
+	public ConcurrentLinkedQueue<LogisticsEntity> getLogisticsWaitingList() {
+		return logisticsWaitingList;
+	}
+
+	public void setLogisticsWaitingList(ConcurrentLinkedQueue<LogisticsEntity> logisticsWaitingList) {
+		this.logisticsWaitingList = logisticsWaitingList;
 	}
 
 
