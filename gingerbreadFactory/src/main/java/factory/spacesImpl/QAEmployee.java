@@ -75,19 +75,26 @@ public class QAEmployee {
 				if (!needsCheck) {
 					eatedSkipped = true; // No check means nothing eaten
 				}
+				
+				ArrayList<Entry> gbEntries = new ArrayList<Entry>();
+				ArrayList<Entry> passed = new ArrayList<Entry>();
+
 				for (GingerBread tested : testList) {
 					tested.setQaId(id);
 					if (!eatedSkipped) {
 						tested.setState(State.EATEN);
 					}
-					capi.write(new Entry(tested), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+					gbEntries.add(new Entry(tested));
+
 					// Ready for delivery
-					System.out.println(tested);
 					if (eatedSkipped && tested.getState().equals(State.CONTROLLED)) {
-						capi.write(new Entry(tested.getId()), qaPassedContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+						passed.add(new Entry(tested.getId()));
 					}
 					eatedSkipped = true;
 				}
+				
+				capi.write(gbEntries, gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+				capi.write(passed, qaPassedContainer, MzsConstants.RequestTimeout.INFINITE, tx);
 				
 				try {
 					capi.commitTransaction(tx);

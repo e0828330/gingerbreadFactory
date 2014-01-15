@@ -15,7 +15,7 @@ public class Ingredient implements Serializable {
 	};
 
 	private Type type;
-
+	
 	public Long getId() {
 		return id;
 	}

@@ -35,8 +35,10 @@ public class SupplierImpl implements Supplier {
 				Ingredient item =  new Ingredient(id, Utils.getID(), type);
 				capi.write(new Entry(item), container, MzsConstants.RequestTimeout.INFINITE, tx);
 				capi.commitTransaction(tx);
-				System.out.println("Unloaded:" + item);
-				Thread.sleep(Utils.getRandomWaitTime());
+				//System.out.println("Unloaded:" + item);
+				if (!Server.BENCHMARK) {
+					Thread.sleep(Utils.getRandomWaitTime());
+				}
 			}
 		} catch (MzsCoreException e) {
 			e.printStackTrace();
@@ -56,7 +58,6 @@ public class SupplierImpl implements Supplier {
 	public void placeOrder(int amount, Type type) {
 		this.amount = amount;
 		this.type = type;
-		
 	}
 
 }

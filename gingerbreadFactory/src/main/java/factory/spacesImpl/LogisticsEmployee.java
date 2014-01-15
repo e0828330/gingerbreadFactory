@@ -80,22 +80,20 @@ public class LogisticsEmployee {
 				
 				orderQueue.clear();
 				
-				// Do we have new Orders ?
-				Order emptyOrder = new Order();
-				emptyOrder.setState(Order.State.OPEN);
-				ArrayList<Order> orders = capi.take(orderContainer, LindaCoordinator.newSelector(emptyOrder, MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, tx);
-				orderQueue.addAll(orders);
-				
-				System.out.println("Open orders :" + orders.size());
+				if (!Server.BENCHMARK) {
+					// Do we have new Orders ?
+					Order emptyOrder = new Order();
+					emptyOrder.setState(Order.State.OPEN);
+					ArrayList<Order> orders = capi.take(orderContainer, LindaCoordinator.newSelector(emptyOrder, MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, tx);
+					orderQueue.addAll(orders);
+	
+					// Do we have old (in progress) orders
+					Order oldOrder = new Order();
+					oldOrder.setState(Order.State.IN_PROGRESS);
+					orders = capi.take(orderContainer, LindaCoordinator.newSelector(oldOrder, MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, tx);
+					orderQueue.addAll(orders);
+				}
 
-				// Do we have old (in progress) orders
-				Order oldOrder = new Order();
-				oldOrder.setState(Order.State.IN_PROGRESS);
-				orders = capi.take(orderContainer, LindaCoordinator.newSelector(oldOrder, MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, tx);
-				orderQueue.addAll(orders);
-				
-				System.out.println("In progress orders :" + orders.size());
-				
 				GingerBread tpl = new GingerBread();
 				tpl.setState(State.CONTROLLED);
 				
@@ -233,28 +231,39 @@ public class LogisticsEmployee {
 				
 				// Build the package
 				Long packageId = Utils.getID();
+				ArrayList<Entry> entries = new ArrayList<Entry>(); 
 				for(GingerBread current : pack) {
 					current.setLogisticsId(id);
 					current.setPackageId(packageId);
 					current.setOrderId(orderId);
 					current.setState(State.DONE);
-					capi.write(new Entry(current), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+					entries.add(new Entry(current));
 				}
+				capi.write(entries, gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+				
 				// Write back what we didn't need
 				ArrayList<GingerBread> unused = new ArrayList<GingerBread>();
 				unused.addAll(normalInStock);
 				unused.addAll(nutInStock);
 				unused.addAll(chocolateInStock);
 				
+				entries.clear();
 				for (GingerBread current : unused) {
-					capi.write(new Entry(current), gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+					entries.add(new Entry(current));
 				}
-				
+				if (!entries.isEmpty()) {
+					capi.write(entries, gingerbreadsContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+				}
+
 				// Write back orders
+				entries.clear();
 				for (Order current : orderQueue) {
-					capi.write(new Entry(current), orderContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+					entries.add(new Entry(current));
 				}
-				
+				if (!entries.isEmpty()) {
+					capi.write(entries, orderContainer, MzsConstants.RequestTimeout.INFINITE, tx);
+				}
+
 				if (unused.size() >= 6) {
 					needsWait = false;
 				}

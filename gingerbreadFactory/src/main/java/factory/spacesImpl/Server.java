@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 import org.mozartspaces.capi3.FifoCoordinator;
 import org.mozartspaces.capi3.KeyCoordinator;
@@ -17,6 +18,9 @@ import org.mozartspaces.core.MzsConstants;
 import org.mozartspaces.core.MzsCore;
 import org.mozartspaces.core.MzsCoreException;
 import org.mozartspaces.core.config.TcpSocketConfiguration;
+
+import factory.entities.GingerBread;
+import factory.entities.Ingredient;
 
 public class Server {
 		
@@ -33,7 +37,7 @@ public class Server {
 		capi.createContainer("ingredients", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false), new FifoCoordinator());
 		capi.createContainer("charges", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 		capi.createContainer("oven", new URI(spaceURL), 10, null, new KeyCoordinator(), new LindaCoordinator(false), new FifoCoordinator());
-		capi.createContainer("gingerbreads", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false), new FifoCoordinator());
+		ContainerReference gingerbreadContainer = capi.createContainer("gingerbreads", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false), new FifoCoordinator());
 		capi.createContainer("qaPassed", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 		capi.createContainer("orders", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false), new FifoCoordinator());
 		
@@ -49,16 +53,42 @@ public class Server {
 			ContainerReference start = capi.createContainer("benchmarkStart", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 			ContainerReference stop = capi.createContainer("benchmarkStop", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 			
-			// TODO: Fill in Benchmark ingredients
+			SupplierImpl supplier = new SupplierImpl();
+			supplier.setId(1234L);
+			supplier.placeOrder(1500, Ingredient.Type.FLOUR);
+			supplier.run();
+			System.out.println("unloaded flour");
+
+			supplier.placeOrder(1500, Ingredient.Type.HONEY);
+			supplier.run();
+			System.out.println("unloaded honey");
+			
+			supplier.placeOrder(500, Ingredient.Type.CHOCOLATE);
+			supplier.run();
+			System.out.println("unloaded chocolate");
+			
+			supplier.placeOrder(500, Ingredient.Type.NUT);
+			supplier.run();
+			System.out.println("unloaded nut");
+
+			supplier.placeOrder(3000, Ingredient.Type.EGG);
+			supplier.run();
+			System.out.println("unloaded eggs");
+
+			System.out.println("done unloading");
+			
 			br.readLine();
 			
 			System.out.println("Sending start signal ...");
 			capi.write(start, new Entry(new String("START")));
-			Thread.sleep(20000);
+			Thread.sleep(60000);
 			System.out.println("Sending stop signal!");
 			capi.write(stop, new Entry(new String("STOP")));
 			
-			// TODO: Count gingerbreads packages
+			GingerBread tpl = new GingerBread();
+			tpl.setState(GingerBread.State.DONE);
+			ArrayList<GingerBread> results = capi.read(gingerbreadContainer, LindaCoordinator.newSelector(tpl, MzsConstants.Selecting.COUNT_MAX), MzsConstants.RequestTimeout.INFINITE, null);
+			System.out.println("Produced " + (results.size() / 6) + " packages!");
 		}
 		System.out.println("Type quit or exit to quit.");
 		

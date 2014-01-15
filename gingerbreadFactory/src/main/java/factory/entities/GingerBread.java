@@ -58,6 +58,7 @@ public class GingerBread implements Serializable {
 	
 	private State state;
 
+
 	public Long getId() {
 		return id;
 	}
