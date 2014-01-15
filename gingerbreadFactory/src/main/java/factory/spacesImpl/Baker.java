@@ -185,6 +185,7 @@ public class Baker {
 		int size = getChargeSize();
 		
 		ArrayList<GingerBread> currentCharge = new ArrayList<GingerBread>(size);
+		ArrayList<Entry> entries = new ArrayList<Entry>(size);
 		
 		for (int i = 0; i < size; i++) {
 			GingerBread tmp = new GingerBread();
@@ -223,9 +224,11 @@ public class Baker {
 				tmp.setFlavor(Flavor.NORMAL);
 			}
 			
-			capi.write(gingerbreadsContainer, new Entry(tmp));
+			entries.add(new Entry(tmp));
 			currentCharge.add(tmp);
 		}
+		
+		capi.write(entries, gingerbreadsContainer);
 		
 		return currentCharge;
 	}

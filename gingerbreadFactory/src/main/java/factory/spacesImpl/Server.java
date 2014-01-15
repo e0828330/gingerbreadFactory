@@ -46,7 +46,7 @@ public class Server {
 		System.out.println("=====================================");
 		System.out.println("Factory ID: " + tcpConfig.getReceiverPort());
 		
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		
 
 		/* Benchmark stuff */
 		if (Server.BENCHMARK) {
@@ -76,9 +76,7 @@ public class Server {
 			System.out.println("unloaded eggs");
 
 			System.out.println("done unloading");
-			
-			br.readLine();
-			
+
 			System.out.println("Sending start signal ...");
 			capi.write(start, new Entry(new String("START")));
 			Thread.sleep(60000);
@@ -89,9 +87,12 @@ public class Server {
 			tpl.setState(GingerBread.State.DONE);
 			ArrayList<GingerBread> results = capi.read(gingerbreadContainer, LindaCoordinator.newSelector(tpl, MzsConstants.Selecting.COUNT_MAX), MzsConstants.RequestTimeout.INFINITE, null);
 			System.out.println("Produced " + (results.size() / 6) + " packages!");
+			results = capi.read(gingerbreadContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_MAX), MzsConstants.RequestTimeout.INFINITE, null);
+			System.out.println("Produced " + results.size() + " gingerbreads!");
 		}
 		System.out.println("Type quit or exit to quit.");
 		
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		String input;
 		while ((input = br.readLine()) != null) {
 			 if (input.equals("quit") || input.equals("exit")) {

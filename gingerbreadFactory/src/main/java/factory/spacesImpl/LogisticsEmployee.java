@@ -73,7 +73,6 @@ public class LogisticsEmployee {
 				// Wait for next event
 				if (needsWait) {
 					capi.take(qaPassedContainer, FifoCoordinator.newSelector(1), MzsConstants.RequestTimeout.INFINITE, null);
-					System.out.println("GOT EVENT");
 				}
 				
 				TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
@@ -98,8 +97,6 @@ public class LogisticsEmployee {
 				tpl.setState(State.CONTROLLED);
 				
 				ArrayList<GingerBread> inStock = capi.take(gingerbreadsContainer, LindaCoordinator.newSelector(tpl, MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, tx);
-				
-				System.out.println(inStock.size());
 				
 				LinkedList<GingerBread> normalInStock = new LinkedList<GingerBread>();
 				LinkedList<GingerBread> nutInStock = new LinkedList<GingerBread>();
@@ -222,7 +219,6 @@ public class LogisticsEmployee {
 					}
 					// Out of stock lets wait
 					else {
-						System.out.println("NOT IN STOCK WAIT...");
 						needsWait = true;
 						capi.rollbackTransaction(tx);
 						continue;
@@ -269,7 +265,7 @@ public class LogisticsEmployee {
 				}
 				
 				try {
-					System.out.println("Done packing ...");
+					//System.out.println("Done packing ...");
 					capi.commitTransaction(tx);
 				}
 				catch (MzsCoreException e) {
