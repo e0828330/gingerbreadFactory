@@ -79,7 +79,7 @@ public class JMSServerPackagingListener implements MessageListener {
 				
 				if (this.server.getPackageOrderesBlocked().get() == false) {
 					this.server.getPackageOrderesBlocked().set(true);
-					LinkedList<Order> tmp = new LinkedList<Order>(this.server.getOrders());
+					LinkedList<Order> tmp = new LinkedList<Order>(this.server.getOpenOrders());
 					this.logger.info("Get request to send all orders to logistics with id = " + logisticsID + " and size = " + tmp.size(), (Object[]) null);
 					Hashtable<String, String> properties = new Hashtable<String, String>();
 					properties.put("TYPE", "LinkedList<Order>");
@@ -105,11 +105,15 @@ public class JMSServerPackagingListener implements MessageListener {
 				if (message instanceof ObjectMessage) {
 					ObjectMessage objMessage = (ObjectMessage) message;
 					ArrayList<Order> orderList = (ArrayList<Order>) objMessage.getObject();
-					ConcurrentLinkedQueue<Order> tmp = new ConcurrentLinkedQueue<Order>();
+					ConcurrentLinkedQueue<Order> tmp_open_orders = new ConcurrentLinkedQueue<Order>();
+					
 					for (Order o : orderList) {
-						tmp.add(o);
+						this.server.getOrder_list().put(o.getId(), o);
+						if (o.getState() != Order.State.DONE) {
+							tmp_open_orders.add(o);
+						}
 					}
-					this.server.setOrders(tmp);
+					this.server.setOpenOrders(tmp_open_orders);
 					this.logger.info("Overwrite order list with current orders...", (Object[]) null);
 					
 					// next in queue
@@ -119,7 +123,7 @@ public class JMSServerPackagingListener implements MessageListener {
 					}
 					else {
 						this.logger.info("Pop next logistic from waiting list...", (Object[]) null);
-						LinkedList<Order> tmpList = new LinkedList<Order>(this.server.getOrders());
+						LinkedList<Order> tmpList = new LinkedList<Order>(this.server.getOpenOrders());
 						LogisticsEntity entity = this.server.getLogisticsWaitingList().remove();
 						this.logger.info("Get request to send all orders to logistics with id = " + entity.getID() + " and size = " + tmpList.size(), (Object[]) null);
 						Hashtable<String, String> properties = new Hashtable<String, String>();

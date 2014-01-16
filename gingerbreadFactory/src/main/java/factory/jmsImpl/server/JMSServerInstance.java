@@ -83,8 +83,11 @@ public class JMSServerInstance implements Runnable {
 	// Stores the current charges in the oven
 	private ArrayList<ChargeReplyObject> nextOvenCharges;
 	
-	// Stores all orders
-	private ConcurrentLinkedQueue<Order> orders;
+	// Stores all open orders
+	private ConcurrentLinkedQueue<Order> open_orders;
+	
+	// Stores the complete order list for gui (opened and finished)
+	private ConcurrentHashMap<Long, Order> order_list;
 
 	// Oven
 	private final int MAX_OVEN_SIZE = 10;
@@ -221,7 +224,8 @@ public class JMSServerInstance implements Runnable {
 		this.packageOrderesBlocked = new AtomicBoolean(false);
 
 		
-		this.orders = new ConcurrentLinkedQueue<Order>();
+		this.open_orders = new ConcurrentLinkedQueue<Order>();
+		this.order_list = new ConcurrentHashMap<Long, Order>(64);
 		// TestOrders harcoded
 		
 		Order order1 = new Order();
@@ -242,8 +246,8 @@ public class JMSServerInstance implements Runnable {
 		order2.setTimestamp((new Date()).getTime());
 		order2.setState(Order.State.OPEN);
 		
-		this.orders.add(order1);
-		this.orders.add(order2);
+		this.storeOrder(order1);
+		this.storeOrder(order2);
 		
 		// Init all queues
 		this.initQueues();
@@ -909,12 +913,12 @@ public class JMSServerInstance implements Runnable {
 	
 	}
 
-	public ConcurrentLinkedQueue<Order> getOrders() {
-		return orders;
+	public ConcurrentLinkedQueue<Order> getOpenOrders() {
+		return open_orders;
 	}
 	
-	public void setOrders(ConcurrentLinkedQueue<Order> list) {
-		this.orders = list;
+	public void setOpenOrders(ConcurrentLinkedQueue<Order> list) {
+		this.open_orders = list;
 	}
 
 	public AtomicBoolean getPackageOrderesBlocked() {
@@ -931,6 +935,19 @@ public class JMSServerInstance implements Runnable {
 
 	public void setLogisticsWaitingList(ConcurrentLinkedQueue<LogisticsEntity> logisticsWaitingList) {
 		this.logisticsWaitingList = logisticsWaitingList;
+	}
+	
+	private void storeOrder(Order order) {
+		this.order_list.put(order.getId(), order);
+		this.open_orders.add(order);
+	}
+
+	public ConcurrentHashMap<Long, Order> getOrder_list() {
+		return order_list;
+	}
+
+	public void setOrder_list(ConcurrentHashMap<Long, Order> order_list) {
+		this.order_list = order_list;
 	}
 
 
