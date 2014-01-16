@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,8 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
@@ -43,7 +40,6 @@ import factory.entities.Order;
 import factory.utils.JMSUtils;
 import factory.utils.JMSUtils.MessageType;
 import factory.utils.Messages;
-import factory.utils.Utils;
 
 public class JMSServerInstance implements Runnable {
 
@@ -111,6 +107,12 @@ public class JMSServerInstance implements Runnable {
 	private QueueSession ingredientsDelivery_session;
 	private Queue ingredientsDelivery_queue;
 	private QueueReceiver ingredientsDelivery_receiver;
+	
+	// queue for new orders
+	private QueueConnection order_connection;
+	private QueueSession order_session;
+	private Queue order_queue;
+	private QueueReceiver order_receiver;	
 
 	// baker queue
 	private QueueConnection bakerIngredients_connection;
@@ -177,6 +179,7 @@ public class JMSServerInstance implements Runnable {
 	private JMSServerCommandListener command_listener;
 	private JMSServerBakerGeneralRequestListener bakerGeneralRequest_listener;
 	private JMSServerPackagingListener packagingQueue_listener;
+	private JMSServerOrderQueueListener orderQueue_listener;
 	
 	private final String PROPERTIES_FILE = "jms.properties";
 
@@ -226,28 +229,6 @@ public class JMSServerInstance implements Runnable {
 		
 		this.open_orders = new ConcurrentLinkedQueue<Order>();
 		this.order_list = new ConcurrentHashMap<Long, Order>(64);
-		// TestOrders harcoded
-		
-		Order order1 = new Order();
-		order1.setId(Utils.getID());
-		order1.setNumChocolate(2);
-		order1.setNumNut(3);
-		order1.setNumNormal(1);
-		order1.setPackages(5); // Ich will 5 packete mit jeweils 2 schoko und 3 nuss und 1 normales
-		order1.setTimestamp((new Date()).getTime());
-		order1.setState(Order.State.OPEN);
-		
-		Order order2 = new Order();
-		order2.setId(Utils.getID());
-		order2.setNumChocolate(1);
-		order2.setNumNut(1);
-		order2.setNumNormal(4);
-		order2.setPackages(2); // Ich will 5 packete mit jeweils 2 schoko und 3 nuss und 1 normales
-		order2.setTimestamp((new Date()).getTime());
-		order2.setState(Order.State.OPEN);
-		
-		this.storeOrder(order1);
-		this.storeOrder(order2);
 		
 		// Init all queues
 		this.initQueues();
@@ -277,6 +258,9 @@ public class JMSServerInstance implements Runnable {
 		
 		// set packaging queue
 		this.setup_packagingQueue();
+		
+		// set order queue
+		this.setup_orderQueue();
 		
 		// set queues for quality control and logistics
 		this.setup_dummyQueueConsumer();
@@ -367,6 +351,19 @@ public class JMSServerInstance implements Runnable {
 		this.bakerIngredients_connection.start();
 		this.logger.info("Queue for baker created and connection started.", (Object[]) null);
 	}
+	
+	private void setup_orderQueue() throws NamingException, JMSException {
+		this.logger.info("Initializing queue for orders...", (Object[]) null);
+		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		this.order_queue = (Queue) ctx.lookup("orderQueue");
+		this.order_connection = queueConnectionFactory.createQueueConnection();
+		this.order_session = this.order_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
+		this.orderQueue_listener = new JMSServerOrderQueueListener(this);
+		this.order_receiver = this.order_session.createReceiver(this.order_queue);
+		this.order_receiver.setMessageListener(this.orderQueue_listener);
+		this.order_connection.start();
+		this.logger.info("Queue for orders created and connection started.", (Object[]) null);
+	}	
 
 	private void setup_ingredientsQueue() throws IOException, NamingException, JMSException {
 		this.logger.info("Initializing queue for ingredients...", (Object[]) null);
@@ -489,6 +486,12 @@ public class JMSServerInstance implements Runnable {
 		this.bakerRequest_receiver.close();
 		this.bakerRequest_session.close();
 		this.bakerRequest_connection.close();
+		
+		
+		this.logger.info("Closing queue for orders", (Object[]) null);
+		this.order_receiver.close();
+		this.order_session.close();
+		this.order_connection.close();
 		
 		this.qualityQueue_consumer.close();
 		this.qualityQueue_session.close();
@@ -937,9 +940,13 @@ public class JMSServerInstance implements Runnable {
 		this.logisticsWaitingList = logisticsWaitingList;
 	}
 	
-	private void storeOrder(Order order) {
+	public void storeOrder(Order order) {
 		this.order_list.put(order.getId(), order);
 		this.open_orders.add(order);
+		Hashtable<String, String> properties = new Hashtable<String, String>(1);
+		properties.put("TYPE", "ArrayList<Order>");
+		properties.put("EVENT", Messages.EVENT_ORDERLIST_CHANGED);
+		this.sendEventToGUI(new ArrayList<Order>(this.order_list.values()), properties);
 	}
 
 	public ConcurrentHashMap<Long, Order> getOrder_list() {

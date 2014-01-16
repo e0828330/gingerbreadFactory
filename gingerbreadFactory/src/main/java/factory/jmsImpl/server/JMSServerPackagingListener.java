@@ -114,6 +114,11 @@ public class JMSServerPackagingListener implements MessageListener {
 						}
 					}
 					this.server.setOpenOrders(tmp_open_orders);
+					// send event to gui
+					Hashtable<String, String> properties = new Hashtable<String, String>(1);
+					properties.put("TYPE", "ArrayList<Order>");
+					properties.put("EVENT", Messages.EVENT_ORDERLIST_CHANGED);
+					this.server.sendEventToGUI(new ArrayList<Order>(server.getOrder_list().values()), properties);
 					this.logger.info("Overwrite order list with current orders...", (Object[]) null);
 					
 					// next in queue
@@ -126,7 +131,7 @@ public class JMSServerPackagingListener implements MessageListener {
 						LinkedList<Order> tmpList = new LinkedList<Order>(this.server.getOpenOrders());
 						LogisticsEntity entity = this.server.getLogisticsWaitingList().remove();
 						this.logger.info("Get request to send all orders to logistics with id = " + entity.getID() + " and size = " + tmpList.size(), (Object[]) null);
-						Hashtable<String, String> properties = new Hashtable<String, String>();
+						properties = new Hashtable<String, String>(1);
 						properties.put("TYPE", "LinkedList<Order>");
 						JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
 								tmpList, 

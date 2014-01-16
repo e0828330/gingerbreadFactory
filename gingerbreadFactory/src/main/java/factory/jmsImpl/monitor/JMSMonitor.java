@@ -169,9 +169,9 @@ public class JMSMonitor implements Monitor, MessageListener {
 				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_INGREDIENTS)) {
 					ArrayList<Ingredient> result = (ArrayList<Ingredient>) objectMessage.getObject();
 					if (result != null)	this.eventListener.onIngredientChanged(result);
-				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_OVENT_CHARGE)) {
-					ArrayList<GingerBread> result = (ArrayList<GingerBread>) objectMessage.getObject();
-					if (result != null)	this.eventListener.onOvenChanged(result);
+				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_ORDERLIST_CHANGED)) {
+					ArrayList<Order> result = (ArrayList<Order>) objectMessage.getObject();
+					if (result != null)	this.eventListener.onOrderChanged(result);
 				}
 			}
 		} catch (JMSException e) {
@@ -179,6 +179,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public List<Order> getOrders() {
 		List<Order> result = new ArrayList<Order>();
 		try {
@@ -190,7 +191,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 				}
 			}
 		} catch (JMSException e) {
-			System.err.println("GETOVENCONTENT");
+			System.err.println("GET_ORDER_EVENT");
 			e.printStackTrace();
 		}
 		return result;
