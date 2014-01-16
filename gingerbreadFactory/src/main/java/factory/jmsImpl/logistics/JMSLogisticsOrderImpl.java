@@ -36,10 +36,14 @@ public class JMSLogisticsOrderImpl implements LogisticsOrder {
 	private Queue order_queue;
 	private QueueSender order_sender;
 
-	public JMSLogisticsOrderImpl() {
+	private int factoryID;
+	
+	public JMSLogisticsOrderImpl(int factoryID) {
 		try {
+			this.factoryID = factoryID;
 			Properties properties = new Properties();
 			properties.load(this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE));
+			JMSUtils.extendJMSProperties(properties, this.factoryID);
 			this.ctx = new InitialContext(properties);
 
 			// Set queue connection for communication with server
@@ -77,7 +81,7 @@ public class JMSLogisticsOrderImpl implements LogisticsOrder {
 	private void setup_orderQueue() throws NamingException, JMSException {
 		this.logger.info("Initializing queue for orders...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.order_queue = (Queue) ctx.lookup("orderQueue");
+		this.order_queue = (Queue) ctx.lookup("orderQueue" + this.factoryID);
 		this.order_connection = queueConnectionFactory.createQueueConnection();
 		this.order_session = this.order_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.order_sender = this.order_session.createSender(this.order_queue);

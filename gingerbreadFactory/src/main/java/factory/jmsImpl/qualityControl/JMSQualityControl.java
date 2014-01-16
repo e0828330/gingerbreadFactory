@@ -5,13 +5,15 @@ import java.io.IOException;
 import javax.jms.JMSException;
 import javax.naming.NamingException;
 
+import factory.utils.JMSUtils;
 import factory.utils.Utils;
 
 public class JMSQualityControl {
 
 	public static void main(String[] args) {
 		try {
-			JMSQualityControlInstance qualitycontrol = new JMSQualityControlInstance(Utils.getStartupId(args), Utils.getStartupDefectRate(args));
+			JMSQualityControlInstance qualitycontrol = new JMSQualityControlInstance(Utils.getStartupId(args), 
+					Utils.getStartupDefectRate(args), JMSUtils.parseFactoryID(args, 2));
 			Thread qualityControl = new Thread(qualitycontrol);
 			qualityControl.start();
 		} catch (IOException e) {

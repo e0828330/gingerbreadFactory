@@ -30,6 +30,8 @@ import javax.naming.NamingException;
 
 import org.apache.qpid.transport.util.Logger;
 
+import com.thoughtworks.xstream.core.util.OrderRetainingMap;
+
 import factory.entities.BakerWaitingObject;
 import factory.entities.ChargeReplyObject;
 import factory.entities.GingerBread;
@@ -182,10 +184,15 @@ public class JMSServerInstance implements Runnable {
 	private JMSServerOrderQueueListener orderQueue_listener;
 	
 	private final String PROPERTIES_FILE = "jms.properties";
+	
+	private int factoryID;
 
-	public JMSServerInstance() throws IOException, NamingException, JMSException {
+	public JMSServerInstance(int factoryID) throws IOException, NamingException, JMSException {
+		this.factoryID = factoryID;
+		this.logger.info("Starting with factoryID = " + this.factoryID, (Object[]) null);
 		Properties properties = new Properties();
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE));
+		JMSUtils.extendJMSProperties(properties, this.factoryID);
 		this.ctx = new InitialContext(properties);
 
 		// set ingredient storage
@@ -268,14 +275,14 @@ public class JMSServerInstance implements Runnable {
 	
 	private void setup_dummyQueueConsumer() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.logisticsQueue_queue = (Queue) ctx.lookup("logisticsQueue");
+		this.logisticsQueue_queue = (Queue) ctx.lookup("logisticsQueue" + this.factoryID);
 		this.logisticsQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.logisticsQueue_session = this.logisticsQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.logisticsQueue_consumer = this.logisticsQueue_session.createConsumer(this.logisticsQueue_queue);
 		this.logisticsQueue_connection.start();
 		this.logger.info("Queue for quality-control startet.", (Object[]) null);
 		
-		this.qualityQueue_queue = (Queue) ctx.lookup("qualityControlQueue");
+		this.qualityQueue_queue = (Queue) ctx.lookup("qualityControlQueue" + this.factoryID);
 		this.qualityQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.qualityQueue_session = this.qualityQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.qualityQueue_consumer = this.qualityQueue_session.createConsumer(this.qualityQueue_queue);
@@ -284,7 +291,7 @@ public class JMSServerInstance implements Runnable {
 	
 	private void setup_bakerRequestQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.bakerRequest_queue = (Queue) this.ctx.lookup("bakerRequestQueue");
+		this.bakerRequest_queue = (Queue) this.ctx.lookup("bakerRequestQueue" + this.factoryID);
 		this.bakerRequest_connection = queueConnectionFactory.createQueueConnection();
 		this.bakerGeneralRequest_listener = new JMSServerBakerGeneralRequestListener(this);
 		this.bakerRequest_session = this.bakerRequest_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -296,7 +303,7 @@ public class JMSServerInstance implements Runnable {
 	
 	private void setup_packagingQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.packagingQueue_queue = (Queue) this.ctx.lookup("packagingQueue");
+		this.packagingQueue_queue = (Queue) this.ctx.lookup("packagingQueue" + this.factoryID);
 		this.packagingQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.packagingQueue_listener = new JMSServerPackagingListener(this);
 		this.packagingQueue_session = this.packagingQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -307,7 +314,7 @@ public class JMSServerInstance implements Runnable {
 
 	private void setup_eventQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.eventQueue_queue = (Queue) ctx.lookup("eventQueue");
+		this.eventQueue_queue = (Queue) ctx.lookup("eventQueue" + this.factoryID);
 		this.eventQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.eventQueue_session = this.eventQueue_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.eventQueue_sender = this.eventQueue_session.createSender(this.eventQueue_queue);
@@ -317,7 +324,7 @@ public class JMSServerInstance implements Runnable {
 
 	private void setup_commandQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.command_queue = (Queue) ctx.lookup("commandQueue");
+		this.command_queue = (Queue) ctx.lookup("commandQueue" + this.factoryID);
 		this.command_connection = queueConnectionFactory.createQueueConnection();
 		this.command_session = this.command_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.command_receiver = this.command_session.createReceiver(this.command_queue);
@@ -329,7 +336,7 @@ public class JMSServerInstance implements Runnable {
 	private void setup_monitoringQueue() throws JMSException, NamingException {
 		this.logger.info("Initializing queue for monitoring...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.monitoring_queue = (Queue) ctx.lookup("monitoringQueue");
+		this.monitoring_queue = (Queue) ctx.lookup("monitoringQueue" + this.factoryID);
 		this.monitoring_connection = queueConnectionFactory.createQueueConnection();
 		this.monitoring_session = this.monitoring_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.monitoring_receiver = this.monitoring_session.createReceiver(this.monitoring_queue);
@@ -342,7 +349,7 @@ public class JMSServerInstance implements Runnable {
 	private void setup_bakerIngredientsQueue() throws NamingException, JMSException {
 		this.logger.info("Initializing queue for bakers ingredients requests...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.bakerIngredients_queue = (Queue) ctx.lookup("bakerIngredientsQueue");
+		this.bakerIngredients_queue = (Queue) ctx.lookup("bakerIngredientsQueue" + this.factoryID);
 		this.bakerIngredients_connection = queueConnectionFactory.createQueueConnection();
 		this.bakerIngredients_session = this.bakerIngredients_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.bakerIngredientsQueue_listener = new JMSServerBakerIngredientsQueueListener(this);
@@ -355,7 +362,7 @@ public class JMSServerInstance implements Runnable {
 	private void setup_orderQueue() throws NamingException, JMSException {
 		this.logger.info("Initializing queue for orders...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.order_queue = (Queue) ctx.lookup("orderQueue");
+		this.order_queue = (Queue) ctx.lookup("orderQueue" + this.factoryID);
 		this.order_connection = queueConnectionFactory.createQueueConnection();
 		this.order_session = this.order_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.orderQueue_listener = new JMSServerOrderQueueListener(this);
@@ -368,7 +375,7 @@ public class JMSServerInstance implements Runnable {
 	private void setup_ingredientsQueue() throws IOException, NamingException, JMSException {
 		this.logger.info("Initializing queue for ingredients...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.ingredientsDelivery_queue = (Queue) ctx.lookup("ingredientsDelivery");
+		this.ingredientsDelivery_queue = (Queue) ctx.lookup("ingredientsDelivery" + this.factoryID);
 		this.ingredientsDelivery_connection = queueConnectionFactory.createQueueConnection();
 		this.ingredientsDelivery_session = this.ingredientsDelivery_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.incredientsDelivery_listener = new JMSServerIngredientsDeliveryListener(this);
@@ -381,7 +388,7 @@ public class JMSServerInstance implements Runnable {
 	private void setup_ovenQueue() throws NamingException, JMSException {
 		this.logger.info("Initializing queue for oven...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.ovenQueue_queue = (Queue) ctx.lookup("ovenQueue");
+		this.ovenQueue_queue = (Queue) ctx.lookup("ovenQueue" + this.factoryID);
 		this.ovenQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.ovenQueue_session = this.ovenQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.ovenQueue_receiver = this.ovenQueue_session.createReceiver(this.ovenQueue_queue);
@@ -942,7 +949,9 @@ public class JMSServerInstance implements Runnable {
 	
 	public void storeOrder(Order order) {
 		this.order_list.put(order.getId(), order);
-		this.open_orders.add(order);
+		if (order.getState() != Order.State.MOVED) {
+			this.open_orders.add(order);
+		}
 		Hashtable<String, String> properties = new Hashtable<String, String>(1);
 		properties.put("TYPE", "ArrayList<Order>");
 		properties.put("EVENT", Messages.EVENT_ORDERLIST_CHANGED);

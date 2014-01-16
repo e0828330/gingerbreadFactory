@@ -56,6 +56,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 		try {
 			Properties properties = new Properties();
 			properties.load(this.getClass().getClassLoader().getResourceAsStream("jms.properties"));
+			JMSUtils.extendJMSProperties(properties, JMSUtils.getFactoryID());
 			this.ctx = new InitialContext(properties);
 
 			this.setup_commandQueue();
@@ -71,7 +72,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 
 	private void setup_commandQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.command_queue = (Queue) ctx.lookup("commandQueue");
+		this.command_queue = (Queue) ctx.lookup("commandQueue" + JMSUtils.getFactoryID());
 		this.command_connection = queueConnectionFactory.createQueueConnection();
 		this.command_session = this.command_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.command_sender = this.command_session.createSender(this.command_queue);
@@ -80,7 +81,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 
 	private void setup_eventQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.eventQueue_queue = (Queue) ctx.lookup("eventQueue");
+		this.eventQueue_queue = (Queue) ctx.lookup("eventQueue" + JMSUtils.getFactoryID());
 		this.eventQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.eventQueue_session = this.eventQueue_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.eventQueue_receiver = this.eventQueue_session.createReceiver(this.eventQueue_queue);

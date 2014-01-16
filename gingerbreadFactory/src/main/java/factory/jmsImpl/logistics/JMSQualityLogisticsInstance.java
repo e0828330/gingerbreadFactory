@@ -3,7 +3,6 @@ package factory.jmsImpl.logistics;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,7 +16,6 @@ import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
-import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
@@ -31,7 +29,6 @@ import org.apache.qpid.transport.util.Logger;
 import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
 import factory.entities.Order;
-import factory.jmsImpl.server.JMSServerPackagingListener;
 import factory.utils.JMSMonitoringSender;
 import factory.utils.JMSUtils;
 import factory.utils.JMSUtils.MessageType;
@@ -44,7 +41,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	private boolean isRunning = true;
 	private Logger logger = Logger.get(getClass());
 
-	private Long id = 1L; // TODO: Set at startup
+	private Long id = 1L; // Set at startup
 
 	//private Long packageId = 0L;
 	
@@ -71,14 +68,19 @@ public class JMSQualityLogisticsInstance implements Runnable {
 
 	//private ArrayList<GingerBread> currentPackage = new ArrayList<GingerBread>(MAX_PACKAGE_SIZE);
 	//private int counter = 0;
+	
+	private int factoryID;
 
-	public JMSQualityLogisticsInstance(Long id) throws IOException, NamingException, JMSException {
+	public JMSQualityLogisticsInstance(Long id, int factoryID) throws IOException, NamingException, JMSException {
 		this.id = id;
+		this.factoryID = factoryID;
+		this.logger.info("Start for factory id = " + this.factoryID , (Object[]) null);
 		Properties properties = new Properties();
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(this.PROPERTIES_FILE));
+		JMSUtils.extendJMSProperties(properties, this.factoryID);
 		this.ctx = new InitialContext(properties);
 		
-		this.monitoringSender = new JMSMonitoringSender(this.ctx);
+		this.monitoringSender = new JMSMonitoringSender(this.ctx, this.factoryID);
 		
 		this.setup_logisticsQueue();
 		
@@ -102,7 +104,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	private void setup_logisticsQueue() throws NamingException, JMSException {
 		this.logger.info("Initializing queue for logistics...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.logisticsQueue_queue = (Queue) ctx.lookup("logisticsQueue");
+		this.logisticsQueue_queue = (Queue) ctx.lookup("logisticsQueue" + this.factoryID);
 		this.logisticsQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.logisticsQueue_session = this.logisticsQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.logisticsQueue_consumer = this.logisticsQueue_session.createConsumer(this.logisticsQueue_queue);
@@ -112,7 +114,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	
 	private void setup_packagingQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.packagingQueue_queue = (Queue) this.ctx.lookup("packagingQueue");
+		this.packagingQueue_queue = (Queue) this.ctx.lookup("packagingQueue" + this.factoryID);
 		this.packagingQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.packagingQueue_session = this.packagingQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.packagingQueue_sender = this.packagingQueue_session.createSender(this.packagingQueue_queue);

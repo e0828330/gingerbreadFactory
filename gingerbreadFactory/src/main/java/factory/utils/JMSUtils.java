@@ -3,6 +3,7 @@ package factory.utils;
 import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.UUID;
 
 import javax.jms.Destination;
@@ -15,11 +16,24 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.TextMessage;
 
+import factory.spacesImpl.Server;
+import factory.spacesImpl.SpaceUtils;
+
 public class JMSUtils {
 
 	public enum MessageType {
 		OBJECTMESSAGE, TEXTMESSAGE
 	}
+	
+	private static int factoryID;
+	
+	public static int getFactoryID() {
+		return factoryID;
+	}
+
+	public static void setFactoryID(int factoryID) {
+		JMSUtils.factoryID = factoryID;
+	}	
 	
 	public static void sendReponse(MessageType messageType, Object payLoad, Hashtable<String, String> stringProperties, QueueSession session, String correlationID, Destination destination) throws JMSException {
 		if (messageType == MessageType.TEXTMESSAGE) {
@@ -113,5 +127,48 @@ public class JMSUtils {
 		}
 		return null;
 	}
+	
+	/**
+	 * Parses the factory id from the cmd line arguments
+	 * 
+	 * @param args
+	 * @param idx
+	 */
+	public static int parseFactoryID(String[] args, int idx) {
+		if (args.length < idx + 1) {
+			System.err.println("Please supply a factory id!");
+			System.exit(1);
+		}
+		int factoryId = 0;
+		try {
+			factoryId = Integer.parseInt(args[idx]);
+		}
+		catch (NumberFormatException e) {
+			System.err.println("Please supply a valid factory id!");
+			System.exit(1);
+		}
+		JMSUtils.factoryID = factoryId;
+		return factoryId;
+	}
+
+	public static void extendJMSProperties(Properties properties, int factoryID) {
+		String[] queues = new String[] {
+				"ingredientsDelivery",
+				"bakerIngredientsQueue",
+				"ovenQueue",
+				"qualityControlQueue",
+				"logisticsQueue",
+				"monitoringQueue",
+				"commandQueue",
+				"eventQueue",
+				"bakerRequestQueue",
+				"packagingQueue",
+				"orderQueue"
+		};
+		
+		for (String s : queues) {
+			properties.put("queue." + s + String.valueOf(factoryID), "amq.queue." + s + String.valueOf(factoryID));
+		}
+	}	
 
 }
