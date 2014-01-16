@@ -37,4 +37,6 @@ public class Messages {
 	public static final String SET_ORDERS = "SET_ORDERS";
 
 	public static final String EVENT_ORDERLIST_CHANGED = "EVENT_ORDERLIST_CHANGED";
+
+	public static final String LOAD_REQUEST = "LOAD_REQUEST";
 }

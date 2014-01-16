@@ -176,7 +176,7 @@ public class MainWindow extends Window implements Bindable{
 					order.setFactoryId(SpaceUtils.getFactoryId());
 				}
 				else {
-					logisticsOrder = new JMSLogisticsOrderImpl(JMSUtils.getFactoryID());
+					logisticsOrder = new JMSLogisticsOrderImpl();
 					order.setFactoryId(JMSUtils.getFactoryID());
 				}
 				

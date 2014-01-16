@@ -30,8 +30,6 @@ import javax.naming.NamingException;
 
 import org.apache.qpid.transport.util.Logger;
 
-import com.thoughtworks.xstream.core.util.OrderRetainingMap;
-
 import factory.entities.BakerWaitingObject;
 import factory.entities.ChargeReplyObject;
 import factory.entities.GingerBread;
@@ -114,7 +112,14 @@ public class JMSServerInstance implements Runnable {
 	private QueueConnection order_connection;
 	private QueueSession order_session;
 	private Queue order_queue;
-	private QueueReceiver order_receiver;	
+	private QueueReceiver order_receiver;
+	
+	// queue for loadBalancer
+	private QueueConnection lb_connection;
+	private QueueSession lb_session;
+	private Queue lb_queue;
+	private QueueReceiver lb_receiver;
+	private QueueSender lb_sender;
 
 	// baker queue
 	private QueueConnection bakerIngredients_connection;
@@ -259,6 +264,9 @@ public class JMSServerInstance implements Runnable {
 
 		// set command queue
 		this.setup_commandQueue();
+		
+		// set load balancer
+		this.setup_loadBalancerQueue();
 
 		// set event queue
 		this.setup_eventQueue();
@@ -271,6 +279,17 @@ public class JMSServerInstance implements Runnable {
 		
 		// set queues for quality control and logistics
 		this.setup_dummyQueueConsumer();
+	}
+	
+	private void setup_loadBalancerQueue() throws NamingException, JMSException {
+		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		this.lb_queue = (Queue) ctx.lookup("loadBalancerQueue");
+		this.lb_connection = queueConnectionFactory.createQueueConnection();
+		this.lb_session = this.lb_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
+		this.lb_receiver = this.lb_session.createReceiver(this.lb_queue);
+		this.lb_sender = this.lb_session.createSender(this.lb_queue);
+		this.lb_connection.start();
+		this.logger.info("Queue for load balancer-control startet.", (Object[]) null);
 	}
 	
 	private void setup_dummyQueueConsumer() throws NamingException, JMSException {
@@ -461,6 +480,12 @@ public class JMSServerInstance implements Runnable {
 		this.ovenQueue_receiver.close();
 		this.ovenQueue_session.close();
 		this.ovenQueue_connection.close();
+
+		this.logger.info("Closing lb queue.", (Object[]) null);
+		this.lb_receiver.close();
+		this.lb_sender.close();
+		this.lb_session.close();
+		this.lb_connection.close();		
 
 		this.logger.info("Closing event queue.", (Object[]) null);
 		this.eventQueue_sender.close();

@@ -163,7 +163,7 @@ public class JMSUtils {
 				"eventQueue",
 				"bakerRequestQueue",
 				"packagingQueue",
-				"orderQueue"
+				"orderQueue",
 		};
 		
 		for (String s : queues) {
