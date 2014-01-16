@@ -65,12 +65,12 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	private Queue packagingQueue_queue;
 	private QueueSender packagingQueue_sender;	
 
-	private final int MAX_PACKAGE_SIZE = 6;
+	//private final int MAX_PACKAGE_SIZE = 6;
 	
 	private final String PROPERTIES_FILE = "jms.properties";
 
-	private ArrayList<GingerBread> currentPackage = new ArrayList<GingerBread>(MAX_PACKAGE_SIZE);
-	private int counter = 0;
+	//private ArrayList<GingerBread> currentPackage = new ArrayList<GingerBread>(MAX_PACKAGE_SIZE);
+	//private int counter = 0;
 
 	public JMSQualityLogisticsInstance(Long id) throws IOException, NamingException, JMSException {
 		this.id = id;
@@ -108,8 +108,6 @@ public class JMSQualityLogisticsInstance implements Runnable {
 		this.logisticsQueue_consumer = this.logisticsQueue_session.createConsumer(this.logisticsQueue_queue);
 		this.logisticsQueue_connection.start();
 		this.logger.info("Queue for quality-control startet.", (Object[]) null);
-		
-		//this.packageId = Utils.getID();
 	}
 	
 	private void setup_packagingQueue() throws NamingException, JMSException {
@@ -124,13 +122,10 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	@SuppressWarnings("unchecked")
 	public void run() {
 		try {
-			
 
-			
 			Message response;
 			ArrayList<GingerBread> responsePackage = new ArrayList<GingerBread>();
-			//boolean startup = true;
-			
+
 			while (isRunning) {
 			
 				Hashtable<String, String> properties = new Hashtable<String, String>(1);
@@ -160,10 +155,6 @@ public class JMSQualityLogisticsInstance implements Runnable {
 				// orders
 				boolean fallback = true;
 				for (Order order : this.orderList) {
-					// TODO: quickfix, handle at server done packages:
-					if (order.getState() == Order.State.DONE) {
-						continue;
-					}
 					if (order.getDonePackages() == null) {
 						order.setDonePackages(0);
 					}
@@ -172,14 +163,10 @@ public class JMSQualityLogisticsInstance implements Runnable {
 							fallback = false;
 							order.setState(Order.State.IN_PROGRESS);
 							this.buildPackage(responsePackage, packages, order);
-							/*if (order.getDonePackages() == null) {
-								order.setDonePackages(1);
-								this.logger.info("Package " + order.getDonePackages() + " of " + order.getPackages() + " packed.", (Object[]) null);
-							}
-							else {*/
-								order.setDonePackages(order.getDonePackages() + 1);
-								this.logger.info("Package " + order.getDonePackages() + " of " + order.getPackages() + " packed.", (Object[]) null);
-							//}
+				
+							order.setDonePackages(order.getDonePackages() + 1);
+							this.logger.info("Package " + order.getDonePackages() + " of " + order.getPackages() + " packed.", (Object[]) null);
+						
 							if (order.getDonePackages().equals(order.getPackages())) {
 								this.logger.info("Finished order with id=" + order.getId(), (Object[]) null);
 								order.setState(Order.State.DONE);
@@ -297,7 +284,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 			@SuppressWarnings("unchecked")
 			ArrayList<GingerBread> responseList = (ArrayList<GingerBread>) objMessage.getObject();
 			this.logger.info("Received package with " + responseList.size() + " gingerbreads.", (Object[]) null);
-			//System.out.println("RESPONSE ======>" + responseList.size());
+
 			if (responseList == null || responseList.size() == 0) {
 				return null;
 			}
@@ -340,32 +327,4 @@ public class JMSQualityLogisticsInstance implements Runnable {
 	public void shutDown() {
 		this.isRunning = false;
 	}
-	
-	
-	/*if (message instanceof ObjectMessage) {
-	ObjectMessage objectMessage = (ObjectMessage) message;
-	if (objectMessage.getObject() instanceof GingerBread) {
-		GingerBread gingerBread = (GingerBread) objectMessage.getObject();
-		gingerBread.setLogisticsId(this.id);
-		gingerBread.setPackageId(this.packageId);
-		gingerBread.setState(State.DONE);
-		this.currentPackage.add(gingerBread);
-		this.counter++;
-		this.logger.info("Received gingerbread with id = " + gingerBread.getId() + " from baker with id = " + gingerBread.getBakerId(), (Object[]) null);
-
-		if (this.counter == MAX_PACKAGE_SIZE) {
-			this.logger.info("Send to server for monitoring.", (Object[]) null);
-			try {
-				for (GingerBread tmp : this.currentPackage) {
-					this.monitoringSender.sendMonitoringMessage(tmp);
-				}
-			} catch (NamingException e) {
-				e.printStackTrace();
-			}
-			this.currentPackage.clear();
-			this.counter = 0;
-			this.packageId = Utils.getID();
-		}
-	}
-}*/	
 }

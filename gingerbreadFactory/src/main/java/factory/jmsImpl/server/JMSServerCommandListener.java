@@ -1,7 +1,6 @@
 package factory.jmsImpl.server;
 
 import java.util.ArrayList;
-import java.util.Map.Entry;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -33,17 +32,18 @@ public class JMSServerCommandListener implements MessageListener {
 				response.setJMSCorrelationID(message.getJMSCorrelationID());
 
 				if (textMessage.getText() != null && textMessage.getText().equals(Messages.GET_INGREDIENTS)) {
-					ArrayList<Ingredient> result = new ArrayList<Ingredient>();
-					for (Entry<Long, Ingredient> tmp : this.server.get_total_ingredients_list().entrySet()) {
+					ArrayList<Ingredient> result = new ArrayList<Ingredient>(this.server.get_total_ingredients_list().values());
+					/*for (Entry<Long, Ingredient> tmp : this.server.get_total_ingredients_list().entrySet()) {
 						result.add(tmp.getValue());
-					}
+					}*/
+					
 					response.setObject(result);
 					response.setStringProperty("TYPE", "ArrayList<Ingredient>");
 				} else if (textMessage.getText() != null && textMessage.getText().equals(Messages.GET_GINGERBREADS)) {
-					ArrayList<GingerBread> result = new ArrayList<GingerBread>();
-					for (Entry<Long, GingerBread> tmp : this.server.getGingerBreads().entrySet()) {
+					ArrayList<GingerBread> result = new ArrayList<GingerBread>(this.server.getGingerBreads().values());
+					/*for (Entry<Long, GingerBread> tmp : this.server.getGingerBreads().entrySet()) {
 						result.add(tmp.getValue());
-					}
+					}*/
 					response.setObject(result);
 					response.setStringProperty("TYPE", "ArrayList<GingerBread>");
 				} else if (textMessage.getText() != null && textMessage.getText().equals(Messages.GET_OVEN)) {
