@@ -172,6 +172,9 @@ public class JMSMonitor implements Monitor, MessageListener {
 				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_ORDERLIST_CHANGED)) {
 					ArrayList<Order> result = (ArrayList<Order>) objectMessage.getObject();
 					if (result != null)	this.eventListener.onOrderChanged(result);
+				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_OVENT_CHARGE)) {
+						ArrayList<GingerBread> result = (ArrayList<GingerBread>) objectMessage.getObject();
+						if (result != null)	this.eventListener.onOvenChanged(result);
 				}
 			}
 		} catch (JMSException e) {
