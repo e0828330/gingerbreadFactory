@@ -13,6 +13,7 @@ import javax.jms.TextMessage;
 import factory.entities.ChargeReplyObject;
 import factory.entities.GingerBread;
 import factory.entities.Ingredient;
+import factory.entities.Order;
 import factory.utils.Messages;
 
 public class JMSServerCommandListener implements MessageListener {
@@ -55,6 +56,10 @@ public class JMSServerCommandListener implements MessageListener {
 					}
 					response.setObject(result);
 					response.setStringProperty("TYPE", "ArrayList<GingerBread>");
+				} else if (textMessage.getText() != null && textMessage.getText().equals(Messages.GET_ORDERS)) {
+					ArrayList<Order> result = new ArrayList<Order>(this.server.getOrder_list().values());
+					response.setObject(result);
+					response.setStringProperty("TYPE", "ArrayList<Order>");
 				}
 				MessageProducer producer = this.server.get_CommandSession().createProducer(message.getJMSReplyTo());
 				producer.send(response);

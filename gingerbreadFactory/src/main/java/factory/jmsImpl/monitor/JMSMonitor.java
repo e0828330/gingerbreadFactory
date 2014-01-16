@@ -180,9 +180,20 @@ public class JMSMonitor implements Monitor, MessageListener {
 	}
 
 	public List<Order> getOrders() {
-		// TODO Auto-generated method stub
-		// TODO: Martin
-		return null;
+		List<Order> result = new ArrayList<Order>();
+		try {
+			Message response = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, Messages.GET_ORDERS, null, this.command_session, true, this.command_sender);
+			if (response instanceof ObjectMessage) {
+				ObjectMessage objMessage = (ObjectMessage) response;
+				if (response.getStringProperty("TYPE") != null && response.getStringProperty("TYPE").equals("ArrayList<Order>")) {
+					result = (ArrayList<Order>) objMessage.getObject();
+				}
+			}
+		} catch (JMSException e) {
+			System.err.println("GETOVENCONTENT");
+			e.printStackTrace();
+		}
+		return result;
 	}
 
 }
