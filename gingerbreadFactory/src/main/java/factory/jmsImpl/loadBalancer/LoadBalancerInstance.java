@@ -237,7 +237,7 @@ public class LoadBalancerInstance implements Runnable, MessageListener {
 						
 						
 						double avg = totalLoad / factorySize;
-						
+						this.logger.info("defaultload < avg * 1.25 === " + defaultReceiverLoad + " < " + avg + " * 1.25 (" + avg * 1.25 + ")");
 						if (defaultReceiverLoad < avg * 1.25 || totalLoad == 0) {
 							// send to default factory
 							this.logger.info("Sending to default factory with id = " + this.orders.get(orderID).getFactoryId());
