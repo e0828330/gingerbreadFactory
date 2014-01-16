@@ -991,5 +991,17 @@ public class JMSServerInstance implements Runnable {
 		this.order_list = order_list;
 	}
 
+	public QueueSession getLb_session() {
+		return lb_session;
+	}
+
+	public QueueSender getLb_sender() {
+		return lb_sender;
+	}
+
+	public synchronized int getFactoryID() {
+		return this.factoryID;
+	}
+
 
 }

@@ -8,7 +8,7 @@ import javax.jms.QueueSession;
 
 public class JMSFactoryConnection {
 
-	private int id;
+	private int factoryID;
 	private QueueConnection connection;
 	private QueueSession session;
 	private Queue queue;
@@ -45,10 +45,10 @@ public class JMSFactoryConnection {
 		this.sender = sender;
 	}
 	public int getId() {
-		return id;
+		return factoryID;
 	}
 	public void setId(int id) {
-		this.id = id;
+		this.factoryID = id;
 	}
 	
 }
