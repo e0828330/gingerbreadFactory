@@ -25,7 +25,7 @@ import factory.entities.Ingredient;
 public class Server {
 		
 	public static String spaceURL = "xvsm://localhost:9876";
-	public static final boolean BENCHMARK = true;
+	public static final boolean BENCHMARK = false;
 	
 	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException, IOException {
 		MzsCore core = DefaultMzsCore.newInstance();
