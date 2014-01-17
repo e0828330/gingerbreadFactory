@@ -35,6 +35,49 @@ public class JMSServerPackagingListener implements MessageListener {
 		try {
 			message.acknowledge();
 			if (message.getStringProperty("LOGISTICS_ID") != null && message.getStringProperty("REQTYPE") != null 
+					&& message.getStringProperty("REQTYPE").equals("GET_BEST_PACKAGE")) {
+				Long logisticsID = Long.valueOf(message.getStringProperty("LOGISTICS_ID"));
+				
+
+				//get best gingerbreads
+				
+				ArrayList<GingerBread> list = this.server.getPackage(2, 2, 2);
+				if (list.size() == 0) {
+					list = this.server.getPackage(3, 3, 0);
+					if (list.size() == 0) {
+						list = this.server.getPackage(0, 3, 3);
+						if (list.size() == 0) {
+							list = this.server.getPackage(3, 0, 3);
+							if (list.size() == 0) {
+								list = this.server.getPackage(6, 0, 0);
+								if (list.size() == 0) {
+									list = this.server.getPackage(0, 6, 0);
+									if (list.size() == 0) {
+										list = this.server.getPackage(0, 0, 6);
+									}
+								}
+							}
+						}
+					}
+				}
+				
+				if (list.size() == 0) {
+					this.sendNoDataMessage(message);
+				}
+				else {
+					this.logger.info("Package ok... send now to logistics.", (Object[]) null);
+					Hashtable<String, String> properties = new Hashtable<String, String>(2);
+					properties.put("TYPE", "ArrayList<GingerBread>");
+					JMSUtils.sendReponse(MessageType.OBJECTMESSAGE, 
+							list, 
+							properties, 
+							this.server.get_PackagingQueueSession(), 
+							message.getJMSCorrelationID(),
+							message.getJMSReplyTo());			
+				}
+				
+			}
+			else if (message.getStringProperty("LOGISTICS_ID") != null && message.getStringProperty("REQTYPE") != null 
 					&& message.getStringProperty("REQTYPE").equals("GET_PACKAGE")) {
 				Long logisticsID = Long.valueOf(message.getStringProperty("LOGISTICS_ID"));
 				

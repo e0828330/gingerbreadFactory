@@ -181,7 +181,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 				
 				if (fallback) {
 					// fallback
-					if ((responsePackage = this.checkResponse(this.requestForPackage(2, 2, 2))) != null) {
+					/*if ((responsePackage = this.checkResponse(this.requestForPackage(2, 2, 2))) != null) {
 						this.logger.info("Package with 2x normal, 2x chocolate, 2x nut.", (Object[]) null);
 						this.buildPackage(responsePackage, packages, null);
 					}
@@ -208,7 +208,12 @@ public class JMSQualityLogisticsInstance implements Runnable {
 					else if ((responsePackage = this.checkResponse(this.requestForPackage(0, 0, 6))) != null) {
 						this.logger.info("Package with 6x nut.", (Object[]) null);
 						this.buildPackage(responsePackage, packages, null);
+					}*/
+					if ((responsePackage = this.checkResponse(this.requestBestPackage())) != null) {
+						this.logger.info("received best package.", (Object[]) null);
+						this.buildPackage(responsePackage, packages, null);
 					}
+					
 				}
 				
 				// send order back to server:
@@ -305,6 +310,21 @@ public class JMSQualityLogisticsInstance implements Runnable {
 		properties.put(Messages.FLAVOR_NORMAL, String.valueOf(normal));
 		properties.put(Messages.FLAVOR_CHOCOLATE,  String.valueOf(chocolate));
 		properties.put(Messages.FLAVOR_NUT,  String.valueOf(nut));
+		Message response = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, 
+				Messages.PACKAGE_ORDER, 
+				properties, 
+				this.packagingQueue_session, 
+				true, 
+				this.packagingQueue_sender);
+		response.acknowledge();
+		return response;
+	}
+	
+	private Message requestBestPackage() throws JMSException {
+		this.logger.info("Request now at server side", (Object[]) null);
+		Hashtable<String, String> properties = new Hashtable<String, String>(6);
+		properties.put("LOGISTICS_ID", String.valueOf((this.id)));
+		properties.put("REQTYPE", "GET_BEST_PACKAGE");
 		Message response = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, 
 				Messages.PACKAGE_ORDER, 
 				properties, 
