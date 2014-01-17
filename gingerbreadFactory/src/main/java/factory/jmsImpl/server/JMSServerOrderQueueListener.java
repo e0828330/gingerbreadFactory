@@ -1,6 +1,5 @@
 package factory.jmsImpl.server;
 
-import java.util.HashMap;
 import java.util.Hashtable;
 
 import javax.jms.JMSException;

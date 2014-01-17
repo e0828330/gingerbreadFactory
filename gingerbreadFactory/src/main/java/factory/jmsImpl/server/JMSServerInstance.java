@@ -190,6 +190,8 @@ public class JMSServerInstance implements Runnable {
 	private AtomicInteger count_gingerBread_flour;
 	private AtomicInteger count_gingerBread_nuts;
 	private AtomicInteger count_gingerBread_chocolate;
+	
+	private AtomicInteger totalFinishedPackages;
 
 	private AtomicInteger gingerBreadCounter;
 
@@ -260,6 +262,8 @@ public class JMSServerInstance implements Runnable {
 		this.count_gingerBread_chocolate = new AtomicInteger(0);
 		this.count_gingerBread_nuts = new AtomicInteger(0);
 		this.gingerBreadCounter = new AtomicInteger(0);
+		
+		this.totalFinishedPackages = new AtomicInteger(0);
 		
 		this.packageOrderesBlocked = new AtomicBoolean(false);
 
@@ -496,7 +500,8 @@ public class JMSServerInstance implements Runnable {
 		System.out.println("Type 'monitor' to see the state of gingerbreads");
 		System.out.println("Type 'exit' to to shut down the server");
 		System.out.println("Type 'controlled' to see the list of controlled gingerbreads");
-		System.out.println("Type 'benchmark' to to send benchmark start signal.");
+		System.out.println("Type 'benchmark' to send benchmark start signal.");
+		System.out.println("Type 'packages_finished' to see how many packages were finished.");
 		System.out.println("======================================\n");
 		while (isRunning) {
 			try {
@@ -522,6 +527,9 @@ public class JMSServerInstance implements Runnable {
 				else if (s.equals("exit")) {
 					break;
 				}
+				else if (s.equals("packages_finished")) {
+					System.out.println(totalFinishedPackages.get());
+				}
 				else if (s.equals("benchmark")) {
 					if (!JMSUtils.BENCHMARK) {
 						System.out.println("Not in benchmark mode.");
@@ -538,7 +546,12 @@ public class JMSServerInstance implements Runnable {
 								} catch (JMSException e) {
 									e.printStackTrace();
 								}
-								timer.cancel();								
+								timer.cancel();		
+								
+								System.out.println("-------------------------------------");
+								System.out.println("Benchmark stopped after 60s: Total finished:" + totalFinishedPackages.get());
+								System.out.println("-------------------------------------");
+								
 							}
 						}, JMSUtils.BENCHMARK_TIMEOUT);
 					}
@@ -1104,6 +1117,10 @@ public class JMSServerInstance implements Runnable {
 
 	public synchronized int getFactoryID() {
 		return this.factoryID;
+	}
+	
+	public AtomicInteger getTotalFinishedPackages() {
+		return this.totalFinishedPackages;
 	}
 
 

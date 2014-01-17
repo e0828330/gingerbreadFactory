@@ -78,6 +78,12 @@ public class JMSServerMonitoringListener implements MessageListener {
 						}
 					}
 					
+					if (message.getStringProperty("NUMBER_OF_PACKAGES") != null) {
+						int value = Integer.parseInt(message.getStringProperty("NUMBER_OF_PACKAGES"));
+						this.logger.info("Received " + value + " finished packages", (Object[]) null);
+						this.server.getTotalFinishedPackages().addAndGet(value);
+					}
+					
 					this.server.sendEventToGUI(result, properties);
 				}
 			}

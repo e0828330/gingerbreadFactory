@@ -16,13 +16,12 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.TextMessage;
 
-import factory.spacesImpl.Server;
-import factory.spacesImpl.SpaceUtils;
-
 public class JMSUtils {
 
 	public static final boolean BENCHMARK = true;
-	public static final int BENCHMARK_TIMEOUT = 5000;
+	public static final int BENCHMARK_TIMEOUT = 60000;
+	
+	public static final int PACKAGE_SIZE = 6;
 	
 	public enum MessageType {
 		OBJECTMESSAGE, TEXTMESSAGE

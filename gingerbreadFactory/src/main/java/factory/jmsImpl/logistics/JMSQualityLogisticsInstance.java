@@ -247,15 +247,18 @@ public class JMSQualityLogisticsInstance implements Runnable {
 					// send to server and gui
 					this.logger.info("Packages build.", (Object[]) null);
 					
-					for (GingerBread b : packages) {
+					Hashtable<String, String> propertiesM = new Hashtable<String, String>(1);
+					propertiesM.put("NUMBER_OF_PACKAGES", String.valueOf(packages.size() / JMSUtils.PACKAGE_SIZE));
+					this.monitoringSender.sendMonitoringMessage(new ArrayList<GingerBread>(packages), propertiesM);
+					
+					/*for (GingerBread b : packages) {
 						this.monitoringSender.sendMonitoringMessage(b);
-					}
+						
+					}*/
 				}	
 				
 			}
 		} catch (JMSException e) {
-			e.printStackTrace();
-		} catch (NamingException e) {
 			e.printStackTrace();
 		}
 
@@ -313,7 +316,7 @@ public class JMSQualityLogisticsInstance implements Runnable {
 		return response;
 	}
 
-	private void close() throws JMSException {
+	public void close() throws JMSException {
 		this.logger.info("Closing quality-control queue.", (Object[]) null);
 		this.monitoringSender.closeConnection();
 		this.logisticsQueue_consumer.close();

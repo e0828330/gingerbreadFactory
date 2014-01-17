@@ -165,7 +165,7 @@ public class JMSQualityControlInstance implements Runnable {
 		}
 	}
 
-	private void close() throws JMSException {
+	public void close() throws JMSException {
 		this.monitoringSender.closeConnection();
 
 		this.logger.info("Closing quality-control queue.", (Object[]) null);
