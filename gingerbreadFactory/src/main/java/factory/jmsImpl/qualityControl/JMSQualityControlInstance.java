@@ -113,7 +113,7 @@ public class JMSQualityControlInstance implements Runnable {
 						ArrayList<GingerBread> testList = (ArrayList<GingerBread>) objectMessage.getObject();
 
 						// We don't need to check this round
-						if (this.needsCheck == false) {
+						if (this.needsCheck == false || this.defectRate == 0.0) {
 							this.logger.info("This charge is just forwarded...", (Object[]) null);
 							for (GingerBread tested : testList) {
 								tested.setState(State.CONTROLLED);
