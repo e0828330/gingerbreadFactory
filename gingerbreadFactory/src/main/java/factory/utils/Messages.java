@@ -41,4 +41,8 @@ public class Messages {
 	public static final String LOAD_REQUEST = "LOAD_REQUEST";
 
 	public static final String LOAD = "LOAD";
+
+	public static final String BENCHMARK_START = "START_BENCHMARK";
+	
+	public static final String BENCHMARK_STOP = "STOP_BENCHMARK";
 }

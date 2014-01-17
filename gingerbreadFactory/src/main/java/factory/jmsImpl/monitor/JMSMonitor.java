@@ -161,6 +161,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 
 	@SuppressWarnings("unchecked")
 	public void onMessage(Message message) {
+		System.out.println("MSSAGE = " + message);
 		try {
 			if (message instanceof ObjectMessage) {
 				ObjectMessage objectMessage = (ObjectMessage) message;

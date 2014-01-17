@@ -21,6 +21,9 @@ import factory.spacesImpl.SpaceUtils;
 
 public class JMSUtils {
 
+	public static final boolean BENCHMARK = true;
+	public static final int BENCHMARK_TIMEOUT = 5000;
+	
 	public enum MessageType {
 		OBJECTMESSAGE, TEXTMESSAGE
 	}

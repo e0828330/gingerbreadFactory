@@ -17,6 +17,11 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.Topic;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.jms.TopicSession;
+import javax.jms.TopicSubscriber;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -67,7 +72,7 @@ public class JMSBakerInstance implements Runnable {
 	private QueueSession bakerRequest_session;
 	private Queue bakerRequest_queue;
 	private QueueSender bakerRequest_sender;
-
+	
 	// oven queue
 	private QueueConnection ovenQueue_connection;
 	private QueueSession ovenQueue_session;
@@ -107,6 +112,7 @@ public class JMSBakerInstance implements Runnable {
 
 			// set baker request queue
 			this.setup_bakerRequestQueue();
+
 
 		} catch (NamingException e) {
 			e.printStackTrace();
@@ -182,13 +188,17 @@ public class JMSBakerInstance implements Runnable {
 				this.logger.info("Received answer..", (Object[]) null);
 				this.checkReponseMessage(responseMessage);
 			} catch (JMSException e) {
-				e.printStackTrace();
+				try {
+					this.close();
+				} catch (JMSException e1) {
+					System.exit(0);
+				}
 			}
 		}
 		try {
 			this.close();
 		} catch (JMSException e) {
-			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 
@@ -196,7 +206,7 @@ public class JMSBakerInstance implements Runnable {
 		this.isRunning = false;
 	}
 
-	private void close() throws JMSException {
+	public void close() throws JMSException {
 		this.logger.info("Closing topic connection for ingredients.", (Object[]) null);
 
 		this.logger.info("Closing baker-server queue.", (Object[]) null);
@@ -278,7 +288,9 @@ public class JMSBakerInstance implements Runnable {
 
 						tmp.setState(GingerBread.State.PRODUCED);
 						this.charge.add(tmp);
-						Thread.sleep(Utils.getRandomWaitTime());
+						if (!JMSUtils.BENCHMARK) {
+							Thread.sleep(Utils.getRandomWaitTime());
+						}
 					}
 					Hashtable<String, String> properties1 = new Hashtable<String, String>();
 					properties1.put("BAKER_ID", String.valueOf(this.id));
@@ -327,7 +339,7 @@ public class JMSBakerInstance implements Runnable {
 				}
 
 			} catch (JMSException e) {
-				e.printStackTrace();
+				this.shutDown();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

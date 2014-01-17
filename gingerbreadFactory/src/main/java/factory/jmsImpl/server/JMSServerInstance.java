@@ -8,8 +8,10 @@ import java.util.Collections;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimerTask;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,6 +26,11 @@ import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
+import javax.jms.Topic;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.jms.TopicPublisher;
+import javax.jms.TopicSession;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -38,6 +45,7 @@ import factory.entities.Ingredient;
 import factory.entities.LogisticsEntity;
 import factory.entities.Order;
 import factory.utils.JMSUtils;
+import factory.utils.Utils;
 import factory.utils.JMSUtils.MessageType;
 import factory.utils.Messages;
 
@@ -120,6 +128,12 @@ public class JMSServerInstance implements Runnable {
 	private Queue lb_queue;
 	private QueueReceiver lb_receiver;
 	private QueueSender lb_sender;
+	
+	// benchmark topic 
+	private TopicConnection benchmarkTopicConnection;
+	private TopicSession benchmarkSession;
+	private Topic benchmarkTopic;
+	private TopicPublisher benchmarkPublisher;
 
 	// baker queue
 	private QueueConnection bakerIngredients_connection;
@@ -201,13 +215,24 @@ public class JMSServerInstance implements Runnable {
 		this.ctx = new InitialContext(properties);
 
 		// set ingredient storage
-		this.honey_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
-		this.flour_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
-		this.egg_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
-		this.nut_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
-		this.chocolate_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
+
 		
-		this.total_ingredients_list = new ConcurrentHashMap<Long, Ingredient>(150);
+		if (JMSUtils.BENCHMARK) {
+			this.total_ingredients_list = new ConcurrentHashMap<Long, Ingredient>(7000);
+			this.honey_list = Collections.synchronizedList(new ArrayList<Ingredient>(1500));
+			this.flour_list = Collections.synchronizedList(new ArrayList<Ingredient>(1500));
+			this.egg_list = Collections.synchronizedList(new ArrayList<Ingredient>(3000));
+			this.nut_list = Collections.synchronizedList(new ArrayList<Ingredient>(500));
+			this.chocolate_list = Collections.synchronizedList(new ArrayList<Ingredient>(500));
+		}
+		else {
+			this.total_ingredients_list = new ConcurrentHashMap<Long, Ingredient>(150);
+			this.honey_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
+			this.flour_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
+			this.egg_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
+			this.nut_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
+			this.chocolate_list = Collections.synchronizedList(new ArrayList<Ingredient>(50));
+		}
 		this.bakerProducedGingerBread_tmpList = new ConcurrentHashMap<Long, ArrayList<GingerBread>>();
 		this.setBakerWaitingList(new LinkedList<BakerWaitingObject>());
 		this.bakersChargeInOven = new ConcurrentHashMap<Long, ArrayList<GingerBread>>();
@@ -242,8 +267,55 @@ public class JMSServerInstance implements Runnable {
 		this.open_orders = new ConcurrentLinkedQueue<Order>();
 		this.order_list = new ConcurrentHashMap<Long, Order>(64);
 		
+		if (JMSUtils.BENCHMARK) {
+			this.createBenchmarkTopic();
+			this.fillBenchmarkIngredients();
+		}
+		
 		// Init all queues
 		this.initQueues();
+	}
+	
+	private void createBenchmarkTopic() throws JMSException, NamingException {
+		TopicConnectionFactory topicConnectionFactory = (TopicConnectionFactory) ctx.lookup("qpidConnectionfactory");
+		this.benchmarkTopic = (Topic) ctx.lookup("benchmarkTopic");
+		this.benchmarkTopicConnection = topicConnectionFactory.createTopicConnection();
+		this.benchmarkSession = this.benchmarkTopicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+		this.benchmarkPublisher = this.benchmarkSession.createPublisher(this.benchmarkTopic);
+		this.benchmarkTopicConnection.start();
+	}
+	
+	private void fillBenchmarkIngredients() {
+		this.gingerBreadCounter.set(1500);
+		this.count_gingerBread_chocolate.set(500);
+		this.count_gingerBread_nuts.set(500);
+		
+		// create entries
+		for (int i = 0; i < 1500; i++) {
+			Ingredient tmp = new Ingredient(1234L, Utils.getID(), Ingredient.Type.FLOUR);
+			this.total_ingredients_list.put(tmp.getId(), tmp);
+			this.flour_list.add(tmp);
+		}
+		for (int i = 0; i < 1500; i++) {
+			Ingredient tmp = new Ingredient(1234L, Utils.getID(), Ingredient.Type.HONEY);
+			this.total_ingredients_list.put(tmp.getId(), tmp);
+			this.honey_list.add(tmp);
+		}
+		for (int i = 0; i < 500; i++) {
+			Ingredient tmp = new Ingredient(1234L, Utils.getID(), Ingredient.Type.CHOCOLATE);
+			this.total_ingredients_list.put(tmp.getId(), tmp);
+			this.chocolate_list.add(tmp);
+		}
+		for (int i = 0; i < 500; i++) {
+			Ingredient tmp = new Ingredient(1234L, Utils.getID(), Ingredient.Type.NUT);
+			this.total_ingredients_list.put(tmp.getId(), tmp);
+			this.nut_list.add(tmp);
+		}
+		for (int i = 0; i < 3000; i++) {
+			Ingredient tmp = new Ingredient(1234L, Utils.getID(), Ingredient.Type.EGG);
+			this.total_ingredients_list.put(tmp.getId(), tmp);
+			this.egg_list.add(tmp);
+		}
 	}
 
 	private void initQueues() throws IOException, NamingException, JMSException {
@@ -424,6 +496,7 @@ public class JMSServerInstance implements Runnable {
 		System.out.println("Type 'monitor' to see the state of gingerbreads");
 		System.out.println("Type 'exit' to to shut down the server");
 		System.out.println("Type 'controlled' to see the list of controlled gingerbreads");
+		System.out.println("Type 'benchmark' to to send benchmark start signal.");
 		System.out.println("======================================\n");
 		while (isRunning) {
 			try {
@@ -449,6 +522,27 @@ public class JMSServerInstance implements Runnable {
 				else if (s.equals("exit")) {
 					break;
 				}
+				else if (s.equals("benchmark")) {
+					if (!JMSUtils.BENCHMARK) {
+						System.out.println("Not in benchmark mode.");
+					}
+					else {
+						this.benchmarkPublisher.publish(this.benchmarkSession.createTextMessage(Messages.BENCHMARK_START));
+						final Timer timer = new Timer();
+						timer.schedule(new TimerTask() {
+							
+							@Override
+							public void run() {
+								try {
+									benchmarkPublisher.publish(benchmarkSession.createTextMessage(Messages.BENCHMARK_STOP));
+								} catch (JMSException e) {
+									e.printStackTrace();
+								}
+								timer.cancel();								
+							}
+						}, JMSUtils.BENCHMARK_TIMEOUT);
+					}
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 				try {
@@ -456,6 +550,9 @@ public class JMSServerInstance implements Runnable {
 				} catch (JMSException e1) {
 					e1.printStackTrace();
 				}
+			} catch (JMSException e) {
+				System.err.println("Couldn't publish benchmark start signal.");
+				e.printStackTrace();
 			}
 		}
 		try {
@@ -528,6 +625,12 @@ public class JMSServerInstance implements Runnable {
 		this.qualityQueue_consumer.close();
 		this.qualityQueue_session.close();
 		this.qualityQueue_connection.close();
+		
+		if (JMSUtils.BENCHMARK) {
+			this.benchmarkPublisher.close();
+			this.benchmarkSession.close();
+			this.benchmarkTopicConnection.close();
+		}
 
 		this.logger.info("ServerInstance shutting down.", (Object[]) null);
 	}
