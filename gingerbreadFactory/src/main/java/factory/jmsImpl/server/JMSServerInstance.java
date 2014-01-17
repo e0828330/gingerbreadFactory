@@ -5,13 +5,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TimerTask;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -45,9 +46,9 @@ import factory.entities.Ingredient;
 import factory.entities.LogisticsEntity;
 import factory.entities.Order;
 import factory.utils.JMSUtils;
-import factory.utils.Utils;
 import factory.utils.JMSUtils.MessageType;
 import factory.utils.Messages;
+import factory.utils.Utils;
 
 public class JMSServerInstance implements Runnable {
 
@@ -134,6 +135,10 @@ public class JMSServerInstance implements Runnable {
 	private TopicSession benchmarkSession;
 	private Topic benchmarkTopic;
 	private TopicPublisher benchmarkPublisher;
+	
+	// for benchmark
+	private Date dateTime_start;
+	private Date dateTime_end;
 
 	// baker queue
 	private QueueConnection bakerIngredients_connection;
@@ -293,6 +298,8 @@ public class JMSServerInstance implements Runnable {
 		this.gingerBreadCounter.set(1500);
 		this.count_gingerBread_chocolate.set(500);
 		this.count_gingerBread_nuts.set(500);
+		this.dateTime_start = new Date();
+		this.dateTime_end = dateTime_start;
 		
 		// create entries
 		for (int i = 0; i < 1500; i++) {
@@ -501,7 +508,7 @@ public class JMSServerInstance implements Runnable {
 		System.out.println("Type 'exit' to to shut down the server");
 		System.out.println("Type 'controlled' to see the list of controlled gingerbreads");
 		System.out.println("Type 'benchmark' to send benchmark start signal.");
-		System.out.println("Type 'packages_finished' to see how many packages were finished.");
+		System.out.println("Type 'benchmark_stats' to see how many packages were finished.");
 		System.out.println("======================================\n");
 		while (isRunning) {
 			try {
@@ -527,8 +534,12 @@ public class JMSServerInstance implements Runnable {
 				else if (s.equals("exit")) {
 					break;
 				}
-				else if (s.equals("packages_finished")) {
-					System.out.println(totalFinishedPackages.get());
+				else if (s.equals("benchmark_stats")) {
+					System.out.println("-------------------------------------");
+					System.out.println("Benchmark stopped after 60s: Total finished:" + totalFinishedPackages.get());
+					System.out.println("Started producing at " + dateTime_start + " and finished at " + dateTime_end);
+					System.out.println("Total seconds: " + (dateTime_end.getTime() - dateTime_start.getTime()) / 1000);
+					System.out.println("-------------------------------------");
 				}
 				else if (s.equals("benchmark")) {
 					if (!JMSUtils.BENCHMARK) {
@@ -537,6 +548,7 @@ public class JMSServerInstance implements Runnable {
 					else {
 						this.benchmarkPublisher.publish(this.benchmarkSession.createTextMessage(Messages.BENCHMARK_START));
 						final Timer timer = new Timer();
+						this.dateTime_start = new Date();
 						timer.schedule(new TimerTask() {
 							
 							@Override
@@ -547,9 +559,13 @@ public class JMSServerInstance implements Runnable {
 									e.printStackTrace();
 								}
 								timer.cancel();		
-								
+								if (dateTime_end.getTime() == dateTime_start.getTime()) {
+									dateTime_end = new Date();
+								}
 								System.out.println("-------------------------------------");
 								System.out.println("Benchmark stopped after 60s: Total finished:" + totalFinishedPackages.get());
+								System.out.println("Started producing at " + dateTime_start + " and finished at " + dateTime_end);
+								System.out.println("Total seconds: " + (dateTime_end.getTime() - dateTime_start.getTime()) / 1000);
 								System.out.println("-------------------------------------");
 								
 							}
@@ -1121,6 +1137,22 @@ public class JMSServerInstance implements Runnable {
 	
 	public AtomicInteger getTotalFinishedPackages() {
 		return this.totalFinishedPackages;
+	}
+
+	public Date getDateTime_start() {
+		return dateTime_start;
+	}
+
+	public void setDateTime_start(Date dateTime_start) {
+		this.dateTime_start = dateTime_start;
+	}
+
+	public Date getDateTime_end() {
+		return dateTime_end;
+	}
+
+	public void setDateTime_end(Date dateTime_end) {
+		this.dateTime_end = dateTime_end;
 	}
 
 

@@ -1,6 +1,7 @@
 package factory.jmsImpl.server;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.TreeSet;
@@ -152,6 +153,11 @@ public class JMSServerPackagingListener implements MessageListener {
 	}
 	
 	private void sendNoDataMessage(Message message) throws JMSException {
+		if (JMSUtils.BENCHMARK) {
+			if (this.server.getGingerBreadCounter() == 0) {
+				this.server.setDateTime_end(new Date());
+			}
+		}
 		JMSUtils.sendReponse(MessageType.TEXTMESSAGE, 
 				Messages.NO_STORED_DATA, 
 				null, 
