@@ -33,14 +33,14 @@ public class JMSServerOvenQueueListener implements MessageListener {
 				if (objMessage.getStringProperty("TYPE").equals("ArrayList<GingerBread>")) {
 					@SuppressWarnings("unchecked")
 					ArrayList<GingerBread> charge = (ArrayList<GingerBread>) objMessage.getObject();
-				
+				/*
 					for (GingerBread tmp : charge) {
 						this.server.get_total_ingredients_list().remove(tmp.getFirstEggId());
 						this.server.get_total_ingredients_list().remove(tmp.getSecondEggId());
 						this.server.get_total_ingredients_list().remove(tmp.getHoneyId());
 						this.server.get_total_ingredients_list().remove(tmp.getFlourId());
 					}
-					
+					*/
 					ChargeReplyObject replyObject = new ChargeReplyObject(charge, message.getJMSCorrelationID(), message.getJMSReplyTo());
 
 					

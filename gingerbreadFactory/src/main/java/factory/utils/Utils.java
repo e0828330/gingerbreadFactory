@@ -3,6 +3,8 @@ package factory.utils;
 import java.net.UnknownHostException;
 import java.util.UUID;
 
+import factory.entities.GingerBread;
+
 public class Utils {
 	/**
 	 * Generates a global unique ID
@@ -61,4 +63,5 @@ public class Utils {
 		}
 		return defectRate;
 	}
+
 }

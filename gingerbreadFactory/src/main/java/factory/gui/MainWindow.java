@@ -27,10 +27,13 @@ import factory.entities.Order;
 import factory.entities.Order.State;
 import factory.interfaces.LogisticsOrder;
 import factory.interfaces.Supplier;
+import factory.jmsImpl.logistics.JMSLogisticsOrderImpl;
 import factory.jmsImpl.supplier.JMSSupplierInstance;
 import factory.spacesImpl.LogisticsOrderImpl;
 import factory.spacesImpl.SpaceUtils;
 import factory.spacesImpl.SupplierImpl;
+import factory.utils.JMSUtils;
+import factory.utils.Utils;
 
 public class MainWindow extends Window implements Bindable{
 
@@ -98,7 +101,7 @@ public class MainWindow extends Window implements Bindable{
 					supplier = new SupplierImpl();
 				}
 				else {
-					supplier = new JMSSupplierInstance();
+					supplier = new JMSSupplierInstance(JMSUtils.getFactoryID());
 				}
 				supplier.setId(Long.parseLong(supplierId.getText()));
 				Ingredient.Type selectedType = null;
@@ -173,7 +176,8 @@ public class MainWindow extends Window implements Bindable{
 					order.setFactoryId(SpaceUtils.getFactoryId());
 				}
 				else {
-					// TODO: Martin
+					logisticsOrder = new JMSLogisticsOrderImpl();
+					order.setFactoryId(JMSUtils.getFactoryID());
 				}
 				
 				logisticsOrder.placeOrder(order);

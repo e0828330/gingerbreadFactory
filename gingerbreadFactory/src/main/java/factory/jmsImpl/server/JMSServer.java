@@ -5,16 +5,16 @@ import java.io.IOException;
 import javax.jms.JMSException;
 import javax.naming.NamingException;
 
+import factory.utils.JMSUtils;
+
 public class JMSServer {
 
 
 	public static void main(String argv[]) {
 		try {
-			JMSServerInstance jmsServerInstance = new JMSServerInstance();
+			JMSServerInstance jmsServerInstance = new JMSServerInstance(JMSUtils.parseFactoryID(argv, 0));
 			Thread thread = new Thread(jmsServerInstance);
 			thread.start();
-			
-			//jmsServerInstance.shutDown();
 		}
 		catch (IOException e) {
 			// TODO handling

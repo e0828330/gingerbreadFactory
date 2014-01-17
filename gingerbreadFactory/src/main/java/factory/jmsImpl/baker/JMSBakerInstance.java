@@ -17,6 +17,11 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.Topic;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.jms.TopicSession;
+import javax.jms.TopicSubscriber;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -67,7 +72,7 @@ public class JMSBakerInstance implements Runnable {
 	private QueueSession bakerRequest_session;
 	private Queue bakerRequest_queue;
 	private QueueSender bakerRequest_sender;
-
+	
 	// oven queue
 	private QueueConnection ovenQueue_connection;
 	private QueueSession ovenQueue_session;
@@ -80,16 +85,21 @@ public class JMSBakerInstance implements Runnable {
 	private Queue qualityQueue_queue;
 	private QueueSender qualityQueue_sender;
 
-	public JMSBakerInstance(Long id) throws IOException, NamingException {
+	private int factoryID;
+	
+	public JMSBakerInstance(Long id, int factoryID) throws IOException, NamingException {
+		this.factoryID = factoryID;
+		this.logger.info("Start for factory id = " + this.factoryID , (Object[]) null);
 		this.id = id;
 		Properties properties = new Properties();
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE));
+		JMSUtils.extendJMSProperties(properties, this.factoryID);
 		this.ctx = new InitialContext(properties);
 		this.gingerBreadList = new ArrayList<GingerBreadTransactionObject>(5);
 		this.charge = new ArrayList<GingerBread>(10);
 		this.producedCharges = new ConcurrentHashMap<Long, Integer>();
 		try {
-			this.monitoringSender = new JMSMonitoringSender(this.ctx);
+			this.monitoringSender = new JMSMonitoringSender(this.ctx, this.factoryID);
 
 			// Set queue connection for baker
 			this.setup_bakerIngredientsQueue();
@@ -103,6 +113,7 @@ public class JMSBakerInstance implements Runnable {
 			// set baker request queue
 			this.setup_bakerRequestQueue();
 
+
 		} catch (NamingException e) {
 			e.printStackTrace();
 		} catch (JMSException e) {
@@ -112,7 +123,7 @@ public class JMSBakerInstance implements Runnable {
 
 	private void setup_bakerRequestQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.bakerRequest_queue = (Queue) this.ctx.lookup("bakerRequestQueue");
+		this.bakerRequest_queue = (Queue) this.ctx.lookup("bakerRequestQueue" + this.factoryID);
 		this.bakerRequest_connection = queueConnectionFactory.createQueueConnection();
 		this.bakerRequest_session = this.bakerRequest_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.bakerRequest_sender = this.bakerRequest_session.createSender(this.bakerRequest_queue);
@@ -122,7 +133,7 @@ public class JMSBakerInstance implements Runnable {
 	private void setup_qualityControlQueue() throws NamingException, JMSException {
 		this.logger.info("Initializing queue for bakers quality-control requests...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.qualityQueue_queue = (Queue) ctx.lookup("qualityControlQueue");
+		this.qualityQueue_queue = (Queue) ctx.lookup("qualityControlQueue" + this.factoryID);
 		this.qualityQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.qualityQueue_session = this.qualityQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.qualityQueue_sender = this.qualityQueue_session.createSender(this.qualityQueue_queue);
@@ -133,7 +144,7 @@ public class JMSBakerInstance implements Runnable {
 	private void setup_bakerIngredientsQueue() throws NamingException, JMSException {
 		this.logger.info("Initializing queue for bakers ingredients requests...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.bakerIngredients_queue = (Queue) ctx.lookup("bakerIngredientsQueue");
+		this.bakerIngredients_queue = (Queue) ctx.lookup("bakerIngredientsQueue" + this.factoryID);
 		this.bakerIngredients_connection = queueConnectionFactory.createQueueConnection();
 		this.bakerIngredients_session = this.bakerIngredients_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.bakerIngredients_sender = this.bakerIngredients_session.createSender(this.bakerIngredients_queue);
@@ -144,8 +155,7 @@ public class JMSBakerInstance implements Runnable {
 	private void setup_ovenQueue() throws NamingException, JMSException {
 		this.logger.info("Initializing queue for oven...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-
-		this.ovenQueue_queue = (Queue) ctx.lookup("ovenQueue");
+		this.ovenQueue_queue = (Queue) ctx.lookup("ovenQueue" + this.factoryID);
 		this.ovenQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.ovenQueue_session = this.ovenQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.ovenQueue_sender = this.ovenQueue_session.createSender(this.ovenQueue_queue);
@@ -178,13 +188,17 @@ public class JMSBakerInstance implements Runnable {
 				this.logger.info("Received answer..", (Object[]) null);
 				this.checkReponseMessage(responseMessage);
 			} catch (JMSException e) {
-				e.printStackTrace();
+				try {
+					this.close();
+				} catch (JMSException e1) {
+					System.exit(0);
+				}
 			}
 		}
 		try {
 			this.close();
 		} catch (JMSException e) {
-			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 
@@ -192,7 +206,7 @@ public class JMSBakerInstance implements Runnable {
 		this.isRunning = false;
 	}
 
-	private void close() throws JMSException {
+	public void close() throws JMSException {
 		this.logger.info("Closing topic connection for ingredients.", (Object[]) null);
 
 		this.logger.info("Closing baker-server queue.", (Object[]) null);
@@ -247,15 +261,36 @@ public class JMSBakerInstance implements Runnable {
 						tmp.setHoneyId(obj.getHoney().getId());
 						tmp.setFirstEggId(obj.getEgg1().getId());
 						tmp.setSecondEggId(obj.getEgg2().getId());
-
+						
 						tmp.setFirstEggSupplierId(obj.getEgg1().getSupplierId());
 						tmp.setSecondEggSupplierId(obj.getEgg2().getSupplierId());
 						tmp.setHoneySupplierId(obj.getHoney().getSupplierId());
 						tmp.setFlourSupplierId(obj.getFlour().getSupplierId());
+						
+						// Flavor
+						if (obj.getChocolate() != null) {
+							tmp.setChocolateId(obj.getChocolate().getId());
+							tmp.setChocolateSupplierId(obj.getChocolate().getSupplierId());
+							tmp.setFlavor(GingerBread.Flavor.CHOCOLATE);
+							this.logger.info("Producing chocolate gingerbread...", (Object[]) null);
+							
+						}
+						else if (obj.getNut() != null) {
+							tmp.setNutId(obj.getNut().getId());
+							tmp.setNutSupplierId(obj.getNut().getSupplierId());
+							tmp.setFlavor(GingerBread.Flavor.NUT);
+							this.logger.info("Producing nut gingerbread...", (Object[]) null);
+						}
+						else {
+							tmp.setFlavor(GingerBread.Flavor.NORMAL);
+							this.logger.info("Producing normal gingerbread...", (Object[]) null);
+						}
 
 						tmp.setState(GingerBread.State.PRODUCED);
 						this.charge.add(tmp);
-						Thread.sleep(Utils.getRandomWaitTime());
+						if (!JMSUtils.BENCHMARK) {
+							Thread.sleep(Utils.getRandomWaitTime());
+						}
 					}
 					Hashtable<String, String> properties1 = new Hashtable<String, String>();
 					properties1.put("BAKER_ID", String.valueOf(this.id));
@@ -304,7 +339,7 @@ public class JMSBakerInstance implements Runnable {
 				}
 
 			} catch (JMSException e) {
-				e.printStackTrace();
+				this.shutDown();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

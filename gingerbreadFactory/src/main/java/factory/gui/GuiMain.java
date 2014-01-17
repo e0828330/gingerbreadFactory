@@ -7,6 +7,7 @@ import org.apache.pivot.wtk.DesktopApplicationContext;
 import org.apache.pivot.wtk.Display;
 
 import factory.spacesImpl.SpaceUtils;
+import factory.utils.JMSUtils;
 
 public class GuiMain implements Application {
 
@@ -44,6 +45,7 @@ public class GuiMain implements Application {
 	public static void main(String[] args) {
 		if (args.length != 0 && args[0].equals("jms")) {
 			mode = Mode.JMS;
+			JMSUtils.parseFactoryID(args, args.length - 1);
 		}
 		else {
 			mode = Mode.SPACES;

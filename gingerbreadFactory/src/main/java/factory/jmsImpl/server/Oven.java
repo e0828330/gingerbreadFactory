@@ -7,6 +7,7 @@ import org.apache.qpid.transport.util.Logger;
 import factory.entities.ChargeReplyObject;
 import factory.entities.GingerBread;
 import factory.entities.GingerBread.State;
+import factory.utils.JMSUtils;
 
 public class Oven implements Runnable {
 
@@ -16,7 +17,7 @@ public class Oven implements Runnable {
 	
 	private Logger logger = Logger.get(getClass());
 	
-	private final int WAITING_TIME = 10000;
+	private int WAITING_TIME = 10000;
 	
 	public Oven(JMSServerInstance server, ArrayList<ChargeReplyObject> charges) {
 		this.server = server;
@@ -33,10 +34,12 @@ public class Oven implements Runnable {
 				this.server.getGingerBreads().put(gingerBread.getId(), gingerBread);
 			}
 		}
-		try {
-			Thread.sleep(WAITING_TIME);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		if (!JMSUtils.BENCHMARK) {
+			try {
+				Thread.sleep(WAITING_TIME);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 		this.server.stopOven(this.charges);
 	}

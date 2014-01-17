@@ -26,6 +26,7 @@ import factory.entities.GingerBread.State;
 import factory.utils.JMSMonitoringSender;
 import factory.utils.JMSUtils;
 import factory.utils.JMSUtils.MessageType;
+import factory.utils.Messages;
 
 public class JMSQualityControlInstance implements Runnable {
 
@@ -54,13 +55,18 @@ public class JMSQualityControlInstance implements Runnable {
 	private JMSMonitoringSender monitoringSender;
 
 	private boolean needsCheck = true;
+	
+	private int factoryID;
 
-	public JMSQualityControlInstance(Long id, float defectRate) throws IOException, NamingException, JMSException {
+	public JMSQualityControlInstance(Long id, float defectRate, int factoryID) throws IOException, NamingException, JMSException {
+		this.logger.info("Starting for factory with id = " + this.factoryID, (Object[]) null);
+		this.factoryID = factoryID;
 		Properties properties = new Properties();
 		properties.load(this.getClass().getClassLoader().getResourceAsStream(this.PROPERTIES_FILE));
+		JMSUtils.extendJMSProperties(properties, this.factoryID);
 		this.ctx = new InitialContext(properties);
 
-		this.monitoringSender = new JMSMonitoringSender(this.ctx);
+		this.monitoringSender = new JMSMonitoringSender(this.ctx, this.factoryID);
 
 		this.id = id;
 		this.defectRate = defectRate;
@@ -73,7 +79,7 @@ public class JMSQualityControlInstance implements Runnable {
 	private void setup_logisticsQueue() throws NamingException, JMSException {
 		this.logger.info("Initializing queue for logistics...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.logisticsQueue_queue = (Queue) ctx.lookup("logisticsQueue");
+		this.logisticsQueue_queue = (Queue) ctx.lookup("logisticsQueue" + this.factoryID);
 		this.logisticsQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.logisticsQueue_session = this.logisticsQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.logisticsQueue_sender = this.logisticsQueue_session.createSender(this.logisticsQueue_queue);
@@ -84,7 +90,7 @@ public class JMSQualityControlInstance implements Runnable {
 	private void setup_qualityControlQueue() throws NamingException, JMSException {
 		this.logger.info("Initializing queue for bakers quality-control requests...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.qualityQueue_queue = (Queue) ctx.lookup("qualityControlQueue");
+		this.qualityQueue_queue = (Queue) ctx.lookup("qualityControlQueue" + this.factoryID);
 		this.qualityQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.qualityQueue_session = this.qualityQueue_connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
 		this.qualityQueue_consumer = this.qualityQueue_session.createConsumer(this.qualityQueue_queue);
@@ -95,6 +101,8 @@ public class JMSQualityControlInstance implements Runnable {
 	public void run() {
 		try {
 			while (isRunning) {
+				// REMOVE AFTER DEBUGGING
+				//this.forwardCharge(new ArrayList<GingerBread>(), false);
 				Message message = this.qualityQueue_consumer.receive();
 				this.logger.info("Received message...", (Object[]) null);
 				boolean isGarbage = false;
@@ -157,7 +165,7 @@ public class JMSQualityControlInstance implements Runnable {
 		}
 	}
 
-	private void close() throws JMSException {
+	public void close() throws JMSException {
 		this.monitoringSender.closeConnection();
 
 		this.logger.info("Closing quality-control queue.", (Object[]) null);
@@ -183,10 +191,10 @@ public class JMSQualityControlInstance implements Runnable {
 			}
 			// forward to logistic
 			if (isGarbage == false) {
-				this.logger.info("Send charge to logistic", (Object[]) null);
-				for (GingerBread gingerBread : charge) {
-					JMSUtils.sendMessage(MessageType.OBJECTMESSAGE, gingerBread, null, this.logisticsQueue_session, false, this.logisticsQueue_sender);
-				}
+				this.logger.info("Send info to logistic", (Object[]) null);
+				//for (GingerBread gingerBread : charge) {
+					JMSUtils.sendMessage(MessageType.TEXTMESSAGE, Messages.NEW_CONTROLLED_GINGERBREAD, null, this.logisticsQueue_session, false, this.logisticsQueue_sender);
+				//}
 			}
 		} catch (JMSException e) {
 			e.printStackTrace();
