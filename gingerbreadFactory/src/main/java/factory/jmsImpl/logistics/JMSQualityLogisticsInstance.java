@@ -156,22 +156,24 @@ public class JMSQualityLogisticsInstance implements Runnable {
 				
 				// orders
 				boolean fallback = true;
-				for (Order order : this.orderList) {
-					if (order.getDonePackages() == null) {
-						order.setDonePackages(0);
-					}
-					for (int i = order.getDonePackages().intValue(); i < order.getPackages().intValue(); i++) {
-						if ((responsePackage = this.checkResponse(this.requestForPackage(order.getNumNormal().intValue(), order.getNumChocolate().intValue(), order.getNumNut().intValue()))) != null) {
-							fallback = false;
-							order.setState(Order.State.IN_PROGRESS);
-							this.buildPackage(responsePackage, packages, order);
-				
-							order.setDonePackages(order.getDonePackages() + 1);
-							this.logger.info("Package " + order.getDonePackages() + " of " + order.getPackages() + " packed.", (Object[]) null);
-						
-							if (order.getDonePackages().equals(order.getPackages())) {
-								this.logger.info("Finished order with id=" + order.getId(), (Object[]) null);
-								order.setState(Order.State.DONE);
+				if (!JMSUtils.BENCHMARK) {
+					for (Order order : this.orderList) {
+						if (order.getDonePackages() == null) {
+							order.setDonePackages(0);
+						}
+						for (int i = order.getDonePackages().intValue(); i < order.getPackages().intValue(); i++) {
+							if ((responsePackage = this.checkResponse(this.requestForPackage(order.getNumNormal().intValue(), order.getNumChocolate().intValue(), order.getNumNut().intValue()))) != null) {
+								fallback = false;
+								order.setState(Order.State.IN_PROGRESS);
+								this.buildPackage(responsePackage, packages, order);
+					
+								order.setDonePackages(order.getDonePackages() + 1);
+								this.logger.info("Package " + order.getDonePackages() + " of " + order.getPackages() + " packed.", (Object[]) null);
+							
+								if (order.getDonePackages().equals(order.getPackages())) {
+									this.logger.info("Finished order with id=" + order.getId(), (Object[]) null);
+									order.setState(Order.State.DONE);
+								}
 							}
 						}
 					}
@@ -208,9 +210,6 @@ public class JMSQualityLogisticsInstance implements Runnable {
 						this.buildPackage(responsePackage, packages, null);
 					}
 				}
-				
-				
-				// Send order back to server
 				
 				// send order back to server:
 				this.logger.info("Send orderlist back to server...", (Object[]) null);

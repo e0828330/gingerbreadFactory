@@ -127,7 +127,9 @@ public class JMSQualityControlInstance implements Runnable {
 						// We need to check this round
 
 						// Shuffle to have a random selection for testing
-						Collections.shuffle(testList);
+						if (!JMSUtils.BENCHMARK) {
+							Collections.shuffle(testList);
+						}
 
 						// Eat he yummmy yummmy gingerbread
 						if (Math.random() < defectRate) {
