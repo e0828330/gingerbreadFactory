@@ -535,8 +535,15 @@ public class JMSServerInstance implements Runnable {
 					break;
 				}
 				else if (s.equals("benchmark_stats")) {
+					int total = 0;
+					for (Entry<Long, GingerBread> g : this.gingerBreads.entrySet()) {
+						if (g.getValue().getState() == GingerBread.State.DONE) {
+							total++;
+						}
+					}
 					System.out.println("-------------------------------------");
 					System.out.println("Benchmark stopped after 60s: Total finished:" + totalFinishedPackages.get());
+					System.out.println("Benchmark stopped after 60s: Total finished:" + (int) (total /6));
 					System.out.println("Started producing at " + dateTime_start + " and finished at " + dateTime_end);
 					System.out.println("Total seconds: " + (dateTime_end.getTime() - dateTime_start.getTime()) / 1000);
 					System.out.println("-------------------------------------");
@@ -562,6 +569,7 @@ public class JMSServerInstance implements Runnable {
 								if (dateTime_end.getTime() == dateTime_start.getTime()) {
 									dateTime_end = new Date();
 								}
+						
 								System.out.println("-------------------------------------");
 								System.out.println("Benchmark stopped after 60s: Total finished:" + totalFinishedPackages.get());
 								System.out.println("Started producing at " + dateTime_start + " and finished at " + dateTime_end);
