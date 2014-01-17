@@ -47,10 +47,15 @@ public class JMSSupplierInstance implements Supplier {
 	// produced ingredients
 	private ArrayList<Ingredient> ingredients;
 
-	public JMSSupplierInstance() {
+	private int factoryID;
+	
+	public JMSSupplierInstance(int factoryID) {
 		try {
+			this.factoryID = factoryID;
+			this.logger.info("Starting with factoryID = " + this.factoryID, (Object[]) null);
 			Properties properties = new Properties();
 			properties.load(this.getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE));
+			JMSUtils.extendJMSProperties(properties, this.factoryID);
 			this.ctx = new InitialContext(properties);
 	
 			// init ingredient list
@@ -67,7 +72,7 @@ public class JMSSupplierInstance implements Supplier {
 	private void setup_ingredientsQueue() throws IOException, NamingException, JMSException {
 		this.logger.info("Initializing queue for ingredients...", (Object[]) null);
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.ingredientsDelivery_queue = (Queue) ctx.lookup("ingredientsDelivery");
+		this.ingredientsDelivery_queue = (Queue) ctx.lookup("ingredientsDelivery" + this.factoryID);
 		this.ingredientsDelivery_connection = queueConnectionFactory.createQueueConnection();
 		this.ingredientsDelivery_session = this.ingredientsDelivery_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.ingredientsDelivery_sender = this.ingredientsDelivery_session.createSender(ingredientsDelivery_queue);

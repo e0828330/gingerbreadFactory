@@ -56,6 +56,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 		try {
 			Properties properties = new Properties();
 			properties.load(this.getClass().getClassLoader().getResourceAsStream("jms.properties"));
+			JMSUtils.extendJMSProperties(properties, JMSUtils.getFactoryID());
 			this.ctx = new InitialContext(properties);
 
 			this.setup_commandQueue();
@@ -71,7 +72,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 
 	private void setup_commandQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.command_queue = (Queue) ctx.lookup("commandQueue");
+		this.command_queue = (Queue) ctx.lookup("commandQueue" + JMSUtils.getFactoryID());
 		this.command_connection = queueConnectionFactory.createQueueConnection();
 		this.command_session = this.command_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.command_sender = this.command_session.createSender(this.command_queue);
@@ -80,7 +81,7 @@ public class JMSMonitor implements Monitor, MessageListener {
 
 	private void setup_eventQueue() throws NamingException, JMSException {
 		QueueConnectionFactory queueConnectionFactory = (QueueConnectionFactory) ctx.lookup("qpidConnectionfactory");
-		this.eventQueue_queue = (Queue) ctx.lookup("eventQueue");
+		this.eventQueue_queue = (Queue) ctx.lookup("eventQueue" + JMSUtils.getFactoryID());
 		this.eventQueue_connection = queueConnectionFactory.createQueueConnection();
 		this.eventQueue_session = this.eventQueue_connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 		this.eventQueue_receiver = this.eventQueue_session.createReceiver(this.eventQueue_queue);
@@ -169,9 +170,12 @@ public class JMSMonitor implements Monitor, MessageListener {
 				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_INGREDIENTS)) {
 					ArrayList<Ingredient> result = (ArrayList<Ingredient>) objectMessage.getObject();
 					if (result != null)	this.eventListener.onIngredientChanged(result);
+				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_ORDERLIST_CHANGED)) {
+					ArrayList<Order> result = (ArrayList<Order>) objectMessage.getObject();
+					if (result != null)	this.eventListener.onOrderChanged(result);
 				} else if (objectMessage.getStringProperty("EVENT") != null && objectMessage.getStringProperty("EVENT").equals(Messages.EVENT_NEW_OVENT_CHARGE)) {
-					ArrayList<GingerBread> result = (ArrayList<GingerBread>) objectMessage.getObject();
-					if (result != null)	this.eventListener.onOvenChanged(result);
+						ArrayList<GingerBread> result = (ArrayList<GingerBread>) objectMessage.getObject();
+						if (result != null)	this.eventListener.onOvenChanged(result);
 				}
 			}
 		} catch (JMSException e) {
@@ -179,10 +183,22 @@ public class JMSMonitor implements Monitor, MessageListener {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public List<Order> getOrders() {
-		// TODO Auto-generated method stub
-		// TODO: Martin
-		return null;
+		List<Order> result = new ArrayList<Order>();
+		try {
+			Message response = JMSUtils.sendMessage(MessageType.TEXTMESSAGE, Messages.GET_ORDERS, null, this.command_session, true, this.command_sender);
+			if (response instanceof ObjectMessage) {
+				ObjectMessage objMessage = (ObjectMessage) response;
+				if (response.getStringProperty("TYPE") != null && response.getStringProperty("TYPE").equals("ArrayList<Order>")) {
+					result = (ArrayList<Order>) objMessage.getObject();
+				}
+			}
+		} catch (JMSException e) {
+			System.err.println("GET_ORDER_EVENT");
+			e.printStackTrace();
+		}
+		return result;
 	}
 
 }

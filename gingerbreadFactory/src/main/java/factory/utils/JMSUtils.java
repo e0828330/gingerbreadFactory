@@ -3,29 +3,67 @@ package factory.utils;
 import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.UUID;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
-import javax.jms.Queue;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
-import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.naming.Context;
-import javax.naming.NamingException;
-
-import factory.entities.GingerBread;
 
 public class JMSUtils {
 
+	public static final boolean BENCHMARK = true;
+	public static final int BENCHMARK_TIMEOUT = 60000;
+	
+	public static final int PACKAGE_SIZE = 6;
+	
 	public enum MessageType {
 		OBJECTMESSAGE, TEXTMESSAGE
+	}
+	
+	private static int factoryID;
+	
+	public static int getFactoryID() {
+		return factoryID;
+	}
+
+	public static void setFactoryID(int factoryID) {
+		JMSUtils.factoryID = factoryID;
+	}	
+	
+	public static void sendReponse(MessageType messageType, Object payLoad, Hashtable<String, String> stringProperties, QueueSession session, String correlationID, Destination destination) throws JMSException {
+		if (messageType == MessageType.TEXTMESSAGE) {
+			TextMessage response = session.createTextMessage();
+			response.setJMSCorrelationID(correlationID);
+			response.setText((String) payLoad);
+			if (stringProperties != null) {
+				for (Entry<String, String> entry : stringProperties.entrySet()) {
+					response.setStringProperty(entry.getKey(), entry.getValue());
+				}
+			}
+			MessageProducer producer = session.createProducer(destination);
+			producer.send(response);
+			producer.close();
+		}
+		else if (messageType == MessageType.OBJECTMESSAGE) {
+			ObjectMessage response = session.createObjectMessage();
+			response.setJMSCorrelationID(correlationID);
+			response.setObject((Serializable) payLoad);
+			if (stringProperties != null) {
+				for (Entry<String, String> entry : stringProperties.entrySet()) {
+					response.setStringProperty(entry.getKey(), entry.getValue());
+				}
+			}
+			MessageProducer producer = session.createProducer(destination);
+			producer.send(response);
+			producer.close();			
+		}
 	}
 
 	public static Message sendMessage(MessageType messageType, Object payLoad, Hashtable<String, String> stringProperties, QueueSession session, boolean hasReplyQueue, QueueSender sender)
@@ -91,5 +129,48 @@ public class JMSUtils {
 		}
 		return null;
 	}
+	
+	/**
+	 * Parses the factory id from the cmd line arguments
+	 * 
+	 * @param args
+	 * @param idx
+	 */
+	public static int parseFactoryID(String[] args, int idx) {
+		if (args.length < idx + 1) {
+			System.err.println("Please supply a factory id!");
+			System.exit(1);
+		}
+		int factoryId = 0;
+		try {
+			factoryId = Integer.parseInt(args[idx]);
+		}
+		catch (NumberFormatException e) {
+			System.err.println("Please supply a valid factory id!");
+			System.exit(1);
+		}
+		JMSUtils.factoryID = factoryId;
+		return factoryId;
+	}
+
+	public static void extendJMSProperties(Properties properties, int factoryID) {
+		String[] queues = new String[] {
+				"ingredientsDelivery",
+				"bakerIngredientsQueue",
+				"ovenQueue",
+				"qualityControlQueue",
+				"logisticsQueue",
+				"monitoringQueue",
+				"commandQueue",
+				"eventQueue",
+				"bakerRequestQueue",
+				"packagingQueue",
+				"orderQueue",
+		};
+		
+		for (String s : queues) {
+			properties.put("queue." + s + String.valueOf(factoryID), "amq.queue." + s + String.valueOf(factoryID));
+		}
+	}	
 
 }

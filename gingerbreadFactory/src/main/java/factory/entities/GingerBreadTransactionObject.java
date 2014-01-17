@@ -12,13 +12,24 @@ public class GingerBreadTransactionObject implements Serializable {
 	private Ingredient egg2;
 	private Ingredient flour;
 	private Ingredient honey;
-	
-	
+	private Ingredient chocolate;
+	private Ingredient nut;	
+
 	public GingerBreadTransactionObject(Ingredient egg1, Ingredient egg2, Ingredient flour, Ingredient honey) {
 		this.egg1 = egg1;
 		this.egg2 = egg2;
 		this.flour = flour;
 		this.honey = honey;
+	}
+	
+	public GingerBreadTransactionObject(Ingredient egg1, Ingredient egg2, Ingredient flour, Ingredient honey,
+			Ingredient nut, Ingredient chocolate) {
+		this.egg1 = egg1;
+		this.egg2 = egg2;
+		this.flour = flour;
+		this.honey = honey;
+		this.nut = nut;
+		this.chocolate = chocolate;
 	}
 	
 	public Ingredient getEgg1() {
@@ -44,6 +55,22 @@ public class GingerBreadTransactionObject implements Serializable {
 	}
 	public void setHoney(Ingredient honey) {
 		this.honey = honey;
+	}
+
+	public Ingredient getNut() {
+		return nut;
+	}
+
+	public void setNut(Ingredient nut) {
+		this.nut = nut;
+	}
+
+	public Ingredient getChocolate() {
+		return chocolate;
+	}
+
+	public void setChocolateId(Ingredient chocolate) {
+		this.chocolate = chocolate;
 	}
 	
 }
