@@ -18,7 +18,7 @@ import javax.jms.TextMessage;
 
 public class JMSUtils {
 
-	public static final boolean BENCHMARK = false;
+	public static final boolean BENCHMARK = true;
 	public static final int BENCHMARK_TIMEOUT = 60000;
 	
 	public static final int PACKAGE_SIZE = 6;
