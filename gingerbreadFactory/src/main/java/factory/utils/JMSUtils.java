@@ -171,6 +171,7 @@ public class JMSUtils {
 		for (String s : queues) {
 			properties.put("queue." + s + String.valueOf(factoryID), "amq.queue." + s + String.valueOf(factoryID));
 		}
+		
 	}	
 
 }
