@@ -25,7 +25,7 @@ import factory.entities.Ingredient;
 public class Server {
 		
 	public static String spaceURL = "xvsm://localhost:9876";
-	public static final boolean BENCHMARK = true;
+	public static final boolean BENCHMARK = false;
 	
 	public static void fillForBenchmark(Capi capi, ContainerReference ingredientsContainer, Ingredient.Type type, int amount) throws MzsCoreException {
 		ArrayList<Entry> entries = new ArrayList<Entry>();
