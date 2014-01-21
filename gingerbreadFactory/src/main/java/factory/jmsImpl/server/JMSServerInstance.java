@@ -514,12 +514,12 @@ public class JMSServerInstance implements Runnable {
 			try {
 				BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
 				String s = bufferRead.readLine();
-				if (s.equalsIgnoreCase("storage")) {
+				if (s != null && s.equalsIgnoreCase("storage")) {
 					this.printStorage();
-				} else if (s.equalsIgnoreCase("oven_state")) {
+				} else if (s != null && s.equalsIgnoreCase("oven_state")) {
 						System.out.println("Oven :" + this.ovenList.size());
 
-				} else if (s.equals("monitor")) {
+				} else if (s != null && s.equals("monitor")) {
 					System.out.print("\n");
 					System.out.println("GINGERBREAD_ID \t\t CHARGE_ID \t\t BAKER_ID \t\t STATE \t\t QUAL_ID \t\t LOG_ID");
 					for (Entry<Long, GingerBread> gingerBread : this.gingerBreads.entrySet()) {
@@ -528,13 +528,13 @@ public class JMSServerInstance implements Runnable {
 								+ "\t\t" + gingerBread.getValue().getLogisticsId());
 					}
 					System.out.print("\n");
-				} else if (s.equals("controlled")) {
+				} else if (s != null && s.equals("controlled")) {
 					this.debugControlled();
 				}
-				else if (s.equals("exit")) {
+				else if (s != null && s.equals("exit")) {
 					break;
 				}
-				else if (s.equals("benchmark_stats")) {
+				else if (s != null && s.equals("benchmark_stats")) {
 					int total = 0;
 					for (Entry<Long, GingerBread> g : this.gingerBreads.entrySet()) {
 						if (g.getValue().getState() == GingerBread.State.DONE) {
@@ -548,7 +548,7 @@ public class JMSServerInstance implements Runnable {
 					System.out.println("Total seconds: " + (dateTime_end.getTime() - dateTime_start.getTime()) / 1000);
 					System.out.println("-------------------------------------");
 				}
-				else if (s.equals("benchmark")) {
+				else if (s != null && s.equals("benchmark")) {
 					if (!JMSUtils.BENCHMARK) {
 						System.out.println("Not in benchmark mode.");
 					}
@@ -910,9 +910,9 @@ public class JMSServerInstance implements Runnable {
 
 	public synchronized void stopOven(ArrayList<ChargeReplyObject> charges) {
 		//
-		for (ChargeReplyObject charge : charges) {
+		/*for (ChargeReplyObject charge : charges) {
 			this.logger.info("Oven finished charge with id = " + charge.getCharge().get(0).getChargeId(), (Object[]) null);
-		}
+		}*/
 
 		// Tell baker that his charges is ready
 		try {
