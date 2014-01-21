@@ -46,7 +46,7 @@ public class QAEmployee {
 				TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
 				
 				// Get next charge
-				System.out.println("WAIT FOR NEXT");
+				//System.out.println("WAIT FOR NEXT");
 				Long chargeId =  (Long) capi.take(chargeContainer, FifoCoordinator.newSelector(), MzsConstants.RequestTimeout.INFINITE, tx).get(0);
 				
 				// Get gingerbreads of this charge
@@ -54,25 +54,26 @@ public class QAEmployee {
 				tpl.setChargeId(chargeId);
 				ArrayList<GingerBread> testList = capi.take(gingerbreadsContainer, LindaCoordinator.newSelector(tpl, MzsConstants.Selecting.COUNT_ALL), MzsConstants.RequestTimeout.INFINITE, tx);
 				
+				
 				// Shuffle to have a random selection for testing
 				Collections.shuffle(testList);
 				
 				// Mark as controlled or garbage based on the defectRate
-				if (Math.random() < defectRate && needsCheck) {
+				if (defectRate > 0.01 && Math.random() < defectRate && needsCheck) {
 					for (GingerBread tested : testList) {
 						tested.setState(State.GARBAGE);
-						System.out.println("GARBAGE");
+						//System.out.println("GARBAGE");
 					}
 				}
 				else {
 					for (GingerBread tested : testList) {
 						tested.setState(State.CONTROLLED);
-						System.out.println("Is OK!");
+						//System.out.println("Is OK!");
 					}
 				}
 				
 				boolean eatedSkipped = false; // We need to skip the first one because we did eat it
-				if (!needsCheck) {
+				if (!needsCheck || defectRate < 0.01) {
 					eatedSkipped = true; // No check means nothing eaten
 				}
 				

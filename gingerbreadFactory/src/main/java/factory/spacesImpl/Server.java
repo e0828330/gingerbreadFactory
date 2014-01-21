@@ -89,6 +89,7 @@ public class Server {
 			System.out.println("Produced " + (results.size() / 6) + " packages!");
 			results = capi.read(gingerbreadContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_MAX), MzsConstants.RequestTimeout.INFINITE, null);
 			System.out.println("Produced " + results.size() + " gingerbreads!");
+			System.exit(0);
 		}
 		System.out.println("Type quit or exit to quit.");
 		

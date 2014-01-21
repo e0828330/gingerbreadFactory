@@ -13,7 +13,7 @@ public class Ingredient implements Serializable {
 	public enum Type {
 		HONEY, FLOUR, EGG, CHOCOLATE, NUT
 	};
-
+	
 	private Type type;
 	
 	public Long getId() {
