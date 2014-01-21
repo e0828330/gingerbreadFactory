@@ -129,7 +129,7 @@ public class LoadBalancer implements Runnable {
 				System.out.println("Averange open packages per factory: " + avgOpenPackages);
 				
 				/* If we are 25% above average move otherwise stay in the same */
-				if (minFactoryId != currentOrder.getFactoryId() && openPackages.get(currentOrder.getFactoryId()) + currentOrder.getPackages() > avgOpenPackages * 1.25 || avgOpenPackages < 0.01) {
+				if (minFactoryId != currentOrder.getFactoryId() && openPackages.get(currentOrder.getFactoryId()) + currentOrder.getPackages() > avgOpenPackages * 1.25 && avgOpenPackages > 0.01) {
 					ContainerReference targetFactory = factories.get(currentOrder.getFactoryId());
 					currentOrder.setState(Order.State.MOVED);
 					currentOrder.setFactoryId(minFactoryId);
