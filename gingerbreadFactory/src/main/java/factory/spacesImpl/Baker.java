@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
@@ -91,15 +92,15 @@ public class Baker {
 	 * 
 	 * @param timeout
 	 */
-	private void getNextIngredientSet(Long timeout) {
+	private void getNextIngredientSet(Long timeout, int chargeCount) {
 		try {
 			TransactionReference tx = capi.createTransaction(MzsConstants.RequestTimeout.INFINITE, new URI(Server.spaceURL));
 			try {
 				CountDownLatch sync = new CountDownLatch(3);
-				
-				ItemGetter getFlour = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.FLOUR), 1), tx, timeout, sync);
-				ItemGetter getHoney = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.HONEY), 1), tx, timeout, sync);
-				ItemGetter getEggs = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.EGG), 2), tx, timeout, sync);
+								
+				ItemGetter getFlour = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.FLOUR), 1 * chargeCount), tx, timeout, sync);
+				ItemGetter getHoney = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.HONEY), 1 * chargeCount), tx, timeout, sync);
+				ItemGetter getEggs = new ItemGetter(LindaCoordinator.newSelector(new Ingredient(null, null, Ingredient.Type.EGG), 2 * chargeCount), tx, timeout, sync);
 
 				executor.execute(getFlour);
 				executor.execute(getHoney);
@@ -310,19 +311,25 @@ public class Baker {
 		while (true) {
 			while(true) {
 				/* Get at least enough for one */
-				getNextIngredientSet(MzsConstants.RequestTimeout.INFINITE);
-	
-				/* Try up to five */
-				getNextIngredientSet(0L);
-				if (getChargeSize() == 2) {
-					getNextIngredientSet(0L);
+				
+				
+				getNextIngredientSet(0L, 5);
+				if (getChargeSize() > 0) {
+					break;
 				}
-				if (getChargeSize() == 3) {
-					getNextIngredientSet(0L);
+				getNextIngredientSet(0L, 4);
+				if (getChargeSize() > 0) {
+					break;
 				}
-				if (getChargeSize() == 4) {
-					getNextIngredientSet(0L);
+				getNextIngredientSet(0L, 3);
+				if (getChargeSize() > 0) {
+					break;
 				}
+				getNextIngredientSet(0L, 2);
+				if (getChargeSize() > 0) {
+					break;
+				}
+				getNextIngredientSet(MzsConstants.RequestTimeout.INFINITE, 1);
 				break;
 			}
 			try {
@@ -348,6 +355,10 @@ public class Baker {
 			ovenContainer = capi.lookupContainer("oven", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 			chargeContainer = capi.lookupContainer("charges", new URI(Server.spaceURL), MzsConstants.RequestTimeout.INFINITE, null);
 
+			if (Server.BENCHMARK) {
+				doWork();
+			}
+			
 			ArrayList<GingerBread> list;
 
 			// Do we have something left in oven?

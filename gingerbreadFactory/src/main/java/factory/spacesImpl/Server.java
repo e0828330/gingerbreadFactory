@@ -25,7 +25,17 @@ import factory.entities.Ingredient;
 public class Server {
 		
 	public static String spaceURL = "xvsm://localhost:9876";
-	public static final boolean BENCHMARK = false;
+	public static final boolean BENCHMARK = true;
+	
+	public static void fillForBenchmark(Capi capi, ContainerReference ingredientsContainer, Ingredient.Type type, int amount) throws MzsCoreException {
+		ArrayList<Entry> entries = new ArrayList<Entry>();
+		for (int i = 0; i < amount; i++) {
+			entries.add(new Entry(new Ingredient(1234L, 1L, type)));
+		}
+		
+		capi.write(entries, ingredientsContainer);
+		
+	}
 	
 	public static void main(String[] args) throws MzsCoreException, InterruptedException, URISyntaxException, IOException {
 		MzsCore core = DefaultMzsCore.newInstance();
@@ -34,7 +44,7 @@ public class Server {
 		TcpSocketConfiguration tcpConfig = (TcpSocketConfiguration) core.getConfig().getTransportConfigurations().get("xvsm");
 		
 		Capi capi = new Capi(core);
-		capi.createContainer("ingredients", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false), new FifoCoordinator());
+		ContainerReference ingredientsContainer = capi.createContainer("ingredients", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false), new FifoCoordinator());
 		capi.createContainer("charges", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 		capi.createContainer("oven", new URI(spaceURL), 10, null, new KeyCoordinator(), new LindaCoordinator(false), new FifoCoordinator());
 		ContainerReference gingerbreadContainer = capi.createContainer("gingerbreads", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new LindaCoordinator(false), new FifoCoordinator());
@@ -46,37 +56,27 @@ public class Server {
 		System.out.println("=====================================");
 		System.out.println("Factory ID: " + tcpConfig.getReceiverPort());
 		
-		
+
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
 		/* Benchmark stuff */
 		if (Server.BENCHMARK) {
 			ContainerReference start = capi.createContainer("benchmarkStart", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 			ContainerReference stop = capi.createContainer("benchmarkStop", new URI(spaceURL), MzsConstants.Container.UNBOUNDED, null, new FifoCoordinator());
 			
-			SupplierImpl supplier = new SupplierImpl();
-			supplier.setId(1234L);
-			supplier.placeOrder(1500, Ingredient.Type.FLOUR);
-			supplier.run();
-			System.out.println("unloaded flour");
-
-			supplier.placeOrder(1500, Ingredient.Type.HONEY);
-			supplier.run();
-			System.out.println("unloaded honey");
+			fillForBenchmark(capi, ingredientsContainer, Ingredient.Type.FLOUR, 1500);
 			
-			supplier.placeOrder(500, Ingredient.Type.CHOCOLATE);
-			supplier.run();
-			System.out.println("unloaded chocolate");
+			fillForBenchmark(capi, ingredientsContainer, Ingredient.Type.HONEY, 1500);
+
+			fillForBenchmark(capi, ingredientsContainer, Ingredient.Type.CHOCOLATE, 500);
 			
-			supplier.placeOrder(500, Ingredient.Type.NUT);
-			supplier.run();
-			System.out.println("unloaded nut");
+			fillForBenchmark(capi, ingredientsContainer, Ingredient.Type.NUT, 500);
+			
+			fillForBenchmark(capi, ingredientsContainer, Ingredient.Type.EGG, 3000);
 
-			supplier.placeOrder(3000, Ingredient.Type.EGG);
-			supplier.run();
-			System.out.println("unloaded eggs");
-
-			System.out.println("done unloading");
-
+			System.out.println("Waiting ...");
+			Thread.sleep(20000);
+			
 			System.out.println("Sending start signal ...");
 			capi.write(start, new Entry(new String("START")));
 			Thread.sleep(60000);
@@ -89,10 +89,10 @@ public class Server {
 			System.out.println("Produced " + (results.size() / 6) + " packages!");
 			results = capi.read(gingerbreadContainer, FifoCoordinator.newSelector(MzsConstants.Selecting.COUNT_MAX), MzsConstants.RequestTimeout.INFINITE, null);
 			System.out.println("Produced " + results.size() + " gingerbreads!");
+			System.exit(0);
 		}
 		System.out.println("Type quit or exit to quit.");
 		
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		String input;
 		while ((input = br.readLine()) != null) {
 			 if (input.equals("quit") || input.equals("exit")) {
